@@ -1,0 +1,8 @@
+.region-label {
+  font-weight:bold;
+}
+
+.overlay {
+	fill:none;
+	pointer-events:all;
+}
