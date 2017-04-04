@@ -74,7 +74,7 @@ var MapView = Backbone.View.extend({
 
 	addCities:function(currentScale){
 		var cities = this.model.getCities();
-
+		
 		var svg = d3.select($("#zoomgroup")[0]);
 		var projection = d3.geo.mercator()
 			.center(this.model.get("defaultCenter"))
@@ -84,8 +84,16 @@ var MapView = Backbone.View.extend({
 		svg.selectAll(".city-label")
 			.data(cities).enter()
 			.append("rect")
-			.attr("x", function (d) { return projection([d.lon,d.lat])[0]; })
-			.attr("y", function (d) { return projection([d.lon,d.lat])[1]; })
+			.attr("x", function (d) {
+				var x = projection([d.lon,d.lat])[0];
+				d.x = x;
+				return x; 
+			})
+			.attr("y", function (d) { 
+				var y = projection([d.lon,d.lat])[1];
+				d.y = y;
+				return y;
+			})
 			.attr("height",function(){ return 8/currentScale })
 			.attr("width",function(){ return 8/currentScale })
 			.attr("fill", "white")
@@ -106,6 +114,7 @@ var MapView = Backbone.View.extend({
 			})
 			.text(function(d,i) {return d.name});
 
+		this.model.set("currentCities",cities);
 	},
 
 
@@ -136,12 +145,24 @@ var MapView = Backbone.View.extend({
 
 		window.setTimeout(function(){
 			var currentScale = svg.attr('transform') ? svg.attr('transform').split(",")[3].replace(")","") : 1;
+			that.addCities(currentScale);
+			var cities = that.model.get("currentCities");
 
 			svg.selectAll("circle")
 			.data(dataArray).enter()
 			.append("circle")
-			.attr("cx", function (d) { return projection([d.lon,d.lat])[0]; })
-			.attr("cy", function (d) { return projection([d.lon,d.lat])[1]; })
+			.attr("cx", function (d) { 
+				var x = projection([d.lon,d.lat])[0];
+				d.x = x;
+				that.model.lookForCollisions(that.model.get("currentCities"),"x",x,20,d.name);
+				return x; 
+			})
+			.attr("cy", function (d) { 
+				var y = projection([d.lon,d.lat])[1];
+				d.y = y;
+				that.model.lookForCollisions(that.model.get("currentCities"),"y",y,20,d.name);
+				return y; 
+			})
 			.attr("r", function(d){
 				return (8/currentScale) + "px";
 			})
@@ -169,7 +190,8 @@ var MapView = Backbone.View.extend({
 				})
 				.text(function(d,i) {return d.name})
 
-			that.addCities(currentScale);
+			that.model.set("currentRegions",dataArray);
+
 			//that.appendBarCharts(svg,projection,dataArray,currentScale);
 			that.appendPieCharts(svg,projection,dataArray,currentScale);
 		},delay);

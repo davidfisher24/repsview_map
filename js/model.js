@@ -1,27 +1,25 @@
 MapModel = Backbone.Model.extend({
 
 	defaults: {
+		// Defined attribute
 		"width" : 800, // Width of the svg element
 		"height" : 600, // Height of the svg element
 		"reservedKeys" : ["loc","lat","lon"], // Reserved keys in the current data array
 		"defaultCenter" : [2.5, 47.4], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
-		"level" : 0, // Level of drilling of data
 		"deepestLevel" : 2,  // Maximum level that can be drilled to
+		"pieColors" : ["#5bc0de","#5cb85c","#d9534f","#428bca"], // Colours to use in the segments of the pies
+		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
+		// Dynamic attributes
+		"level" : 0, // Level of drilling of data
 		"currentRegion" : null, // Current region selected for setting data
 		"currentSector" : null, // Current secot select for setting data
-		"pieColors" : ["#5bc0de","#5cb85c","#d9534f","#428bca"], // Colours to use in the segments of the pies
 		"currentBoundingBox" : null, // Current bounding box to draw within lat/lon bounds
-		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
+		"currentCities" : null,
+		"currentRegions" : null,
 	},
 
-	getData: function(){
-		var level = this.get("level");
-		if (level === 0) return this.getRegions();
-		if (level === 1) return this.getSectors();
-		if (level === 2) return this.getUgas();
-	},
-
+	
 	increaseLevel: function(data){
 		if (data.level === 0) this.set("currentRegion",data.name);
 		if (data.level === 1) this.set("currentSector",data.name);
@@ -30,6 +28,19 @@ MapModel = Backbone.Model.extend({
 
 	decreaseLevel: function(data){
 		this.set("level", this.get("level") - 1);
+	},
+
+	//----------------------------------------------------------------------------------------------------
+	// FUNCTIONS FOR GETTING DATA
+	// getData() returns sector data for the level we are currently on
+	// getCities() returns city data depending on the level of zoom and current bounding box
+	//-----------------------------------------------------------------------------------------------------
+
+	getData: function(){
+		var level = this.get("level");
+		if (level === 0) return this.getRegions();
+		if (level === 1) return this.getSectors();
+		if (level === 2) return this.getUgas();
 	},
 
 	getRegions:function(){
@@ -101,6 +112,19 @@ MapModel = Backbone.Model.extend({
 		return selection;
 
 	},
+
+	lookForCollisions:function(testArray,comparator,projectionPoint,give,itemLabelName){
+		$.each(testArray, function(index, obj) {
+		  if ((projectionPoint >= (obj[comparator] - give)) && projectionPoint <= ((obj[comparator] + give))) {
+		  	console.log(itemLabelName + " has a clash at position " + projectionPoint + " .Going to crash into " + obj.name + " with bounds of  " + (obj[comparator] -give) + " to " + (obj[comparator] + give)); 
+		  }
+		});
+	},
+
+	//----------------------------------------------------------------------------------------------------
+	// FUNCTIONS TO RETURN TEST DATA
+	// One function each for returning test data in bar format, and pie format
+	//-----------------------------------------------------------------------------------------------------
 
 	getTestContactsData:function(dataArray){
 		// Array of objects {name:"01", value:894, measure:"contacts", lat:47.97, lon:-1.58};
