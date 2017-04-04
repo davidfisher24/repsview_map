@@ -26,17 +26,36 @@ var MapView = Backbone.View.extend({
 			    .on("zoom", zoomhandler);
 
 			function zoomhandler() {
+				var currentZoom = that.model.get("currentZoom");
 				var translate = [
+					currentZoom.translate[0] + d3.event.translate[0],
+					currentZoom.translate[1] + d3.event.translate[1]
+				];
+
+
+
+				var scale = d3.event.scale + (currentZoom.scale - 1);
+				console.log(scale);
+				that.model.set("currentZoom",{
+					translate: translate,
+					scale: scale
+				});
+
+				zoom.translate([0,0]).scale(1); // Reset the zoom event object
+				svg.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
+
+				/*var translate = [
 					(that.model.get("previousManualZoom").translate[0] + d3.event.translate[0]) /2,
 					(that.model.get("previousManualZoom").translate[1] + d3.event.translate[1]) /2
 				];
 				var scale = (that.model.get("previousManualZoom").scale + d3.event.scale)/2 ;
-				
+				var previous = translate;
+				var prevScale = scale;
 				that.model.set("previousManualZoom",{
 					translate: translate,
 					scale: scale,
 				})
-				svg.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
+				svg.attr("transform", "translate(" + translate + ")scale(" + scale + ")");*/
 			}
 
 
@@ -84,6 +103,7 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	addCities:function(currentScale){
+		console.log(d3.event);
 		var cities = this.model.getCities();
 		
 		var svg = d3.select($("#zoomgroup")[0]);
@@ -298,7 +318,7 @@ var MapView = Backbone.View.extend({
 				.attr("transform", "translate(0,0)scale(1)")
 
 			this.model.set("currentBoundingBox",null);
-			this.model.set("currentAutoZoom",null);
+			this.model.set("currentZoom",{translate: [0,0], scale: 1});
 			return;
 		} 
 
@@ -335,7 +355,7 @@ var MapView = Backbone.View.extend({
 			.duration(750)
 			.style("stroke-width", 1.5 / scale + "px");
 
-		this.model.set("currentAutoZoom",{
+		this.model.set("currentZoom",{
 			translate:translate,
 			scale:scale,
 		});
