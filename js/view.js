@@ -22,12 +22,23 @@ var MapView = Backbone.View.extend({
 			regions = topojson.feature(json, json.objects.FRA_adm2);
 
 			var zoom = d3.behavior.zoom()
-			    .scaleExtent([1, 8])
+			    .scaleExtent([1, 100])
 			    .on("zoom", zoomhandler);
 
 			function zoomhandler() {
-			  svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+				var translate = [
+					(that.model.get("previousManualZoom").translate[0] + d3.event.translate[0]) /2,
+					(that.model.get("previousManualZoom").translate[1] + d3.event.translate[1]) /2
+				];
+				var scale = (that.model.get("previousManualZoom").scale + d3.event.scale)/2 ;
+				
+				that.model.set("previousManualZoom",{
+					translate: translate,
+					scale: scale,
+				})
+				svg.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
 			}
+
 
 			svg = d3.select("#map")
 				.append("svg")
@@ -154,13 +165,11 @@ var MapView = Backbone.View.extend({
 			.attr("cx", function (d) { 
 				var x = projection([d.lon,d.lat])[0];
 				d.x = x;
-				that.model.lookForCollisions(that.model.get("currentCities"),"x",x,20,d.name);
 				return x; 
 			})
 			.attr("cy", function (d) { 
 				var y = projection([d.lon,d.lat])[1];
 				d.y = y;
-				that.model.lookForCollisions(that.model.get("currentCities"),"y",y,20,d.name);
 				return y; 
 			})
 			.attr("r", function(d){
@@ -186,7 +195,6 @@ var MapView = Backbone.View.extend({
 				.attr("transform", function(d,i) { 
 					var target = projection([d.lon,d.lat]);
 					return "translate(" + (target[0] - (2/currentScale)) + "," + (target[1] + (25/currentScale)) + ")"; 
-					//return "translate(" + projection([d.lon ,d.lat]) + ")"; 
 				})
 				.text(function(d,i) {return d.name})
 
@@ -290,6 +298,7 @@ var MapView = Backbone.View.extend({
 				.attr("transform", "translate(0,0)scale(1)")
 
 			this.model.set("currentBoundingBox",null);
+			this.model.set("currentAutoZoom",null);
 			return;
 		} 
 
@@ -325,6 +334,12 @@ var MapView = Backbone.View.extend({
 			.transition()
 			.duration(750)
 			.style("stroke-width", 1.5 / scale + "px");
+
+		this.model.set("currentAutoZoom",{
+			translate:translate,
+			scale:scale,
+		});
+		
 	},
 
 	//----------------------------------------------------------------------------------------------------

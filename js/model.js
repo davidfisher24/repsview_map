@@ -15,6 +15,8 @@ MapModel = Backbone.Model.extend({
 		"currentRegion" : null, // Current region selected for setting data
 		"currentSector" : null, // Current secot select for setting data
 		"currentBoundingBox" : null, // Current bounding box to draw within lat/lon bounds
+		"currentAutoZoom" : null, // Current auto zoom to a bounding box
+		"previousManualZoom" : {translate: [0,0], scale: 1}, // Previous manual zoom level for calculation of events
 		"currentCities" : null,
 		"currentRegions" : null,
 	},
@@ -112,6 +114,15 @@ MapModel = Backbone.Model.extend({
 		return selection;
 
 	},
+
+	/*****************************************************************************************
+	/FUNCTION THAT CAN INVESTIAGE COLLISIONS IN PROJECTION BOXES
+	* testArray - an array of elements to test against (must include x and y projection values)
+	* comparator - x or y
+	* projectionPoint - point x or y of original point to test
+	* give - number of pixels to test to make a projection box
+	* itemLabelname - name of the item to be tested (for console logging instances)
+	*****************************************************************************************/
 
 	lookForCollisions:function(testArray,comparator,projectionPoint,give,itemLabelName){
 		$.each(testArray, function(index, obj) {
