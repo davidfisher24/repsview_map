@@ -18,8 +18,8 @@ var MapView = Backbone.View.extend({
 	renderMap: function() {
 		var that = this;
 
-		var svg = d3.json("./geoJson/FRA_adm1.json", function(json) {
-			regions = topojson.feature(json, json.objects.FRA_adm1);
+		var svg = d3.json("./geoJson/FRA_adm2.json", function(json) {
+			regions = topojson.feature(json, json.objects.FRA_adm2);
 
 			var zoom = d3.behavior.zoom()
 			    .scaleExtent([1, 8])
@@ -40,8 +40,8 @@ var MapView = Backbone.View.extend({
 
 			svg.append("rect")
 			    .attr("class", "overlay")
-			    .attr("width", 800)
-			    .attr("height", 600);
+			    .attr("width", that.model.get("width"))
+			    .attr("height", that.model.get("height"));
 
 			var projection = d3.geo.mercator()
 				.center(that.model.get("defaultCenter"))
@@ -54,15 +54,16 @@ var MapView = Backbone.View.extend({
 				.enter()
 				.append('path')
 				.attr("d", path)
+				.style("stroke-width", "0.5px")
 				.style("fill",function(d,i){
 				if (i % 2 === 0) return '#5bc0de';
-				else return '#f9f9f9';
-			})
-			.style("stroke", function(d,i){
-				return "#000000";
-			})
+					else return '#f9f9f9';
+				})
+				.style("stroke", function(d,i){
+					return "#000000";
+				})
 
-			that.drawRegions();
+			that.drawRegions(true);
 		});
 	},
 
@@ -73,7 +74,7 @@ var MapView = Backbone.View.extend({
 	// The chooses a type of graph to append to the labels
 	//-----------------------------------------------------------------------------------------------------
 
-	drawRegions:function(svg,projection,path) {
+	drawRegions:function(initialLoad) {
 		var that = this;
 		var svg = d3.select($("#zoomgroup")[0]);
 		var projection = d3.geo.mercator()
@@ -81,36 +82,54 @@ var MapView = Backbone.View.extend({
 			.scale(that.model.get("defaultScale"));
 		var path = d3.geo.path().projection(projection);
 
-		this.removeElementsOnChange(svg);
-		
 		var dataArray = that.model.getData();
-		svg.selectAll("circle")
-		.data(dataArray).enter()
-		.append("circle")
-		.attr("cx", function (d) { return projection([d.lon,d.lat])[0]; })
-		.attr("cy", function (d) { return projection([d.lon,d.lat])[1]; })
-		.attr("r", "8px")
-		.attr("fill", "black")
-		.attr("class", function(d,i) {return d.name})
-		.on("click",function(d,i){
-			if (that.model.get("level") < that.model.get("deepestLevel")) {
-				that.model.increaseLevel(d);
-				that.drawRegions()
-			};
-		})
+		
+		this.removeElementsOnChange(svg);
+		if (!initialLoad) {
+			this.zoomToBoundingBox(svg,projection,dataArray)
+		};
 
-		svg.selectAll(".region-label")
-			.data(dataArray)
-			.enter()
-			.append("text")
-			.attr("class", "region-label")
-			.attr("transform", function(d,i) { 
-				return "translate(" + projection([d.lon ,d.lat*0.993]) + ")"; 
+		var delay = 750;
+		if (initialLoad) delay = 0;
+
+		window.setTimeout(function(){
+			var currentScale = svg.attr('transform') ? svg.attr('transform').split(",")[3].replace(")","") : 1;
+
+			svg.selectAll("circle")
+			.data(dataArray).enter()
+			.append("circle")
+			.attr("cx", function (d) { return projection([d.lon,d.lat])[0]; })
+			.attr("cy", function (d) { return projection([d.lon,d.lat])[1]; })
+			.attr("r", function(d){
+				return (8/currentScale) + "px";
 			})
-			.text(function(d,i) {return d.name})
+			.attr("fill", "black")
+			.attr("class", function(d,i) {return d.name})
+			.on("click",function(d,i){
+				if (that.model.get("level") < that.model.get("deepestLevel")) {
+					that.model.increaseLevel(d);
+					that.drawRegions()
+				};
+			})
 
-		//this.appendBarCharts(svg,projection,dataArray);
-		this.appendPieCharts(svg,projection,dataArray);
+			svg.selectAll(".region-label")
+				.data(dataArray)
+				.enter()
+				.append("text")
+				.attr("class", "region-label")
+				.attr("font-size",function(){
+					return (16/currentScale) + "px";
+				})
+				.attr("transform", function(d,i) { 
+					var target = projection([d.lon,d.lat]);
+					return "translate(" + (target[0] - (2/currentScale)) + "," + (target[1] + (25/currentScale)) + ")"; 
+					//return "translate(" + projection([d.lon ,d.lat]) + ")"; 
+				})
+				.text(function(d,i) {return d.name})
+
+			//that.appendBarCharts(svg,projection,dataArray,currentScale);
+			that.appendPieCharts(svg,projection,dataArray,currentScale);
+		},delay);
 		
 	},
 
@@ -121,19 +140,21 @@ var MapView = Backbone.View.extend({
 	// Needs a translate function for spacing the bars according to the graphic
 	//-----------------------------------------------------------------------------------------------------
 
-	appendBarCharts: function(svg,projection,dataArray) {
+	appendBarCharts: function(svg,projection,dataArray,currentScale) {
 		var contactsData = this.model.getTestContactsData(dataArray);
 		var height = this.model.get("height");
 		svg.selectAll("rect")
 			.data(contactsData).enter()
 			.append("rect")
-			.attr("width", 10)
+			.attr("width", function(){
+				return 10/currentScale;
+			})
 			.attr("x", function (d) { return projection([d.lon,d.lat])[0]; })
 			.attr('y', function (d) { 
-				return (parseInt(projection([d.lon,d.lat])[1]) - d.value / 10);
+				return (parseInt(projection([d.lon,d.lat])[1]) - ((d.value / 10) /currentScale));
 			})
 			.attr("height", function(d){
-				return d.value / 10;
+				return (d.value / 10) / currentScale;
 			})
 			
 			.attr("class","graphic")
@@ -142,16 +163,16 @@ var MapView = Backbone.View.extend({
 				if (d.measure === 'visits') return 'blue';
 			})
 			.attr("transform", function(d){
-				if (d.measure === 'contacts') return 'translate(6,-6)';
-				if (d.measure === 'visits') return 'translate(18,-18)';
+				if (d.measure === 'contacts') return 'translate('+ (6/currentScale) +','+ (-(6/currentScale)) +')';
+				if (d.measure === 'visits') return 'translate('+ (18/currentScale) +','+ (-(18/currentScale)) +')';
 			})
 	},
 
-	appendPieCharts: function(svg,projection,dataArray) {
+	appendPieCharts: function(svg,projection,dataArray,currentScale) {
 
 		var pieData = this.model.getTestPieData(dataArray);
 
-		var arc = d3.svg.arc().innerRadius(0).outerRadius(15);         
+		var arc = d3.svg.arc().innerRadius(0).outerRadius(15/currentScale);         
       	var pie = d3.layout.pie().value(function(d){ return d });
 
 		var pies = svg.selectAll('.pie')
@@ -160,9 +181,12 @@ var MapView = Backbone.View.extend({
 			.append('g')
 			.attr('class', 'pie')
 			.attr("transform", function(d) {
-				return "translate(" + (projection([d.lon, d.lat])[0] + 12) + "," + (projection([d.lon, d.lat])[1] - 22)  + ")";
+				return "translate(" + (projection([d.lon, d.lat])[0] + (12/currentScale)) + "," + (projection([d.lon, d.lat])[1] - (22/currentScale))  + ")";
 			})
 			.attr('stroke','#000')
+			.attr('stroke-width',function(d){
+				return (2/currentScale) + "px";
+			})
 
 		var colors = this.model.get("pieColors");
 
@@ -180,7 +204,7 @@ var MapView = Backbone.View.extend({
 	},
 
 	//----------------------------------------------------------------------------------------------------
-	// OTHER FUCNTIONS
+	// OTHER FUNCTIONS
 	//-----------------------------------------------------------------------------------------------------
 
 	removeElementsOnChange:function(svg){
@@ -188,6 +212,44 @@ var MapView = Backbone.View.extend({
 		if ($('.region-label').length !== 0) svg.selectAll(".region-label").remove();
 		if ($('.graphic').length !== 0) svg.selectAll(".graphic").remove();
 		if ($('.pie').length !== 0) svg.selectAll(".pie").remove();
+	},
+
+	zoomToBoundingBox:function(svg,projection,dataArray) {
+		if (this.model.get("level") === 0) {
+			svg.transition()
+				.duration(750)
+				.attr("transform", "translate(0,0)scale(1)")
+
+			return;
+		} 
+
+		var maxProj = projection([
+			Math.max.apply(Math,dataArray.map(function(d){return d.lon})),
+			Math.max.apply(Math,dataArray.map(function(d){return d.lat}))
+		]);
+
+		var minProj = projection([
+			Math.min.apply(Math,dataArray.map(function(d){return d.lon})),
+			Math.min.apply(Math,dataArray.map(function(d){return d.lat}))
+		]);
+
+
+		var bounds = [[maxProj[0],maxProj[1]],[minProj[0],minProj[1]]];
+		var dx = bounds[1][0] - bounds[0][0];
+		var dy = bounds[1][1] - bounds[0][1];
+		var x = (bounds[0][0] + bounds[1][0]) / 2;
+		var y = (bounds[0][1] + bounds[1][1]) / 2;
+		var scale = .7 / Math.max(dx / this.model.get("width"), dy / this.model.get("height"));
+		var translate = [this.model.get("width") / 2 - scale * x, this.model.get("height") / 2 - scale * y];
+
+		svg.transition()
+			.duration(750)
+			.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
+
+		svg.selectAll('path')
+			.transition()
+			.duration(750)
+			.style("stroke-width", 1.5 / scale + "px");
 	},
 
 	//----------------------------------------------------------------------------------------------------
