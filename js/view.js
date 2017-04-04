@@ -68,6 +68,48 @@ var MapView = Backbone.View.extend({
 	},
 
 	//----------------------------------------------------------------------------------------------------
+	// FUNCTION TO ADD CITIES TO THE MAP
+	// Sends a bounding box to get a list of cities in that box and places squares and indented labels
+	//-----------------------------------------------------------------------------------------------------
+
+	addCities:function(currentScale){
+		var cities = this.model.getCities();
+
+		var svg = d3.select($("#zoomgroup")[0]);
+		var projection = d3.geo.mercator()
+			.center(this.model.get("defaultCenter"))
+			.scale(this.model.get("defaultScale"));
+		var path = d3.geo.path().projection(projection);
+
+		svg.selectAll(".city-label")
+			.data(cities).enter()
+			.append("rect")
+			.attr("x", function (d) { return projection([d.lon,d.lat])[0]; })
+			.attr("y", function (d) { return projection([d.lon,d.lat])[1]; })
+			.attr("height",function(){ return 8/currentScale })
+			.attr("width",function(){ return 8/currentScale })
+			.attr("fill", "white")
+			.attr("class", "city-label")
+			.attr("stroke", "black")
+			.attr("stroke-width",function(){ return 2/currentScale })
+
+		svg.selectAll(".city-text")
+			.data(cities).enter()
+			.append("text")
+			.attr("class", "city-text")
+			.attr("font-size",function(){
+				return 12/currentScale;
+			})
+			.attr("transform", function(d,i) { 
+				var target = projection([d.lon,d.lat]);
+				return "translate(" + (target[0] + (12/currentScale)) + "," + (target[1] + (8/currentScale)) + ")"; // Square pixels. Width add 1.5
+			})
+			.text(function(d,i) {return d.name});
+
+	},
+
+
+	//----------------------------------------------------------------------------------------------------
 	// DRAW A REGION/SECTOR/UGA SET
 	// Removes all previous elements and gets the data for the current level we are aut
 	// Appends circles and labels for the current level, and adds click events to the circles for drilling
@@ -127,6 +169,7 @@ var MapView = Backbone.View.extend({
 				})
 				.text(function(d,i) {return d.name})
 
+			that.addCities(currentScale);
 			//that.appendBarCharts(svg,projection,dataArray,currentScale);
 			that.appendPieCharts(svg,projection,dataArray,currentScale);
 		},delay);
@@ -208,11 +251,15 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	removeElementsOnChange:function(svg){
+		if ($('.city-label').length !== 0) svg.selectAll(".city-label").remove();
+		if ($('.city-text').length !== 0) svg.selectAll(".city-text").remove();
 		if ($('circle').length !== 0) svg.selectAll("circle").remove();
 		if ($('.region-label').length !== 0) svg.selectAll(".region-label").remove();
 		if ($('.graphic').length !== 0) svg.selectAll(".graphic").remove();
 		if ($('.pie').length !== 0) svg.selectAll(".pie").remove();
 	},
+
+
 
 	zoomToBoundingBox:function(svg,projection,dataArray) {
 		if (this.model.get("level") === 0) {
@@ -220,8 +267,14 @@ var MapView = Backbone.View.extend({
 				.duration(750)
 				.attr("transform", "translate(0,0)scale(1)")
 
+			this.model.set("currentBoundingBox",null);
 			return;
 		} 
+
+		this.model.set("currentBoundingBox",[
+			[Math.max.apply(Math,dataArray.map(function(d){return d.lon})),Math.max.apply(Math,dataArray.map(function(d){return d.lat}))],
+			[Math.min.apply(Math,dataArray.map(function(d){return d.lon})),Math.min.apply(Math,dataArray.map(function(d){return d.lat}))]
+		]);
 
 		var maxProj = projection([
 			Math.max.apply(Math,dataArray.map(function(d){return d.lon})),

@@ -11,6 +11,8 @@ MapModel = Backbone.Model.extend({
 		"currentRegion" : null, // Current region selected for setting data
 		"currentSector" : null, // Current secot select for setting data
 		"pieColors" : ["#5bc0de","#5cb85c","#d9534f","#428bca"], // Colours to use in the segments of the pies
+		"currentBoundingBox" : null, // Current bounding box to draw within lat/lon bounds
+		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
 	},
 
 	getData: function(){
@@ -73,6 +75,31 @@ MapModel = Backbone.Model.extend({
 			});
 		}
 		return ugasArray;
+	},
+
+	getCities:function(){
+		var boundingBox = this.get("currentBoundingBox") ? this.get("currentBoundingBox") : this.get("defaultBoundingBox");
+		var levelMinPopulation;
+		switch (this.get("level")) {
+		    case 0:
+		        levelMinPopulation = 250000;
+		        break;
+		    case 1:
+		        levelMinPopulation = 100000;
+		        break;
+		    case 2:
+		        levelMinPopulation = 20000;
+		        break;
+		}
+
+		var selection = cities.filter(function(obj){
+			var pop = parseInt(obj.pop);
+			var lon = parseFloat(obj.lon) < Math.max(boundingBox[0][0],boundingBox[1][0]) && parseFloat(obj.lon) > Math.min(boundingBox[0][0],boundingBox[1][0]);
+			var lat = parseFloat(obj.lat) < Math.max(boundingBox[0][1],boundingBox[1][1]) && parseFloat(obj.lat) > Math.min(boundingBox[0][1],boundingBox[1][1]);
+			return pop > levelMinPopulation && lat && lon;
+		});
+		return selection;
+
 	},
 
 	getTestContactsData:function(dataArray){

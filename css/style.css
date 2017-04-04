@@ -2,6 +2,10 @@
   font-weight:bold;
 }
 
+.city-text {
+  font-weight:bold;
+}
+
 .overlay {
 	fill:none;
 	pointer-events:all;
