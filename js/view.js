@@ -26,38 +26,21 @@ var MapView = Backbone.View.extend({
 			    .on("zoom", zoomhandler);
 
 			function zoomhandler() {
-				var currentZoom = that.model.get("currentZoom");
-				var translate = [
-					currentZoom.translate[0] + d3.event.translate[0],
-					currentZoom.translate[1] + d3.event.translate[1]
-				];
+				//svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")"); AUTOMATIC D3 ZOOM
+				//zoom.translate([0,0]).scale(1); ZOOM RESET FUNCTION
 
-
-
-				var scale = d3.event.scale + (currentZoom.scale - 1);
-				console.log(scale);
-				that.model.set("currentZoom",{
-					translate: translate,
-					scale: scale
-				});
-
-				zoom.translate([0,0]).scale(1); // Reset the zoom event object
-				svg.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
-
-				/*var translate = [
-					(that.model.get("previousManualZoom").translate[0] + d3.event.translate[0]) /2,
-					(that.model.get("previousManualZoom").translate[1] + d3.event.translate[1]) /2
-				];
-				var scale = (that.model.get("previousManualZoom").scale + d3.event.scale)/2 ;
-				var previous = translate;
-				var prevScale = scale;
-				that.model.set("previousManualZoom",{
-					translate: translate,
-					scale: scale,
-				})
-				svg.attr("transform", "translate(" + translate + ")scale(" + scale + ")");*/
+				if (that.model.get("currentAutoZoomEvent")) {
+					zoom.translate([
+						that.model.get("currentAutoZoomEvent").translate[0],
+						that.model.get("currentAutoZoomEvent").translate[1]
+					])
+					.scale(that.model.get("currentAutoZoomEvent").scale); 
+					that.model.set("currentAutoZoomEvent",null);
+					return
+				} else {
+					svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+				}
 			}
-
 
 			svg = d3.select("#map")
 				.append("svg")
@@ -103,7 +86,6 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	addCities:function(currentScale){
-		console.log(d3.event);
 		var cities = this.model.getCities();
 		
 		var svg = d3.select($("#zoomgroup")[0]);
@@ -318,7 +300,7 @@ var MapView = Backbone.View.extend({
 				.attr("transform", "translate(0,0)scale(1)")
 
 			this.model.set("currentBoundingBox",null);
-			this.model.set("currentZoom",{translate: [0,0], scale: 1});
+			this.model.set("currentAutoZoomEvent",{translate: [0,0], scale: 1});
 			return;
 		} 
 
@@ -348,19 +330,30 @@ var MapView = Backbone.View.extend({
 
 		svg.transition()
 			.duration(750)
-			.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
+			.attr("transform", "translate(" + translate + ")scale(" + scale + ")")
+
 
 		svg.selectAll('path')
 			.transition()
 			.duration(750)
 			.style("stroke-width", 1.5 / scale + "px");
 
-		this.model.set("currentZoom",{
+		this.model.set("currentAutoZoomEvent",{
 			translate:translate,
 			scale:scale,
 		});
-		
+
 	},
+
+	flagTransitionEnd:function(transition, callback) { 
+		if (transition.size() === 0) { callback() }
+		var n = 0; 
+		transition 
+			.each(function() { ++n; }) 
+			.each("end", function() { if (!--n) callback.apply(this, arguments); }); 
+	},
+
+	
 
 	//----------------------------------------------------------------------------------------------------
 	// EVENTS
