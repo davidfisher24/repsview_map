@@ -25,6 +25,7 @@ var MapView = Backbone.View.extend({
 			    .scaleExtent([1, 100])
 			    .on("zoom", zoomhandler);
 
+			
 			function zoomhandler() {
 				//svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")"); AUTOMATIC D3 ZOOM
 				//zoom.translate([0,0]).scale(1); ZOOM RESET FUNCTION
@@ -49,7 +50,7 @@ var MapView = Backbone.View.extend({
 				.attr("id",'franceMap')
 				.append("g")
 			    .attr("id","zoomgroup")
-			    .call(zoom);
+			    .call(zoom)
 
 			svg.append("rect")
 			    .attr("class", "overlay")
@@ -161,9 +162,30 @@ var MapView = Backbone.View.extend({
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
 
+			var tip = d3.tip()
+			  .attr('class', 'd3-tip')
+			  .offset([-10, 0])
+			  .html(function(d) {
+
+			  	var data = [
+					{name:"contacts", value:4},
+					{name:"doctors", value:8},
+					{name:"visits", value:6},
+					{name:"not visited", value:10}
+				];
+
+			  	that.appendPieChartInToolTip(80,data);
+			  	//that.appendBarChartInToolTip(80,data);
+			  	var toolTipSvg = $('#tooltipGenerator').html();
+			  	$('#tooltipGenerator').html('');
+			    return toolTipSvg;
+			 })
+
+
 			svg.selectAll("circle")
 			.data(dataArray).enter()
 			.append("circle")
+			.call(tip)
 			.attr("cx", function (d) { 
 				var x = projection([d.lon,d.lat])[0];
 				d.x = x;
@@ -185,6 +207,8 @@ var MapView = Backbone.View.extend({
 					that.drawRegions()
 				};
 			})
+			.on('mouseover', tip.show)
+      		.on('mouseout', tip.hide)
 
 			svg.selectAll(".region-label")
 				.data(dataArray)
@@ -203,16 +227,15 @@ var MapView = Backbone.View.extend({
 			that.model.set("currentRegions",dataArray);
 
 			//that.appendBarCharts(svg,projection,dataArray,currentScale);
-			that.appendPieCharts(svg,projection,dataArray,currentScale);
+			//that.appendPieCharts(svg,projection,dataArray,currentScale);
+
 		},delay);
 		
 	},
 
 	
 	//----------------------------------------------------------------------------------------------------
-	// APPEND A SMALL BAR CHART TO EACH LABEL IN THE CURRENT REGIOn
-	// Appends a bar at the lat/lon of each region (!! y axis needs to be return from the bottom)
-	// Needs a translate function for spacing the bars according to the graphic
+	// FUNCTIONS TO APPEND CHARTS DIRECTLY TO THE GRAPHIC
 	//-----------------------------------------------------------------------------------------------------
 
 	appendBarCharts: function(svg,projection,dataArray,currentScale) {
@@ -279,6 +302,81 @@ var MapView = Backbone.View.extend({
 	},
 
 	//----------------------------------------------------------------------------------------------------
+	// FUNCTIONS TO APPEND CHARTS TO TOOLTIPS ABOVE GRAPHICS
+	//-----------------------------------------------------------------------------------------------------
+
+	appendBarChartInToolTip:function(size,data){
+		var x = d3.scale.ordinal().rangeRoundBands([0, size], .05);
+		var y = d3.scale.linear().range([size, 0]);
+		x.domain(data.map(function(d,i) { return i; }));
+		y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+      	var svg = d3.select('#tooltipGenerator')
+      		.append("svg")
+			.attr("width", size)
+			.attr("height", size)
+			.attr("class",'tooltip-canvas')
+
+      	var bar = svg.selectAll("rect")
+			.data(data)
+			.enter()
+			.append("rect")
+			.attr("width", function(d){
+				 return (size / data.length) * 0.75; 
+			})
+			.attr("height",function(d){
+				return size + "px";
+			})
+			.attr("fill", function(d,i){
+				if(i===0) return "red";
+				if(i===1) return "blue";
+				if(i===2) return "green";
+				if(i===3) return "yellow";
+			})
+			.attr("x", function(d,i) { return x(i); })
+			.attr("y", function(d,i) { return y(d.value); })
+	},
+
+	appendPieChartInToolTip:function(size,data){
+		var arc = d3.svg.arc().innerRadius(0).outerRadius(size/3);         
+      	var pie = d3.layout.pie().value(function(d){ return d.value});
+
+      	var svg = d3.select('#tooltipGenerator')
+      		.append("svg")
+			.attr("width", size)
+			.attr("height", size)
+			.attr("class",'tooltip-canvas')
+
+      	var tooltipPie = svg.selectAll('.pie')
+			.data(data)
+			.enter()
+			.append('g')
+			.attr('class', 'pie')
+			.attr("transform", function(d) {
+				return "translate(" + (size/2) + "," + (size/2) + ")";
+			})
+			.attr('stroke','#000')
+			.attr('stroke-width',function(d){
+				return 2;
+			});
+
+		tooltipPie.selectAll('.slice')
+			.data(function(d){
+				return pie(data);
+			})
+			.enter()
+			.append('path')
+			.attr('d',  arc)
+			.style('fill', function(d,i){
+				if(i===0) return "red";
+				if(i===1) return "blue";
+				if(i===2) return "green";
+				if(i===3) return "yellow";
+			});
+	},
+
+
+	//----------------------------------------------------------------------------------------------------
 	// OTHER FUNCTIONS
 	//-----------------------------------------------------------------------------------------------------
 
@@ -289,11 +387,14 @@ var MapView = Backbone.View.extend({
 		if ($('.region-label').length !== 0) svg.selectAll(".region-label").remove();
 		if ($('.graphic').length !== 0) svg.selectAll(".graphic").remove();
 		if ($('.pie').length !== 0) svg.selectAll(".pie").remove();
+		if ($('.tooltip-canvas').length !== 0) d3.selectAll(".tooltip-canvas").remove();
 	},
 
 
 
 	zoomToBoundingBox:function(svg,projection,dataArray) {
+		var that = this;
+
 		if (this.model.get("level") === 0) {
 			svg.transition()
 				.duration(750)

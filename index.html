@@ -4,7 +4,9 @@
 	<title>Repsview d3 mapping module</title>
 	<!-- npm components -->
 	<script src="http://d3js.org/d3.v3.min.js"></script>
-	<script src="http://d3js.org/topojson.v1.min.js"></script>
+	<!--<script src="node_modules/d3/build/d3.min.js"></script>-->
+	<script src="node_modules/d3-tip/index.js"></script>
+	<script src="node_modules/topojson/dist/topojson.min.js"></script>
 	<script src="node_modules/jquery/dist/jquery.js"></script>
 	<script src="node_modules/underscore/underscore.js"></script>
 	<script src="node_modules/backbone/backbone.js"></script>
@@ -26,6 +28,7 @@
     	<div class="panel" id="map-panel">
 	    	<div class="controls"><button class="btn btn-primary" id="returnLevel">Back</button></div>
 	      	<div id="map"></div>
+	      	<div id="tooltipGenerator"></div>
 	    </div>
     </div>
   </div>
