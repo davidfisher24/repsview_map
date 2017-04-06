@@ -26,9 +26,9 @@ var MapView = Backbone.View.extend({
 
 			
 			function zoomhandler() {
-				//svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")"); AUTOMATIC D3 ZOOM
+				//svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")"); //AUTOMATIC D3 ZOOM
 				//zoom.translate([0,0]).scale(1); ZOOM RESET FUNCTION
-
+				var currentZoom = $('#zoomgroup').css('transform') === "none" ? 1 : parseFloat($('#zoomgroup').css('transform').split("(")[1].split(",")[0]);
 				if (that.model.get("currentAutoZoomEvent")) {
 					zoom.translate([
 						that.model.get("currentAutoZoomEvent").translate[0],
@@ -38,7 +38,13 @@ var MapView = Backbone.View.extend({
 					that.model.set("currentAutoZoomEvent",null);
 					return
 				} else {
+					// Zoom group
 					svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+					// Pies
+					svg.selectAll('.pie')
+					.attr("transform", function(d){
+						return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")scale(" + (currentZoom/d3.event.scale) + ")";
+					});
 				}
 			}
 
@@ -68,6 +74,7 @@ var MapView = Backbone.View.extend({
 				.append('path')
 				.attr("d", path)
 				.style("stroke-width", "0.5px")
+				.attr("class","stroke-path")
 				.style("fill",function(d,i){
 				if (i % 2 === 0) return '#5bc0de';
 					else return '#f9f9f9';
@@ -86,6 +93,7 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	addCities:function(currentScale){
+		var that = this;
 		var cities = this.model.getCities();
 		
 		var svg = d3.select($("#zoomgroup")[0]);
@@ -107,19 +115,46 @@ var MapView = Backbone.View.extend({
 				d.y = y;
 				return y;
 			})
-			.attr("height",function(){ return 8/currentScale })
-			.attr("width",function(){ return 8/currentScale })
-			.attr("fill", "white")
+			.attr("height",function(d){
+				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
+					return 16/currentScale ;
+				} else {
+					return 8/currentScale;
+				}
+			})
+			.attr("width",function(d){
+				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
+					return 16/currentScale ;
+				} else {
+					return 8/currentScale;
+				}
+			})
+			.attr("fill", function(d){
+				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
+					return "red";
+				} else {
+					return "white";
+				}
+			})
 			.attr("class", "city-label")
 			.attr("stroke", "black")
 			.attr("stroke-width",function(){ return 2/currentScale })
+			.on("click",function(d){
+				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
+					console.log(that.model.get("cityUgaGroups")[d.name]);
+				} 
+			})
 
 		svg.selectAll(".city-text")
 			.data(cities).enter()
 			.append("text")
 			.attr("class", "city-text")
-			.attr("font-size",function(){
-				return 12/currentScale;
+			.attr("font-size",function(d){
+				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
+					return 24/currentScale;
+				} else {
+					return 12/currentScale;
+				}
 			})
 			.attr("transform", function(d,i) { 
 				var target = projection([d.lon,d.lat]);
@@ -161,6 +196,19 @@ var MapView = Backbone.View.extend({
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
 
+			//////////////////////////////
+			// Testing removal of uga groups from city boundaries
+			if (that.model.get("level") === 2) {
+				var groupUgas = that.model.checkUgasThatFallInCities(cities,dataArray,projection);
+				var dataArrayWithoutGroupedUgas = $.grep(dataArray,function(object){
+					return groupUgas.flag.indexOf(object.name) === -1;
+				});
+				dataArray = dataArrayWithoutGroupedUgas;
+				that.model.set("cityUgaGroups",groupUgas.cities);
+			}
+			//////////////////////////////
+
+			
 	
 			var tip = d3.tip()
 			  .attr('class', 'd3-tip')
@@ -509,6 +557,8 @@ var MapView = Backbone.View.extend({
 			this.drawRegions()
 		};
 	},
+
+
 
 
 	

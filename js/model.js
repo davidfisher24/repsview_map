@@ -19,7 +19,10 @@ MapModel = Backbone.Model.extend({
 		"currentCities" : null,
 		"currentRegions" : null,
 
-		"citiesWithGroupedUgas" : ["NANTES","BREST","VANNES","RENNES","ST.MALO","CAEN","ANGERS"],
+		"citiesWithGroupedUgas" : ["BREST","VANNES","RENNES","CAEN","MANS","NANTES","ANGERS","DUNKERQUE","LILLE",
+		"AMIENS","REIMS","TROYES","STRASBOURG","MULHOUSE","COLMAR","NANCY","METZ","BESANCON","BELFORT","TOURS",
+		"CLERMONT-FERRAND","NIORT","LYON","VILLEURBANNE","SAINT-ETIENNE","VALENCE","CHAMBERY","GRENOBLE","BORDEAUX","PAU",
+		"TOULOUSE","NIMES","MONTPELLIER","PERPIGNAN","MARSEILLE","AIX-EN-PROVENCE","ANTIBES","NICE"],
 	},
 
 	
@@ -178,7 +181,6 @@ MapModel = Backbone.Model.extend({
 				} 
 			})
 		})
-		console.log(returnArray);
 		return returnArray;
 	},
 
