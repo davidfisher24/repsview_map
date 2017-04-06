@@ -20,7 +20,6 @@ var MapView = Backbone.View.extend({
 
 		var svg = d3.json("./geoJson/FRA_adm2.json", function(json) {
 			regions = topojson.feature(json, json.objects.FRA_adm2);
-
 			var zoom = d3.behavior.zoom()
 			    .scaleExtent([1, 100])
 			    .on("zoom", zoomhandler);
@@ -162,19 +161,18 @@ var MapView = Backbone.View.extend({
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
 
+	
 			var tip = d3.tip()
 			  .attr('class', 'd3-tip')
 			  .offset([-10, 0])
 			  .html(function(d) {
-
 			  	var data = [
-					{name:"contacts", value:4},
-					{name:"doctors", value:8},
-					{name:"visits", value:6},
-					{name:"not visited", value:10}
+					{name:"doctors", value:d.doctors, label: "medecins"},
+					{name:"contacts", value:d.contacts, label: "hors cible"},
+					{name:"visits", value:d.visits, label: "cible"},
 				];
 
-			  	that.appendPieChartInToolTip(80,data);
+			  	that.appendPieChartInToolTip(150,data);
 			  	//that.appendBarChartInToolTip(80,data);
 			  	var toolTipSvg = $('#tooltipGenerator').html();
 			  	$('#tooltipGenerator').html('');
@@ -182,47 +180,57 @@ var MapView = Backbone.View.extend({
 			 })
 
 
-			svg.selectAll("circle")
-			.data(dataArray).enter()
-			.append("circle")
-			.call(tip)
-			.attr("cx", function (d) { 
-				var x = projection([d.lon,d.lat])[0];
-				d.x = x;
-				return x; 
-			})
-			.attr("cy", function (d) { 
-				var y = projection([d.lon,d.lat])[1];
-				d.y = y;
-				return y; 
-			})
-			.attr("r", function(d){
-				return (8/currentScale) + "px";
-			})
-			.attr("fill", "black")
-			.attr("class", function(d,i) {return d.name})
-			.on("click",function(d,i){
-				if (that.model.get("level") < that.model.get("deepestLevel")) {
-					that.model.increaseLevel(d);
-					that.drawRegions()
-				};
-			})
-			.on('mouseover', tip.show)
-      		.on('mouseout', tip.hide)
+			var arc = d3.svg.arc().innerRadius(0).outerRadius(10/currentScale);        
+	      	var pie = d3.layout.pie().value(function(d){ return d });
 
-			svg.selectAll(".region-label")
+
+			var pies = svg.selectAll('.pie')
 				.data(dataArray)
 				.enter()
-				.append("text")
-				.attr("class", "region-label")
-				.attr("font-size",function(){
-					return (16/currentScale) + "px";
+				.append('g')
+				.attr('class', 'pie')
+				.attr("transform", function(d) {
+					return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")";
 				})
-				.attr("transform", function(d,i) { 
-					var target = projection([d.lon,d.lat]);
-					return "translate(" + (target[0] - (2/currentScale)) + "," + (target[1] + (25/currentScale)) + ")"; 
+				.attr('stroke','#000')
+				.attr('stroke-width',function(d){
+					return (1.3/currentScale) + "px";
 				})
-				.text(function(d,i) {return d.name})
+				.call(tip)
+				.on("click",function(d,i){
+					if (that.model.get("level") < that.model.get("deepestLevel")) {
+						that.model.increaseLevel(d);
+						that.drawRegions()
+					};
+				})
+				.on('mouseover', tip.show)
+	      		.on('mouseout', tip.hide)
+
+			var colors = that.model.get("pieColors");
+
+			pies.selectAll('.slice')
+				.data(function(d){
+					return pie([d.contacts,d.visits,d.doctors]); 
+				})
+				.enter()
+				.append('path')
+				.attr('d',  arc)
+				.attr("class", function(d,i) {return d.name})
+				.style('fill', function(d,i){
+					return colors[i];
+				})
+				
+			pies.append("text")
+				.data(dataArray)
+		        .attr("x", 0)             
+		        .attr("y", 25/currentScale)
+		        .attr("text-anchor", "middle")  
+		        .style("font-size", function(d,i){
+		        	return 16/currentScale + "px";
+		        }) 
+		        .text(function(d,i){
+		        	return d.name;
+		        });
 
 			that.model.set("currentRegions",dataArray);
 
@@ -298,7 +306,6 @@ var MapView = Backbone.View.extend({
 			.style('fill', function(d,i){
 				return colors[i];
 			});
-
 	},
 
 	//----------------------------------------------------------------------------------------------------
@@ -338,40 +345,76 @@ var MapView = Backbone.View.extend({
 	},
 
 	appendPieChartInToolTip:function(size,data){
-		var arc = d3.svg.arc().innerRadius(0).outerRadius(size/3);         
-      	var pie = d3.layout.pie().value(function(d){ return d.value});
+		var region = "01";
+		var colors = this.model.get("pieColors");
+		var labels = [];
+		var values = [];
+		$.each(data, function(index,obj) {
+			labels.push(obj.label);
+			values.push(obj.value);
+		});
 
-      	var svg = d3.select('#tooltipGenerator')
-      		.append("svg")
-			.attr("width", size)
-			.attr("height", size)
-			.attr("class",'tooltip-canvas')
+		/*var computeAngle = function(d) {
+			var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
+			return a > 90 ? a - 180 : a;
+		};*/
+		var arc = d3.svg.arc().innerRadius(0).outerRadius(size/4);   
+		var outerArc = d3.svg.arc().innerRadius(size/2).outerRadius(size/4);
+		var pie = d3.layout.pie() 
+      		.value(function(d) { return d.value; }) 
 
-      	var tooltipPie = svg.selectAll('.pie')
-			.data(data)
-			.enter()
-			.append('g')
-			.attr('class', 'pie')
-			.attr("transform", function(d) {
-				return "translate(" + (size/2) + "," + (size/2) + ")";
-			})
+		var tooltipElement = d3.select("#tooltipGenerator")
+			.append("svg") 
+			.data(data) 
+			.attr("width", size) 
+			.attr("height", size) 
+			.attr("class","tooltip-canvas")
+			.append("g") 
+			.attr("transform", "translate(" + (size/2) + "," + (size/2) + ")")
 			.attr('stroke','#000')
-			.attr('stroke-width',function(d){
-				return 2;
-			});
+			.attr('stroke-width',2);
 
-		tooltipPie.selectAll('.slice')
+		var arcs = tooltipElement.selectAll("g.slice")
 			.data(function(d){
 				return pie(data);
 			})
 			.enter()
-			.append('path')
-			.attr('d',  arc)
-			.style('fill', function(d,i){
-				if(i===0) return "red";
-				if(i===1) return "blue";
-				if(i===2) return "green";
-				if(i===3) return "yellow";
+			.append("g")
+			.attr("class", "slice");  
+
+
+		arcs.append("path")
+			.attr("fill", function(d, i) { return colors[i]; } )
+			.attr("d", arc);
+
+		arcs.append("text")
+			.attr("transform", function(d) {
+				d.outerRadius = (size/2);
+				d.innerRadius = (size/2); 
+				return "translate(" + arc.centroid(d) + ")";
+			})
+			.attr("text-anchor", "middle") //center the text on it's origin
+			.style("stroke", "000")
+			.style("font", "10px verdana")
+			.text(function(d, i) { 
+				return values[i]; 
+			});
+
+		arcs.filter(function(d) { 
+				return d.endAngle - d.startAngle > .2; 
+			}).append("text")
+			.attr("dy", ".35em")
+			.attr("text-anchor", "middle")
+			.attr("transform", function(d) { 
+				d.outerRadius = (size/2); 
+				d.innerRadius = (size/2); 
+				//return "translate(" + outerArc.centroid(d) + ")rotate(" + computeAngle(d) + ")";
+				return "translate(" + outerArc.centroid(d) + ")";
+			})
+			.style("stroke", "428bca")
+			.style("font", "10px verdana")
+			.text(function(i) { 
+				return i.data.label; 
 			});
 	},
 
@@ -468,6 +511,7 @@ var MapView = Backbone.View.extend({
 	},
 
 
+	
 
 
 });

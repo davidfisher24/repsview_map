@@ -11,9 +11,10 @@
 	pointer-events:all;
 }
 
-/*#tooltipGenerator {
+
+#tooltipGenerator {
 	display:none;
-}*/
+}
 
 .d3-tip {
   line-height: 1;
