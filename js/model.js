@@ -19,6 +19,9 @@ MapModel = Backbone.Model.extend({
 		"currentCities" : null,
 		"currentRegions" : null,
 
+		"citiesVisible" : true, // Linked to the checkbox for this element. If the cities are visible or not
+		"citiesVisibleLimit" : 250000,
+
 		"citiesWithGroupedUgas" : ["BREST","VANNES","RENNES","CAEN","MANS","NANTES","ANGERS","DUNKERQUE","LILLE",
 		"AMIENS","REIMS","TROYES","STRASBOURG","MULHOUSE","COLMAR","NANCY","METZ","BESANCON","BELFORT","TOURS",
 		"CLERMONT-FERRAND","NIORT","LYON","VILLEURBANNE","SAINT-ETIENNE","VALENCE","CHAMBERY","GRENOBLE","BORDEAUX","PAU",
@@ -105,7 +108,6 @@ MapModel = Backbone.Model.extend({
 
 	getCities:function(){
 		var boundingBox = this.get("currentBoundingBox") ? this.get("currentBoundingBox") : this.get("defaultBoundingBox");
-		var levelMinPopulation;
 		switch (this.get("level")) {
 		    case 0:
 		        levelMinPopulation = 250000;
@@ -122,7 +124,8 @@ MapModel = Backbone.Model.extend({
 			var pop = parseInt(obj.pop);
 			var lon = parseFloat(obj.lon) < Math.max(boundingBox[0][0],boundingBox[1][0]) && parseFloat(obj.lon) > Math.min(boundingBox[0][0],boundingBox[1][0]);
 			var lat = parseFloat(obj.lat) < Math.max(boundingBox[0][1],boundingBox[1][1]) && parseFloat(obj.lat) > Math.min(boundingBox[0][1],boundingBox[1][1]);
-			return pop > levelMinPopulation && lat && lon;
+			//return pop > levelMinPopulation && lat && lon;
+			return lat && lon;
 		});
 		return selection;
 

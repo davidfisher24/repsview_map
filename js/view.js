@@ -8,6 +8,9 @@ var MapView = Backbone.View.extend({
 
 	events: {
 		'click #returnLevel' : "moveUpALevel",
+		"click .selector" : "showHideElement",
+		"click #controlCities" : "showHideCities",
+		"change #controlCitiesSize" : "showHideCitiesBySize",
 	},
 
 
@@ -115,30 +118,17 @@ var MapView = Backbone.View.extend({
 				d.y = y;
 				return y;
 			})
-			.attr("height",function(d){
-				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
-					return 16/currentScale ;
-				} else {
-					return 8/currentScale;
-				}
-			})
-			.attr("width",function(d){
-				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
-					return 16/currentScale ;
-				} else {
-					return 8/currentScale;
-				}
-			})
-			.attr("fill", function(d){
-				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
-					return "red";
-				} else {
-					return "white";
-				}
-			})
+			.attr("height",8/currentScale)
+			.attr("width", 8/currentScale)
+			.attr("fill", "white")
 			.attr("class", "city-label")
 			.attr("stroke", "black")
 			.attr("stroke-width",function(){ return 2/currentScale })
+			.attr("opacity",function(d){
+				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
+				var labelO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
+				return labelO;
+			})
 			.on("click",function(d){
 				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
 					console.log(that.model.get("cityUgaGroups")[d.name]);
@@ -159,6 +149,11 @@ var MapView = Backbone.View.extend({
 			.attr("transform", function(d,i) { 
 				var target = projection([d.lon,d.lat]);
 				return "translate(" + (target[0] + (12/currentScale)) + "," + (target[1] + (8/currentScale)) + ")"; // Square pixels. Width add 1.5
+			})
+			.attr("opacity",function(d){
+				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
+				var textO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
+				return textO;
 			})
 			.text(function(d,i) {return d.name});
 
@@ -198,14 +193,14 @@ var MapView = Backbone.View.extend({
 
 			//////////////////////////////
 			// Testing removal of uga groups from city boundaries
-			if (that.model.get("level") === 2) {
+			/*if (that.model.get("level") === 2) {
 				var groupUgas = that.model.checkUgasThatFallInCities(cities,dataArray,projection);
 				var dataArrayWithoutGroupedUgas = $.grep(dataArray,function(object){
 					return groupUgas.flag.indexOf(object.name) === -1;
 				});
 				dataArray = dataArrayWithoutGroupedUgas;
 				that.model.set("cityUgaGroups",groupUgas.cities);
-			}
+			}*/
 			//////////////////////////////
 
 			
@@ -236,7 +231,7 @@ var MapView = Backbone.View.extend({
 				.data(dataArray)
 				.enter()
 				.append('g')
-				.attr('class', 'pie')
+				.attr('class', 'area-element')
 				.attr("transform", function(d) {
 					return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")";
 				})
@@ -247,6 +242,7 @@ var MapView = Backbone.View.extend({
 				.call(tip)
 				.on("click",function(d,i){
 					if (that.model.get("level") < that.model.get("deepestLevel")) {
+						$('#selection').html('');
 						that.model.increaseLevel(d);
 						that.drawRegions()
 					};
@@ -284,6 +280,10 @@ var MapView = Backbone.View.extend({
 
 			//that.appendBarCharts(svg,projection,dataArray,currentScale);
 			//that.appendPieCharts(svg,projection,dataArray,currentScale);
+
+			$.each(dataArray,function(index,element){
+				$('#selection').append("<span class='selector' data-value='on' id='"+element.name+"''>"+element.name+"</span>");
+			});
 
 		},delay);
 		
@@ -477,7 +477,7 @@ var MapView = Backbone.View.extend({
 		if ($('circle').length !== 0) svg.selectAll("circle").remove();
 		if ($('.region-label').length !== 0) svg.selectAll(".region-label").remove();
 		if ($('.graphic').length !== 0) svg.selectAll(".graphic").remove();
-		if ($('.pie').length !== 0) svg.selectAll(".pie").remove();
+		if ($('.area-element').length !== 0) svg.selectAll(".area-element").remove();
 		if ($('.tooltip-canvas').length !== 0) d3.selectAll(".tooltip-canvas").remove();
 	},
 
@@ -552,10 +552,73 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	moveUpALevel:function(){
+		$('#selection').html('');
 		if (this.model.get("level") > 0) {
 			this.model.decreaseLevel();
 			this.drawRegions()
 		};
+	},
+
+	showHideElement:function(e){
+		var id = e.target.id;
+		var state = $(e.target).data('value');
+
+		var element = d3.selectAll('.area-element')
+			.filter(function(d,i){
+				return d.name === id;
+			})
+			.style('display',function(d){
+				var then = state == 'on' ? 'none' : 'inline';
+				return then;
+			})
+
+		var now = state == 'on' ? 'off' : 'on';
+		$(e.target).data('value',now);
+	},
+
+	showHideCities:function(e){
+		var that = this;
+
+		if (e.target.checked === false) {
+			d3.selectAll('.city-label').attr('opacity',0)
+			d3.selectAll('.city-text').attr('opacity',0)
+			this.model.set("citiesVisible",false);
+		} else if (e.target.checked === true) {
+			d3.selectAll('.city-label')
+				.attr("opacity",function(d){
+					var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
+					var labelO =  popLimit === true ? 1 : 0;
+					return labelO;
+				})
+			d3.selectAll('.city-text')
+				.attr("opacity",function(d){
+					var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
+					var labelO =  popLimit === true ? 1 : 0;
+					return labelO;
+				})
+
+			this.model.set("citiesVisible",true);
+		}
+	},
+
+	showHideCitiesBySize:function(e){
+		var that = this;
+		var populationLimit = e.target.value;
+		this.model.set("citiesVisibleLimit",populationLimit);
+
+		d3.selectAll('.city-label')
+			.attr("opacity",function(d){
+				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
+				var labelO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
+				return labelO;
+			})
+
+		d3.selectAll('.city-text')
+			.attr("opacity",function(d){
+				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
+				var labelO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
+				return labelO;
+			})
 	},
 
 
