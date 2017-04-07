@@ -69,6 +69,7 @@ MapModel = Backbone.Model.extend({
 		return regionsArray;
 	},
 
+
 	getSectors:function(){
 		var _this = this;
 		var region = this.get("currentRegion");
@@ -86,6 +87,7 @@ MapModel = Backbone.Model.extend({
 		}
 		return sectorsArray;
 	},
+
 
 	getUgas:function(region,sector){
 		var _this = this;
@@ -271,7 +273,16 @@ MapModel = Backbone.Model.extend({
 			})
 		}
 		return pieData;
+	},
+
+	/*function compare(a,b) {
+	  if (a.name < b.name)
+	    return -1;
+	  if (a.name > b.name)
+	    return 1;
+	  return 0;
 	}
+	regions.sort(compare);*/
 
 
 });

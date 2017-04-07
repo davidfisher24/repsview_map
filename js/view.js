@@ -24,7 +24,7 @@ var MapView = Backbone.View.extend({
 		var svg = d3.json("./geoJson/FRA_adm2.json", function(json) {
 			regions = topojson.feature(json, json.objects.FRA_adm2);
 			var zoom = d3.behavior.zoom()
-			    .scaleExtent([1, 100])
+			    .scaleExtent([1, 500])
 			    .on("zoom", zoomhandler);
 
 			
@@ -44,7 +44,7 @@ var MapView = Backbone.View.extend({
 					// Zoom group
 					svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 					// Pies
-					svg.selectAll('.pie')
+					svg.selectAll('.area-element')
 					.attr("transform", function(d){
 						return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")scale(" + (currentZoom/d3.event.scale) + ")";
 					});
@@ -188,7 +188,18 @@ var MapView = Backbone.View.extend({
 	
 			var tip = d3.tip()
 			  .attr('class', 'd3-tip')
-			  .offset([-10, 0])
+			  .offset(function(d){
+			  	// TESTING PROJECTION OF MAX LATS AND LONS OF CURRENT VIEW
+			  	// THE ZOOM ELEMENT ISN'T CORRECT - we deinitelty need the France map
+			  	/*var box = svg.node().getBBox();
+			  	var x1 = box.x;
+				var y1 = box.y;
+				var x2 = box.x+box.width;
+				var y2 = box.y+box.height;
+			  	console.log(projection.invert([x1,y1]));
+			  	console.log(projection.invert([x2,y2]));*/
+				return [-10,0];
+			  })
 			  .html(function(d) {
 			  	var data = [
 					{name:"doctors", value:d.doctors, label: "medecins"},
@@ -501,7 +512,6 @@ var MapView = Backbone.View.extend({
 		var y = (bounds[0][1] + bounds[1][1]) / 2;
 		var scale = .7 / Math.max(dx / this.model.get("width"), dy / this.model.get("height"));
 		var translate = [this.model.get("width") / 2 - scale * x, this.model.get("height") / 2 - scale * y];
-
 		svg.transition()
 			.duration(750)
 			.attr("transform", "translate(" + translate + ")scale(" + scale + ")")
@@ -518,6 +528,7 @@ var MapView = Backbone.View.extend({
 		});
 
 	},
+
 
 	flagTransitionEnd:function(transition, callback) { 
 		if (transition.size() === 0) { callback() }
