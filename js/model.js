@@ -187,6 +187,47 @@ MapModel = Backbone.Model.extend({
 		return returnArray;
 	},
 
+	/*************************************************************************************************************
+	/FUNCTION TO TEST BOUNDING BOXES OF CITIES AND CLASHES
+	* Tests the original shown area elements for clashes within the bounding boxes
+	* Uses second helper function to recursively move through the array, dropping number of test elements each time
+	* params - {test element - class name for d3 to find the element it needs to test}, {projection - map projection}
+	**************************************************************************************************************/
+
+	testAreaBoundingBoxesForCollisions:function(testElement,projection){
+		var boxes = [];
+		var clashes = [];
+		d3.selectAll(testElement).each(function(d,i){
+			var proj = projection([d.lon, d.lat]);
+			var box = d3.select(this).node().getBBox();
+			boxes.push({
+				x: [proj[0] + box.x, proj[0] - box.x],
+				y: [proj[1] + box.y, proj[1] - box.y],
+				name: d.name,
+			})
+		})
+
+		for (var a=0; a < boxes.length - 1; a++) {
+			var check = this.checkBounds(boxes[a], boxes.slice(a + 1));
+			if (check) $.each(check,function(i,e){
+				if (clashes.indexOf(e) === -1) clashes.push(e);
+			})
+		}
+
+		return clashes;
+	},
+
+	checkBounds:function(testElement,testArray){
+		var crash = null;
+		$.each(testArray,function(index,obj){
+			if (testElement.x[0] <= obj.x[1] && testElement.x[1] >= obj.x[0] && testElement.y[0] <= obj.y[1] && testElement.y[1] >= obj.y[0]) {
+				crash = [testElement.name,obj.name];
+				return false;
+			}
+		});
+		return crash;
+	},
+
 	//----------------------------------------------------------------------------------------------------
 	// FUNCTIONS TO RETURN TEST DATA
 	// One function each for returning test data in bar format, and pie format

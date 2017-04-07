@@ -139,13 +139,7 @@ var MapView = Backbone.View.extend({
 			.data(cities).enter()
 			.append("text")
 			.attr("class", "city-text")
-			.attr("font-size",function(d){
-				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
-					return 24/currentScale;
-				} else {
-					return 12/currentScale;
-				}
-			})
+			.attr("font-size",12/currentScale)
 			.attr("transform", function(d,i) { 
 				var target = projection([d.lon,d.lat]);
 				return "translate(" + (target[0] + (12/currentScale)) + "," + (target[1] + (8/currentScale)) + ")"; // Square pixels. Width add 1.5
@@ -191,19 +185,6 @@ var MapView = Backbone.View.extend({
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
 
-			//////////////////////////////
-			// Testing removal of uga groups from city boundaries
-			/*if (that.model.get("level") === 2) {
-				var groupUgas = that.model.checkUgasThatFallInCities(cities,dataArray,projection);
-				var dataArrayWithoutGroupedUgas = $.grep(dataArray,function(object){
-					return groupUgas.flag.indexOf(object.name) === -1;
-				});
-				dataArray = dataArrayWithoutGroupedUgas;
-				that.model.set("cityUgaGroups",groupUgas.cities);
-			}*/
-			//////////////////////////////
-
-			
 	
 			var tip = d3.tip()
 			  .attr('class', 'd3-tip')
@@ -242,6 +223,7 @@ var MapView = Backbone.View.extend({
 				.call(tip)
 				.on("click",function(d,i){
 					if (that.model.get("level") < that.model.get("deepestLevel")) {
+						tip.hide();
 						$('#selection').html('');
 						that.model.increaseLevel(d);
 						that.drawRegions()
@@ -278,9 +260,9 @@ var MapView = Backbone.View.extend({
 
 			that.model.set("currentRegions",dataArray);
 
-			//that.appendBarCharts(svg,projection,dataArray,currentScale);
-			//that.appendPieCharts(svg,projection,dataArray,currentScale);
 
+			var clashes = that.model.testAreaBoundingBoxesForCollisions('.area-element',projection);
+			console.log(clashes);
 			$.each(dataArray,function(index,element){
 				$('#selection').append("<span class='selector' data-value='on' id='"+element.name+"''>"+element.name+"</span>");
 			});
