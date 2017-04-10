@@ -5,10 +5,12 @@ MapModel = Backbone.Model.extend({
 		"width" : 800, // Width of the svg element
 		"height" : 600, // Height of the svg element
 		"reservedKeys" : ["loc","lat","lon"], // Reserved keys in the current data array
-		"defaultCenter" : [2.5, 47.4], // Default centre (France)
+		"defaultCenter" : [4.8, 47.35], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
 		"deepestLevel" : 2,  // Maximum level that can be drilled to
 		"pieColors" : ["#5bc0de","#5cb85c","#d9534f","#428bca"], // Colours to use in the segments of the pies
+		"mapColors" : ["red","green","blue","yellow","orange","purple","cyan","indigo","black","brown"],
+
 		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
 		// Dynamic attributes
 		"level" : 0, // Level of drilling of data

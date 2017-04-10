@@ -6,6 +6,11 @@
   font-weight:bold;
 }
 
+#map {
+  overflow: hidden;
+  /*border: 1px solid red;  Testing purposes */
+}
+
 .overlay {
 	fill:none;
 	pointer-events:all;
@@ -18,10 +23,10 @@
 
 .d3-tip {
   line-height: 1;
-  font-weight: bold;
+  /*font-weight: bold;*/
   padding: 2px;
   background: rgba(0, 0, 0, 0.8);
-  color: #fff;
+  /*color: #fff;*/
   border-radius: 2px;
 }
 
