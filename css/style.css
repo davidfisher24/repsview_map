@@ -8,6 +8,7 @@
 
 #map {
   overflow: hidden;
+  position:relative;
   /*border: 1px solid red;  Testing purposes */
 }
 
@@ -16,6 +17,11 @@
 	pointer-events:all;
 }
 
+#returnLevel {
+  position:absolute;
+  top: 1%;
+  left: 1%;
+}
 
 #tooltipGenerator {
 	display:none;

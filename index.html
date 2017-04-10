@@ -25,24 +25,21 @@
 <body>
 
 <div class = "container container-fluid">
-	<div class="row">
-		<div class="col-md-9">
-			<div class="panel" id="map-panel">
-			<div class="controls">
-				<button class="btn btn-primary" id="returnLevel">Back</button>
-				<input type="checkbox" id="controlCities" checked>
-				<input type="number" id="controlCitiesSize" min="20000" max="250000" value="250000" step="5000">
-			</div>	      	
-			<div id="map"></div>
-			<div id="tooltipGenerator"></div>
+		<div class="row">
+			<div class="col-md-9">
+				<div class="panel" id="map-panel">     	
+				<div id="map">
+					<button class="btn btn-primary" id="returnLevel">Back</button>
+				</div>
+				<div id="tooltipGenerator"></div>
+				</div>
+			</div>
+			<div class="col-md-3" id="controls-panel">
+				<div id="graphs"></div>
+				<div id="informationPanel"></div>
+			</div>
 			</div>
 		</div>
-		<div class="col-md-3">
-			<div class="panel" id="graphs-panel">
-			<div id="graphs"></div>
-		</div>
-		</div>
-	</div>
 </div>
 
 

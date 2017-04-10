@@ -12,6 +12,10 @@ var MapView = Backbone.View.extend({
 		"change #controlCitiesSize" : "showHideCitiesBySize",
 	},
 
+	testHover:function(){
+		console.log("Hovering");
+	},
+
 
 	//----------------------------------------------------------------------------------------------------
 	// RENDERS THE MAP ON FIRST LOAD
@@ -303,7 +307,6 @@ var MapView = Backbone.View.extend({
 
 			that.createview();
 			var clashes = that.model.testAreaBoundingBoxesForCollisions('.area-element',projection);
-
 			var clashes = that.model.testAreaBoundingBoxesForCollisions('.area-element',projection);
 			console.log(clashes);
 
@@ -383,26 +386,81 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	appendBarChartInToolTip:function(size,data){
+		var y = d3.scale.linear().range([0,size * 0.75]);
+		y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+		var svg = d3.select("#informationPanel")
+            .append("svg")
+            .attr("width", size)
+            .attr("height", size)
+            .attr("class",'tooltip-canvas')
+
+        var bars = svg.selectAll("rect")
+		   .data(data)
+		   .enter()
+		   .append("rect")
+		   .attr("x", function(d, i) {
+			    return i * (size / data.length);
+			})
+		   .attr("y",size)
+		   .attr("width", size/data.length - 20)
+		   .attr("height", function(d,i){
+		   		return y(d.value);
+		   })
+		   .attr("fill", function(d) {
+			    return "rgb(0, 0, " + (d.value * 5) + ")";
+			})
+			.transition()
+			.duration(400)
+			.delay(function (d, i) {
+				return (i === 0) ? 400 : 400/(i+1);
+			})
+			.attr("y", function(d,i){
+		   		return size - y(d.value)
+		   })
+		   
+		svg.selectAll("text")
+		   .data(data)
+		   .enter()
+		   .append("text")
+		   .text("")
+		   .attr("x", function(d, i) {
+		        return i * (size / data.length);
+		   })
+		   .attr("y", function(d) {
+		        return size - y(d.value) -5;
+		   })
+		   .attr('font','8px Verdana')
+		   .transition()
+			.duration(400)
+			.delay(function (d, i) {
+				return (i === 0) ? 400 : 400/(i+1);
+			})
+			.text(function(d) {
+		        return d.label;
+		   })
+
+
+	},
+
+	_appendBarChartInToolTip:function(size,data){
 		var x = d3.scale.ordinal().rangeRoundBands([0, size], .05);
-		var y = d3.scale.linear().range([size, 0]);
+		var y = d3.scale.linear().range([0,(size * 0.8)]);
 		x.domain(data.map(function(d,i) { return i; }));
 		y.domain([0, d3.max(data, function(d) { return d.value; })]);
 
-      	var svg = d3.select('#tooltipGenerator')
+      	var svg = d3.select('#informationPanel') // #tooltipGenerator
       		.append("svg")
 			.attr("width", size)
 			.attr("height", size)
 			.attr("class",'tooltip-canvas')
 
-      	var bar = svg.selectAll("rect")
+      	var bars = svg.selectAll("rect")
 			.data(data)
 			.enter()
 			.append("rect")
 			.attr("width", function(d){
 				 return (size / data.length) * 0.75;
-			})
-			.attr("height",function(d){
-				return size + "px";
 			})
 			.attr("fill", function(d,i){
 				if(i===0) return "red";
@@ -410,8 +468,20 @@ var MapView = Backbone.View.extend({
 				if(i===2) return "green";
 				if(i===3) return "yellow";
 			})
+			.attr("class","bar")
 			.attr("x", function(d,i) { return x(i); })
-			.attr("y", function(d,i) { return y(d.value); })
+			.attr("height", 0)
+			.transition()
+			.duration(400)
+			.delay(function (d, i) {
+				return (i === 0) ? 400 : 400/(i+1);
+			})
+			.attr("y", function (d, i) {
+				return size - y(d.value); 
+			})
+			.attr("height", function (d, i) {
+				return y(d.value);
+			})
 	},
 
 
@@ -499,6 +569,7 @@ var MapView = Backbone.View.extend({
 		if ($('.graphic').length !== 0) svg.selectAll(".graphic").remove();
 		if ($('.area-element').length !== 0) svg.selectAll(".area-element").remove();
 		if ($('.tooltip-canvas').length !== 0) d3.selectAll(".tooltip-canvas").remove();
+		$('#informationPanel').html('');
 	},
 
 
@@ -614,6 +685,7 @@ var MapView = Backbone.View.extend({
 	},
 
 	showHideCitiesBySize:function(e){
+		console.log("clicked");
 		var that = this;
 		var populationLimit = e.target.value;
 		this.model.set("citiesVisibleLimit",populationLimit);
@@ -673,7 +745,24 @@ var MapView = Backbone.View.extend({
 			},
 			onNodeUnchecked: function(event, data) {
 				that.showHideElement(data.id,data.state.checked);
-			}
+			},
+			onNodeSelected: function(event, data) {
+				$('#informationPanel').html('');
+				var dataForRegion;
+				dataArray.filter(function(obj){
+					if (obj.name === data.id) {dataForRegion = obj; return false;}
+					return obj.name === data.id;
+				});
+				var data = [
+					{name:"doctors", value:dataForRegion.doctors, label: "medecins"},
+					{name:"contacts", value:dataForRegion.contacts, label: "hors cible"},
+					{name:"visits", value:dataForRegion.visits, label: "cible"},
+				];
+				that.appendBarChartInToolTip($('#controls-panel').width(),data);
+			},
+			onNodeUnselected: function(){
+				$('#informationPanel').html('');
+			},
 		});
 		$('#graphs').treeview("checkAll",{silent:true});
 	},
