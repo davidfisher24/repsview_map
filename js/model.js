@@ -9,7 +9,7 @@ MapModel = Backbone.Model.extend({
 		"defaultScale" : 2400, // Default scale (France)
 		"deepestLevel" : 2,  // Maximum level that can be drilled to
 		"pieColors" : ["#5bc0de","#5cb85c","#d9534f","#428bca"], // Colours to use in the segments of the pies
-		"mapColors" : ["red","green","blue","yellow","orange","purple","cyan","indigo","black","brown"],
+		"mapColors" : ["407020","609040","80b060","a0d080","306010","508030","70a050","90c070","b0e090","205000"],
 
 		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
 		// Dynamic attributes

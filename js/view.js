@@ -10,7 +10,6 @@ var MapView = Backbone.View.extend({
 		'click #returnLevel' : "moveUpALevel",
 		"click #controlCities" : "showHideCities",
 		"change #controlCitiesSize" : "showHideCitiesBySize",
-		"hover .list-group-item" : "highlightElement",
 	},
 
 
@@ -64,7 +63,7 @@ var MapView = Backbone.View.extend({
 				//.on("touchmove.zoom", null)
 				//.on("touchend.zoom", null);
 
-
+		
 			svg.append("rect")
 			    .attr("class", "overlay")
 			    .attr("width", that.model.get("width"))
@@ -89,8 +88,31 @@ var MapView = Backbone.View.extend({
 						if (department_map[key].departments.indexOf(departments[i].department) !== -1) 
 							colors.push(that.model.get("mapColors")[parseInt(key) - 1]);
 					}
-					if (i % 2 === 0) return '#5bc0de';
-					else return '#f9f9f9';
+					// Corsica has to be handled manually
+					if (colors.length === 0) {return that.model.get("mapColors")[9]} // Hard coding corsica
+					if (colors.length === 1) {return colors[0];}
+					if (colors.length === 2) {
+						var gradient = svg.append("defs")
+						  .append("linearGradient")
+						    .attr("id", "gradient")
+						    .attr("x1", "0%")
+						    .attr("y1", "0%")
+						    .attr("x2", "100%")
+						    .attr("y2", "100%")
+						    .attr("spreadMethod", "pad");
+
+						gradient.append("stop")
+						    .attr("offset", "0%")
+						    .attr("stop-color", "#"+colors[0])
+						    .attr("stop-opacity", 1);
+
+						gradient.append("stop")
+						    .attr("offset", "100%")
+						    .attr("stop-color", "#"+colors[1])
+						    .attr("stop-opacity", 1);
+
+						return "url(#gradient)";
+					}
 				})
 				.style("stroke", function(d,i){
 					return "#000000";
