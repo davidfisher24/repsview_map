@@ -30,7 +30,7 @@ MapModel = Backbone.Model.extend({
 		"TOULOUSE","NIMES","MONTPELLIER","PERPIGNAN","MARSEILLE","AIX-EN-PROVENCE","ANTIBES","NICE"],
 	},
 
-	
+
 	increaseLevel: function(data){
 		if (data.level === 0) this.set("currentRegion",data.name);
 		if (data.level === 1) this.set("currentSector",data.name);
@@ -147,7 +147,7 @@ MapModel = Backbone.Model.extend({
 	lookForCollisions:function(testArray,comparator,projectionPoint,give,itemLabelName){
 		$.each(testArray, function(index, obj) {
 		  if ((projectionPoint >= (obj[comparator] - give)) && projectionPoint <= ((obj[comparator] + give))) {
-		  	console.log(itemLabelName + " has a clash at position " + projectionPoint + " .Going to crash into " + obj.name + " with bounds of  " + (obj[comparator] -give) + " to " + (obj[comparator] + give)); 
+		  	console.log(itemLabelName + " has a clash at position " + projectionPoint + " .Going to crash into " + obj.name + " with bounds of  " + (obj[comparator] -give) + " to " + (obj[comparator] + give));
 		  }
 		});
 	},
@@ -185,7 +185,7 @@ MapModel = Backbone.Model.extend({
 					if (returnArray.cities[o.name] === undefined) returnArray.cities[o.name] = [];
 					returnArray.cities[o.name].push(obj);
 					if (returnArray.flag.indexOf(obj.name) === -1) returnArray.flag.push(obj.name);
-				} 
+				}
 			})
 		})
 		return returnArray;
