@@ -212,7 +212,8 @@ var MapView = Backbone.View.extend({
 		if (initialLoad) delay = 0;
 
 		window.setTimeout(function(){
-			var currentScale = svg.attr('transform') ? svg.attr('transform').split(",")[3].replace(")","") : 1;
+			var currentScale = (svg.attr('transform') && that.model.get("level") !== 0) ? svg.attr('transform').split(",")[3].replace(")","") : 1;
+			console.log(currentScale);
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
 
