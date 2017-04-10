@@ -10,6 +10,7 @@ var MapView = Backbone.View.extend({
 		'click #returnLevel' : "moveUpALevel",
 		"click #controlCities" : "showHideCities",
 		"change #controlCitiesSize" : "showHideCitiesBySize",
+		"hover .list-group-item" : "highlightElement",
 	},
 
 
@@ -58,10 +59,10 @@ var MapView = Backbone.View.extend({
 				.append("g")
 			    .attr("id","zoomgroup")
 			    .call(zoom)
-					.on("mousedown.zoom", null)
-				.on("touchstart.zoom", null)
-				.on("touchmove.zoom", null)
-			.on("touchend.zoom", null);
+				//.on("mousedown.zoom", null)
+				//.on("touchstart.zoom", null)
+				//.on("touchmove.zoom", null)
+				//.on("touchend.zoom", null);
 
 
 			svg.append("rect")
@@ -564,52 +565,6 @@ var MapView = Backbone.View.extend({
 
 		var now = state == true ? false : true;
 	},
-
-	showHideCities:function(e){
-		var that = this;
-
-		if (e.target.checked === false) {
-			d3.selectAll('.city-label').attr('opacity',0)
-			d3.selectAll('.city-text').attr('opacity',0)
-			this.model.set("citiesVisible",false);
-		} else if (e.target.checked === true) {
-			d3.selectAll('.city-label')
-				.attr("opacity",function(d){
-					var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
-					var labelO =  popLimit === true ? 1 : 0;
-					return labelO;
-				})
-			d3.selectAll('.city-text')
-				.attr("opacity",function(d){
-					var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
-					var labelO =  popLimit === true ? 1 : 0;
-					return labelO;
-				})
-
-			this.model.set("citiesVisible",true);
-		}
-	},
-
-	showHideCitiesBySize:function(e){
-		var that = this;
-		var populationLimit = e.target.value;
-		this.model.set("citiesVisibleLimit",populationLimit);
-
-		d3.selectAll('.city-label')
-			.attr("opacity",function(d){
-				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
-				var labelO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
-				return labelO;
-			})
-
-		d3.selectAll('.city-text')
-			.attr("opacity",function(d){
-				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
-				var labelO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
-				return labelO;
-			})
-	},
-
 
 	showHideCities:function(e){
 		var that = this;
