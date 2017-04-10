@@ -88,6 +88,7 @@ var MapView = Backbone.View.extend({
 						if (department_map[key].departments.indexOf(departments[i].department) !== -1) 
 							colors.push(that.model.get("mapColors")[parseInt(key) - 1]);
 					}
+
 					if (colors.length === 0) {return that.model.get("mapColors")[9]} // Hard coding corsica
 					if (colors.length === 1) {return colors[0];}
 					if (colors.length === 2) {
