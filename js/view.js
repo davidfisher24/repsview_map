@@ -12,11 +12,6 @@ var MapView = Backbone.View.extend({
 		"change #controlCitiesSize" : "showHideCitiesBySize",
 	},
 
-	testHover:function(){
-		console.log("Hovering");
-	},
-
-
 	//----------------------------------------------------------------------------------------------------
 	// RENDERS THE MAP ON FIRST LOAD
 	//-----------------------------------------------------------------------------------------------------
@@ -92,7 +87,6 @@ var MapView = Backbone.View.extend({
 						if (department_map[key].departments.indexOf(departments[i].department) !== -1) 
 							colors.push(that.model.get("mapColors")[parseInt(key) - 1]);
 					}
-					// Corsica has to be handled manually
 					if (colors.length === 0) {return that.model.get("mapColors")[9]} // Hard coding corsica
 					if (colors.length === 1) {return colors[0];}
 					if (colors.length === 2) {
@@ -307,7 +301,6 @@ var MapView = Backbone.View.extend({
 
 			that.createview();
 			var clashes = that.model.testAreaBoundingBoxesForCollisions('.area-element',projection);
-			var clashes = that.model.testAreaBoundingBoxesForCollisions('.area-element',projection);
 			console.log(clashes);
 
 		},delay);
@@ -501,6 +494,7 @@ var MapView = Backbone.View.extend({
 		var pie = d3.layout.pie() 
       		.value(function(d) { return d.value; }) 
 
+
 		var tooltipElement = d3.select("#tooltipGenerator")
 			.append("svg") 
 			.data(data) 
@@ -627,7 +621,8 @@ var MapView = Backbone.View.extend({
 
 	},
 
-	flagTransitionEnd:function(transition, callback) { 		
+
+	flagTransitionEnd:function(transition, callback) {
 		if (transition.size() === 0) {
 		 callback();
 		}
@@ -661,6 +656,7 @@ var MapView = Backbone.View.extend({
 	},
 
 	showHideCities:function(e){
+		console.log("clicked");
 		var that = this;
 		if (e.target.checked === false) {
 			d3.selectAll('.city-label').attr('opacity',0)
@@ -685,9 +681,10 @@ var MapView = Backbone.View.extend({
 	},
 
 	showHideCitiesBySize:function(e){
-		console.log("clicked");
 		var that = this;
+		console.log("hey");
 		var populationLimit = e.target.value;
+		console.log(populationLimit);
 		this.model.set("citiesVisibleLimit",populationLimit);
 
 		d3.selectAll('.city-label')
