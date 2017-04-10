@@ -17,7 +17,7 @@
 </head>
 <body>
 
-<div class = "container container-fluid">
+<div class = "container container-fluid" id="map-panel-container">
 		<div class="row">
 			<div class="col-md-9">
 				<div class="panel" id="map-panel">     	
@@ -28,15 +28,17 @@
 				</div>
 			</div>
 			<div class="col-md-3" id="controls-panel">
-				<div class="panel" id="graphs-panel" style="margin-top:25%">
+				<div class="panel" id="graphs-panel">
 
 				<div id="graphs"></div>
 
 				<div class="controls">
 				<label>permettre aux villes </label><input type="checkbox" id="controlCities"  style="margin-left:50px;"checked><br>
 				<label>Villes de la population</label>	<input type="number" id="controlCitiesSize" min="20000" max="250000" value="250000" step="5000">
-			</div>
 				<div id="informationPanel"></div>
+
+			</div>
+				
 			</div>
 			</div>
 		</div>

@@ -32,6 +32,9 @@ module.exports = function(grunt) {
     copy: {
       main: {
         files: [
+          {expand: true, src: ['node_modules/bootstrap/fonts/*'], dest: './fonts/', filter: 'isFile', flatten:true},
+          {expand: true, src: ['node_modules/bootstrap/fonts/*'], dest: './public/fonts/', filter: 'isFile', flatten:true},
+
           {expand: true, src: ['geoJson/*'], dest: 'public/', filter: 'isFile'},
           {expand: true, src: ['js/*'], dest: 'public/', filter: 'isFile'},
           {expand: true, src: ['css/*'], dest: 'public/', filter: 'isFile'},

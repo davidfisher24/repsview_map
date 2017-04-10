@@ -1,9 +1,10 @@
 var MapView = Backbone.View.extend({
 
-	el: '#map-panel',
+	el: '#map-panel-container',
 
 	initialize: function(options) {
 		this.renderMap();
+		$('#informationPanel').html(this.model.get("infoPanelDefault"));
 	},
 
 	events: {
@@ -201,8 +202,9 @@ var MapView = Backbone.View.extend({
 
 		var dataArray = that.model.getData();
 
-		this.removeElementsOnChange(svg);
+		
 		if (!initialLoad) {
+			this.removeElementsOnChange(svg);
 			this.zoomToBoundingBox(svg,projection,dataArray)
 		};
 
@@ -442,7 +444,7 @@ var MapView = Backbone.View.extend({
 		x.domain(data.map(function(d,i) { return i; }));
 		y.domain([0, d3.max(data, function(d) { return d.value; })]);
 
-      	var svg = d3.select('#informationPanel') // #tooltipGenerator
+      	var svg = d3.select('#tooltipGenerator') 
       		.append("svg")
 			.attr("width", size)
 			.attr("height", size)
@@ -563,7 +565,7 @@ var MapView = Backbone.View.extend({
 		if ($('.graphic').length !== 0) svg.selectAll(".graphic").remove();
 		if ($('.area-element').length !== 0) svg.selectAll(".area-element").remove();
 		if ($('.tooltip-canvas').length !== 0) d3.selectAll(".tooltip-canvas").remove();
-		$('#informationPanel').html('');
+		$('#informationPanel').html(this.model.get("infoPanelDefault"));
 	},
 
 
@@ -656,6 +658,7 @@ var MapView = Backbone.View.extend({
 	},
 
 	showHideCities:function(e){
+		console.log("Showing hiding cities");
 		console.log("clicked");
 		var that = this;
 		if (e.target.checked === false) {
@@ -681,8 +684,8 @@ var MapView = Backbone.View.extend({
 	},
 
 	showHideCitiesBySize:function(e){
+		console.log("Changing city size");
 		var that = this;
-		console.log("hey");
 		var populationLimit = e.target.value;
 		console.log(populationLimit);
 		this.model.set("citiesVisibleLimit",populationLimit);
@@ -758,7 +761,7 @@ var MapView = Backbone.View.extend({
 				that.appendBarChartInToolTip($('#controls-panel').width(),data);
 			},
 			onNodeUnselected: function(){
-				$('#informationPanel').html('');
+				$('#informationPanel').html(that.model.get("infoPanelDefault"));
 			},
 		});
 		$('#graphs').treeview("checkAll",{silent:true});

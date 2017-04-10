@@ -28,6 +28,8 @@ MapModel = Backbone.Model.extend({
 		"AMIENS","REIMS","TROYES","STRASBOURG","MULHOUSE","COLMAR","NANCY","METZ","BESANCON","BELFORT","TOURS",
 		"CLERMONT-FERRAND","NIORT","LYON","VILLEURBANNE","SAINT-ETIENNE","VALENCE","CHAMBERY","GRENOBLE","BORDEAUX","PAU",
 		"TOULOUSE","NIMES","MONTPELLIER","PERPIGNAN","MARSEILLE","AIX-EN-PROVENCE","ANTIBES","NICE"],
+
+		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>"
 	},
 
 
