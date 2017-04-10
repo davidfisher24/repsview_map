@@ -19,13 +19,16 @@ MapModel = Backbone.Model.extend({
 		"currentCities" : null,
 		"currentRegions" : null,
 
+		"citiesVisible" : true, // Linked to the checkbox for this element. If the cities are visible or not
+		"citiesVisibleLimit" : 250000,
+
 		"citiesWithGroupedUgas" : ["BREST","VANNES","RENNES","CAEN","MANS","NANTES","ANGERS","DUNKERQUE","LILLE",
 		"AMIENS","REIMS","TROYES","STRASBOURG","MULHOUSE","COLMAR","NANCY","METZ","BESANCON","BELFORT","TOURS",
 		"CLERMONT-FERRAND","NIORT","LYON","VILLEURBANNE","SAINT-ETIENNE","VALENCE","CHAMBERY","GRENOBLE","BORDEAUX","PAU",
 		"TOULOUSE","NIMES","MONTPELLIER","PERPIGNAN","MARSEILLE","AIX-EN-PROVENCE","ANTIBES","NICE"],
 	},
 
-	
+
 	increaseLevel: function(data){
 		if (data.level === 0) this.set("currentRegion",data.name);
 		if (data.level === 1) this.set("currentSector",data.name);
@@ -105,7 +108,6 @@ MapModel = Backbone.Model.extend({
 
 	getCities:function(){
 		var boundingBox = this.get("currentBoundingBox") ? this.get("currentBoundingBox") : this.get("defaultBoundingBox");
-		var levelMinPopulation;
 		switch (this.get("level")) {
 		    case 0:
 		        levelMinPopulation = 250000;
@@ -122,7 +124,8 @@ MapModel = Backbone.Model.extend({
 			var pop = parseInt(obj.pop);
 			var lon = parseFloat(obj.lon) < Math.max(boundingBox[0][0],boundingBox[1][0]) && parseFloat(obj.lon) > Math.min(boundingBox[0][0],boundingBox[1][0]);
 			var lat = parseFloat(obj.lat) < Math.max(boundingBox[0][1],boundingBox[1][1]) && parseFloat(obj.lat) > Math.min(boundingBox[0][1],boundingBox[1][1]);
-			return pop > levelMinPopulation && lat && lon;
+			//return pop > levelMinPopulation && lat && lon;
+			return lat && lon;
 		});
 		return selection;
 
@@ -140,7 +143,7 @@ MapModel = Backbone.Model.extend({
 	lookForCollisions:function(testArray,comparator,projectionPoint,give,itemLabelName){
 		$.each(testArray, function(index, obj) {
 		  if ((projectionPoint >= (obj[comparator] - give)) && projectionPoint <= ((obj[comparator] + give))) {
-		  	console.log(itemLabelName + " has a clash at position " + projectionPoint + " .Going to crash into " + obj.name + " with bounds of  " + (obj[comparator] -give) + " to " + (obj[comparator] + give)); 
+		  	console.log(itemLabelName + " has a clash at position " + projectionPoint + " .Going to crash into " + obj.name + " with bounds of  " + (obj[comparator] -give) + " to " + (obj[comparator] + give));
 		  }
 		});
 	},
@@ -178,10 +181,51 @@ MapModel = Backbone.Model.extend({
 					if (returnArray.cities[o.name] === undefined) returnArray.cities[o.name] = [];
 					returnArray.cities[o.name].push(obj);
 					if (returnArray.flag.indexOf(obj.name) === -1) returnArray.flag.push(obj.name);
-				} 
+				}
 			})
 		})
 		return returnArray;
+	},
+
+	/*************************************************************************************************************
+	/FUNCTION TO TEST BOUNDING BOXES OF CITIES AND CLASHES
+	* Tests the original shown area elements for clashes within the bounding boxes
+	* Uses second helper function to recursively move through the array, dropping number of test elements each time
+	* params - {test element - class name for d3 to find the element it needs to test}, {projection - map projection}
+	**************************************************************************************************************/
+
+	testAreaBoundingBoxesForCollisions:function(testElement,projection){
+		var boxes = [];
+		var clashes = [];
+		d3.selectAll(testElement).each(function(d,i){
+			var proj = projection([d.lon, d.lat]);
+			var box = d3.select(this).node().getBBox();
+			boxes.push({
+				x: [proj[0] + box.x, proj[0] - box.x],
+				y: [proj[1] + box.y, proj[1] - box.y],
+				name: d.name,
+			})
+		})
+
+		for (var a=0; a < boxes.length - 1; a++) {
+			var check = this.checkBounds(boxes[a], boxes.slice(a + 1));
+			if (check) $.each(check,function(i,e){
+				if (clashes.indexOf(e) === -1) clashes.push(e);
+			})
+		}
+
+		return clashes;
+	},
+
+	checkBounds:function(testElement,testArray){
+		var crash = null;
+		$.each(testArray,function(index,obj){
+			if (testElement.x[0] <= obj.x[1] && testElement.x[1] >= obj.x[0] && testElement.y[0] <= obj.y[1] && testElement.y[1] >= obj.y[0]) {
+				crash = [testElement.name,obj.name];
+				return false;
+			}
+		});
+		return crash;
 	},
 
 	//----------------------------------------------------------------------------------------------------

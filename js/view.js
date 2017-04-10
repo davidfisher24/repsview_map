@@ -8,6 +8,9 @@ var MapView = Backbone.View.extend({
 
 	events: {
 		'click #returnLevel' : "moveUpALevel",
+		"click .selector" : "showHideElement",
+		"click #controlCities" : "showHideCities",
+		"change #controlCitiesSize" : "showHideCitiesBySize",
 	},
 
 
@@ -24,7 +27,7 @@ var MapView = Backbone.View.extend({
 			    .scaleExtent([1, 100])
 			    .on("zoom", zoomhandler);
 
-			
+
 			function zoomhandler() {
 				//svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")"); //AUTOMATIC D3 ZOOM
 				//zoom.translate([0,0]).scale(1); ZOOM RESET FUNCTION
@@ -34,7 +37,7 @@ var MapView = Backbone.View.extend({
 						that.model.get("currentAutoZoomEvent").translate[0],
 						that.model.get("currentAutoZoomEvent").translate[1]
 					])
-					.scale(that.model.get("currentAutoZoomEvent").scale); 
+					.scale(that.model.get("currentAutoZoomEvent").scale);
 					that.model.set("currentAutoZoomEvent",null);
 					return
 				} else {
@@ -56,6 +59,11 @@ var MapView = Backbone.View.extend({
 				.append("g")
 			    .attr("id","zoomgroup")
 			    .call(zoom)
+					.on("mousedown.zoom", null)
+				.on("touchstart.zoom", null)
+				.on("touchmove.zoom", null)
+			.on("touchend.zoom", null);
+
 
 			svg.append("rect")
 			    .attr("class", "overlay")
@@ -69,16 +77,19 @@ var MapView = Backbone.View.extend({
 
 
 			svg.selectAll("path")
-				.data(regions.features)
+			.data(regions.features)
 				.enter()
 				.append('path')
 				.attr("d", path)
 				.style("stroke-width", "0.5px")
-				.attr("class","stroke-path")
-				.style("fill",function(d,i){
-				if (i % 2 === 0) return '#5bc0de';
-					else return '#f9f9f9';
-				})
+					.style("fill",function(d,i){
+
+		          if (i % 2 === 0) return '#5bc0de';
+						else if (i % 3 === 0)return '#ff6666';
+						else if (i % 5 === 0)return '#f9f9f9';
+						else return '#99ffcc';
+
+					})
 				.style("stroke", function(d,i){
 					return "#000000";
 				})
@@ -95,7 +106,7 @@ var MapView = Backbone.View.extend({
 	addCities:function(currentScale){
 		var that = this;
 		var cities = this.model.getCities();
-		
+
 		var svg = d3.select($("#zoomgroup")[0]);
 		var projection = d3.geo.mercator()
 			.center(this.model.get("defaultCenter"))
@@ -108,57 +119,43 @@ var MapView = Backbone.View.extend({
 			.attr("x", function (d) {
 				var x = projection([d.lon,d.lat])[0];
 				d.x = x;
-				return x; 
+				return x;
 			})
-			.attr("y", function (d) { 
+			.attr("y", function (d) {
 				var y = projection([d.lon,d.lat])[1];
 				d.y = y;
 				return y;
 			})
-			.attr("height",function(d){
-				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
-					return 16/currentScale ;
-				} else {
-					return 8/currentScale;
-				}
-			})
-			.attr("width",function(d){
-				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
-					return 16/currentScale ;
-				} else {
-					return 8/currentScale;
-				}
-			})
-			.attr("fill", function(d){
-				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
-					return "red";
-				} else {
-					return "white";
-				}
-			})
+			.attr("height",8/currentScale)
+			.attr("width", 8/currentScale)
+			.attr("fill", "white")
 			.attr("class", "city-label")
 			.attr("stroke", "black")
 			.attr("stroke-width",function(){ return 2/currentScale })
+			.attr("opacity",function(d){
+				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
+				var labelO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
+				return labelO;
+			})
 			.on("click",function(d){
 				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
 					console.log(that.model.get("cityUgaGroups")[d.name]);
-				} 
+				}
 			})
 
 		svg.selectAll(".city-text")
 			.data(cities).enter()
 			.append("text")
 			.attr("class", "city-text")
-			.attr("font-size",function(d){
-				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
-					return 24/currentScale;
-				} else {
-					return 12/currentScale;
-				}
-			})
-			.attr("transform", function(d,i) { 
+			.attr("font-size",12/currentScale)
+			.attr("transform", function(d,i) {
 				var target = projection([d.lon,d.lat]);
 				return "translate(" + (target[0] + (12/currentScale)) + "," + (target[1] + (8/currentScale)) + ")"; // Square pixels. Width add 1.5
+			})
+			.attr("opacity",function(d){
+				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
+				var textO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
+				return textO;
 			})
 			.text(function(d,i) {return d.name});
 
@@ -182,7 +179,7 @@ var MapView = Backbone.View.extend({
 		var path = d3.geo.path().projection(projection);
 
 		var dataArray = that.model.getData();
-		
+
 		this.removeElementsOnChange(svg);
 		if (!initialLoad) {
 			this.zoomToBoundingBox(svg,projection,dataArray)
@@ -196,20 +193,7 @@ var MapView = Backbone.View.extend({
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
 
-			//////////////////////////////
-			// Testing removal of uga groups from city boundaries
-			if (that.model.get("level") === 2) {
-				var groupUgas = that.model.checkUgasThatFallInCities(cities,dataArray,projection);
-				var dataArrayWithoutGroupedUgas = $.grep(dataArray,function(object){
-					return groupUgas.flag.indexOf(object.name) === -1;
-				});
-				dataArray = dataArrayWithoutGroupedUgas;
-				that.model.set("cityUgaGroups",groupUgas.cities);
-			}
-			//////////////////////////////
 
-			
-	
 			var tip = d3.tip()
 			  .attr('class', 'd3-tip')
 			  .offset([-10, 0])
@@ -228,7 +212,7 @@ var MapView = Backbone.View.extend({
 			 })
 
 
-			var arc = d3.svg.arc().innerRadius(0).outerRadius(10/currentScale);        
+			var arc = d3.svg.arc().innerRadius(0).outerRadius(10/currentScale);
 	      	var pie = d3.layout.pie().value(function(d){ return d });
 
 
@@ -236,7 +220,7 @@ var MapView = Backbone.View.extend({
 				.data(dataArray)
 				.enter()
 				.append('g')
-				.attr('class', 'pie')
+				.attr('class', 'area-element')
 				.attr("transform", function(d) {
 					return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")";
 				})
@@ -247,6 +231,8 @@ var MapView = Backbone.View.extend({
 				.call(tip)
 				.on("click",function(d,i){
 					if (that.model.get("level") < that.model.get("deepestLevel")) {
+						tip.hide();
+						$('#selection').html('');
 						that.model.increaseLevel(d);
 						that.drawRegions()
 					};
@@ -258,7 +244,7 @@ var MapView = Backbone.View.extend({
 
 			pies.selectAll('.slice')
 				.data(function(d){
-					return pie([d.contacts,d.visits,d.doctors]); 
+					return pie([d.contacts,d.visits,d.doctors]);
 				})
 				.enter()
 				.append('path')
@@ -267,29 +253,34 @@ var MapView = Backbone.View.extend({
 				.style('fill', function(d,i){
 					return colors[i];
 				})
-				
+
 			pies.append("text")
 				.data(dataArray)
-		        .attr("x", 0)             
+		        .attr("x", 0)
 		        .attr("y", 25/currentScale)
-		        .attr("text-anchor", "middle")  
+		        .attr("text-anchor", "middle")
 		        .style("font-size", function(d,i){
 		        	return 16/currentScale + "px";
-		        }) 
+		        })
 		        .text(function(d,i){
 		        	return d.name;
 		        });
 
 			that.model.set("currentRegions",dataArray);
 
-			//that.appendBarCharts(svg,projection,dataArray,currentScale);
-			//that.appendPieCharts(svg,projection,dataArray,currentScale);
+			that.createview();
+
+			var clashes = that.model.testAreaBoundingBoxesForCollisions('.area-element',projection);
+			console.log(clashes);
+			$.each(dataArray,function(index,element){
+				$('#selection').append("<span class='selector' data-value='on' id='"+element.name+"''>"+element.name+"</span>");
+			});
 
 		},delay);
-		
+
 	},
 
-	
+
 	//----------------------------------------------------------------------------------------------------
 	// FUNCTIONS TO APPEND CHARTS DIRECTLY TO THE GRAPHIC
 	//-----------------------------------------------------------------------------------------------------
@@ -304,13 +295,13 @@ var MapView = Backbone.View.extend({
 				return 10/currentScale;
 			})
 			.attr("x", function (d) { return projection([d.lon,d.lat])[0]; })
-			.attr('y', function (d) { 
+			.attr('y', function (d) {
 				return (parseInt(projection([d.lon,d.lat])[1]) - ((d.value / 10) /currentScale));
 			})
 			.attr("height", function(d){
 				return (d.value / 10) / currentScale;
 			})
-			
+
 			.attr("class","graphic")
 			.attr("fill", function(d){
 				if (d.measure === 'contacts') return 'red';
@@ -326,7 +317,7 @@ var MapView = Backbone.View.extend({
 
 		var pieData = this.model.getTestPieData(dataArray);
 
-		var arc = d3.svg.arc().innerRadius(0).outerRadius(15/currentScale);         
+		var arc = d3.svg.arc().innerRadius(0).outerRadius(15/currentScale);
       	var pie = d3.layout.pie().value(function(d){ return d });
 
 		var pies = svg.selectAll('.pie')
@@ -346,7 +337,7 @@ var MapView = Backbone.View.extend({
 
 		pies.selectAll('.slice')
 			.data(function(d){
-				return pie([d.contacts, d.doctors, d.visits]); 
+				return pie([d.contacts, d.doctors, d.visits]);
 			})
 			.enter()
 			.append('path')
@@ -377,7 +368,7 @@ var MapView = Backbone.View.extend({
 			.enter()
 			.append("rect")
 			.attr("width", function(d){
-				 return (size / data.length) * 0.75; 
+				 return (size / data.length) * 0.75;
 			})
 			.attr("height",function(d){
 				return size + "px";
@@ -406,18 +397,18 @@ var MapView = Backbone.View.extend({
 			var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
 			return a > 90 ? a - 180 : a;
 		};*/
-		var arc = d3.svg.arc().innerRadius(0).outerRadius(size/4);   
+		var arc = d3.svg.arc().innerRadius(0).outerRadius(size/4);
 		var outerArc = d3.svg.arc().innerRadius(size/2).outerRadius(size/4);
-		var pie = d3.layout.pie() 
-      		.value(function(d) { return d.value; }) 
+		var pie = d3.layout.pie()
+      		.value(function(d) { return d.value; })
 
 		var tooltipElement = d3.select("#tooltipGenerator")
-			.append("svg") 
-			.data(data) 
-			.attr("width", size) 
-			.attr("height", size) 
+			.append("svg")
+			.data(data)
+			.attr("width", size)
+			.attr("height", size)
 			.attr("class","tooltip-canvas")
-			.append("g") 
+			.append("g")
 			.attr("transform", "translate(" + (size/2) + "," + (size/2) + ")")
 			.attr('stroke','#000')
 			.attr('stroke-width',2);
@@ -428,7 +419,7 @@ var MapView = Backbone.View.extend({
 			})
 			.enter()
 			.append("g")
-			.attr("class", "slice");  
+			.attr("class", "slice");
 
 
 		arcs.append("path")
@@ -438,31 +429,31 @@ var MapView = Backbone.View.extend({
 		arcs.append("text")
 			.attr("transform", function(d) {
 				d.outerRadius = (size/2);
-				d.innerRadius = (size/2); 
+				d.innerRadius = (size/2);
 				return "translate(" + arc.centroid(d) + ")";
 			})
 			.attr("text-anchor", "middle") //center the text on it's origin
 			.style("stroke", "000")
 			.style("font", "10px verdana")
-			.text(function(d, i) { 
-				return values[i]; 
+			.text(function(d, i) {
+				return values[i];
 			});
 
-		arcs.filter(function(d) { 
-				return d.endAngle - d.startAngle > .2; 
+		arcs.filter(function(d) {
+				return d.endAngle - d.startAngle > .2;
 			}).append("text")
 			.attr("dy", ".35em")
 			.attr("text-anchor", "middle")
-			.attr("transform", function(d) { 
-				d.outerRadius = (size/2); 
-				d.innerRadius = (size/2); 
+			.attr("transform", function(d) {
+				d.outerRadius = (size/2);
+				d.innerRadius = (size/2);
 				//return "translate(" + outerArc.centroid(d) + ")rotate(" + computeAngle(d) + ")";
 				return "translate(" + outerArc.centroid(d) + ")";
 			})
 			.style("stroke", "428bca")
 			.style("font", "10px verdana")
-			.text(function(i) { 
-				return i.data.label; 
+			.text(function(i) {
+				return i.data.label;
 			});
 	},
 
@@ -477,7 +468,7 @@ var MapView = Backbone.View.extend({
 		if ($('circle').length !== 0) svg.selectAll("circle").remove();
 		if ($('.region-label').length !== 0) svg.selectAll(".region-label").remove();
 		if ($('.graphic').length !== 0) svg.selectAll(".graphic").remove();
-		if ($('.pie').length !== 0) svg.selectAll(".pie").remove();
+		if ($('.area-element').length !== 0) svg.selectAll(".area-element").remove();
 		if ($('.tooltip-canvas').length !== 0) d3.selectAll(".tooltip-canvas").remove();
 	},
 
@@ -494,7 +485,7 @@ var MapView = Backbone.View.extend({
 			this.model.set("currentBoundingBox",null);
 			this.model.set("currentAutoZoomEvent",{translate: [0,0], scale: 1});
 			return;
-		} 
+		}
 
 		this.model.set("currentBoundingBox",[
 			[Math.max.apply(Math,dataArray.map(function(d){return d.lon})),Math.max.apply(Math,dataArray.map(function(d){return d.lat}))],
@@ -537,31 +528,142 @@ var MapView = Backbone.View.extend({
 
 	},
 
-	flagTransitionEnd:function(transition, callback) { 
+	flagTransitionEnd:function(transition, callback) {
 		if (transition.size() === 0) { callback() }
-		var n = 0; 
-		transition 
-			.each(function() { ++n; }) 
-			.each("end", function() { if (!--n) callback.apply(this, arguments); }); 
+		var n = 0;
+		transition
+			.each(function() { ++n; })
+			.each("end", function() { if (!--n) callback.apply(this, arguments); });
 	},
 
-	
+
 
 	//----------------------------------------------------------------------------------------------------
 	// EVENTS
 	//-----------------------------------------------------------------------------------------------------
 
 	moveUpALevel:function(){
+		$('#selection').html('');
 		if (this.model.get("level") > 0) {
 			this.model.decreaseLevel();
 			this.drawRegions()
 		};
 	},
 
+	showHideElement:function(e){
+		var id = e.target.id;
+		var state = $(e.target).data('value');
+
+		var element = d3.selectAll('.area-element')
+			.filter(function(d,i){
+				return d.name === id;
+			})
+			.style('display',function(d){
+				var then = state == 'on' ? 'none' : 'inline';
+				return then;
+			})
+
+		var now = state == 'on' ? 'off' : 'on';
+		$(e.target).data('value',now);
+	},
+
+	showHideCities:function(e){
+		var that = this;
+
+		if (e.target.checked === false) {
+			d3.selectAll('.city-label').attr('opacity',0)
+			d3.selectAll('.city-text').attr('opacity',0)
+			this.model.set("citiesVisible",false);
+		} else if (e.target.checked === true) {
+			d3.selectAll('.city-label')
+				.attr("opacity",function(d){
+					var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
+					var labelO =  popLimit === true ? 1 : 0;
+					return labelO;
+				})
+			d3.selectAll('.city-text')
+				.attr("opacity",function(d){
+					var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
+					var labelO =  popLimit === true ? 1 : 0;
+					return labelO;
+				})
+
+			this.model.set("citiesVisible",true);
+		}
+	},
+
+	showHideCitiesBySize:function(e){
+		var that = this;
+		var populationLimit = e.target.value;
+		this.model.set("citiesVisibleLimit",populationLimit);
+
+		d3.selectAll('.city-label')
+			.attr("opacity",function(d){
+				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
+				var labelO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
+				return labelO;
+			})
+
+		d3.selectAll('.city-text')
+			.attr("opacity",function(d){
+				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
+				var labelO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
+				return labelO;
+			})
+	},
+
+
+	createview:function () {
+		that =this;
+
+		// $('#graphs').treeview("destroy");
+
+		var dataArray = that.model.getData();
+			// console.log(data);
+			var arr= [];
+			var newArray = [];
+
+	 	function compare(a,b) {
+	    if (a.name < b.name)
+	      return -1;
+	    if (a.name > b.name)
+	      return 1;
+	    return 0;
+	  }
+			dataArray = 	dataArray.sort(compare);
+			$.each(dataArray,function(index,element){
+
+				arr.push({
+				 text: element.name,
+				 id : element.name,
+				 checked: true,
+				})
+		});
+
+		var tree = $('#graphs').treeview({
+				data: arr,
+				// data: dataArray,
+				levels: 1,
+				showTags:true,
+				showCheckbox: true,
+				disabled:false,
+				multiSelect: false,
+				icon: "glyphicon glyphicon-unchecked",
+				// onChecked:
+				state: {
+				checked: true,
+				disabled: true,
+				expanded: true,
+			},
+				onNodeChecked: function(event, data) {
+					
+				}
+			});
+				$('#graphs').treeview("checkAll",{silent:true});
+	},
 
 
 
-	
 
 
 });
