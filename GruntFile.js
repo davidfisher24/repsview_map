@@ -32,9 +32,10 @@ module.exports = function(grunt) {
     copy: {
       main: {
         files: [
+          // Fonts from bootstrap to dev and public
           {expand: true, src: ['node_modules/bootstrap/fonts/*'], dest: './fonts/', filter: 'isFile', flatten:true},
           {expand: true, src: ['node_modules/bootstrap/fonts/*'], dest: './public/fonts/', filter: 'isFile', flatten:true},
-
+          // End fonts
           {expand: true, src: ['geoJson/*'], dest: 'public/', filter: 'isFile'},
           {expand: true, src: ['js/*'], dest: 'public/', filter: 'isFile'},
           {expand: true, src: ['css/*'], dest: 'public/', filter: 'isFile'},
@@ -47,7 +48,7 @@ module.exports = function(grunt) {
 
 
   grunt.loadNpmTasks('grunt-contrib-concat');
-   grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-copy');
 
 
   grunt.registerTask('default', ['concat','copy']);

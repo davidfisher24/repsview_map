@@ -57,17 +57,14 @@ var MapView = Backbone.View.extend({
 				.attr("id",'franceMap')
 				.append("g")
 			    .attr("id","zoomgroup")
+			    .attr("width",that.model.get("width"))
+			    .attr("height",that.model.get("height"))
 			    .call(zoom)
 				//.on("mousedown.zoom", null)
 				//.on("touchstart.zoom", null)
 				//.on("touchmove.zoom", null)
 				//.on("touchend.zoom", null);
 
-		
-			svg.append("rect")
-			    .attr("class", "overlay")
-			    .attr("width", that.model.get("width"))
-			    .attr("height", that.model.get("height"));
 
 			var projection = d3.geo.mercator()
 				.center(that.model.get("defaultCenter"))
@@ -214,23 +211,13 @@ var MapView = Backbone.View.extend({
 
 		window.setTimeout(function(){
 			var currentScale = (svg.attr('transform') && that.model.get("level") !== 0) ? svg.attr('transform').split(",")[3].replace(")","") : 1;
-			console.log(currentScale);
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
 
 		 var tip = d3.tip()
 			  .attr('class', 'd3-tip')
 			  .offset(function(d){
-			  	// TESTING PROJECTION OF MAX LATS AND LONS OF CURRENT VIEW
-			  	// THE ZOOM ELEMENT ISN'T CORRECT 
-			  	/*var box = svg.node().getBBox();
-			  	var x1 = box.x;
-				var y1 = box.y;
-				var x2 = box.x+box.width;
-				var y2 = box.y+box.height;
-			  	console.log(projection.invert([x1,y1]));
-			  	console.log(projection.invert([x2,y2]));*/
-				return [-10,0];
+			  	return that.model.calculateTooltipPosition(projection,this,d,150);
 			  })
 			  .html(function(d) {
 			  	var data = [
@@ -303,8 +290,8 @@ var MapView = Backbone.View.extend({
 			that.model.set("currentRegions",dataArray);
 
 			that.createview();
+			// Testing clashes. Can log out the clashing elements
 			var clashes = that.model.testAreaBoundingBoxesForCollisions('.area-element',projection);
-			console.log(clashes);
 
 		},delay);
 
@@ -630,7 +617,6 @@ var MapView = Backbone.View.extend({
 		 callback();
 		}
 	},
-
 
 
 	//----------------------------------------------------------------------------------------------------

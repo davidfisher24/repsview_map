@@ -1,3 +1,5 @@
+/* Bolded areas */
+
 .region-label {
   font-weight:bold;
 }
@@ -6,15 +8,16 @@
   font-weight:bold;
 }
 
+/* Map layer - map, zoom group, buttons and hidden tooltip generator */
+
 #map {
   overflow: hidden;
   position:relative;
-  /*border: 1px solid red;  Testing purposes */
 }
 
-.overlay {
-	fill:none;
+#zoomgroup {
 	pointer-events:all;
+  overflow:hidden;
 }
 
 #returnLevel {
@@ -26,6 +29,8 @@
 #tooltipGenerator {
 	display:none;
 }
+
+/* D3 TOOLTIPS */
 
 .d3-tip {
   line-height: 1;

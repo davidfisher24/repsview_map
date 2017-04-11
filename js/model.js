@@ -32,6 +32,10 @@ MapModel = Backbone.Model.extend({
 		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>"
 	},
 
+	initialize:function(options){
+		this.set("width",options.mapSize);
+		this.set("height",options.mapSize);
+	},
 
 	increaseLevel: function(data){
 		if (data.level === 0) this.set("currentRegion",data.name);
@@ -135,6 +139,35 @@ MapModel = Backbone.Model.extend({
 		});
 		return selection;
 
+	},
+
+	/*******************************************************************************************
+	/ FUNCTION TO LOOK FOR ELEMENTS OVERLAPPING THE EDGE OF THE MAP (CURRENTLY USED FOR TOOLTIPS)
+	* projection - map projection
+	* elementObject - original element to be used
+	* element - currently the tooptip that will be placed on the map
+	* size of the tooltip to be place (current height and widt are the same)
+	********************************************************************************************/
+
+	calculateTooltipPosition:function(projection,elementObject,element,elementSize){
+		// Projection of current element
+		var proj = projection([element.lon,element.lat]);  
+		var elementX = proj[0];
+		var elementY = proj[1];
+
+		// Caluclations of the space we have to work with (right and top are not quite working)
+		var mapBox = d3.select('#franceMap').node().getBBox();
+		var zoomBox = d3.select('#zoomgroup').node().getBBox();
+		var scale = mapBox.width/zoomBox.width;
+		var left = zoomBox.x - (mapBox.x / (scale));
+		var top = zoomBox.y - (mapBox.y / (scale));
+		var right = ((zoomBox.width - zoomBox.x) / (scale)) - (mapBox.x / (scale));
+		var bottom = (zoomBox.height - zoomBox.y) / (scale) - (mapBox.y / (scale));
+
+		// offset y - if no space at the top we send back the tooltip height + the element height + 10px for bottom spacing, else we put 10 to the top
+		var offsetY = (elementY - ((elementSize + 10)/scale) < top) ? (d3.select(elementObject).node().getBBox().height * scale) + elementSize + 10 : -10;
+		return [offsetY,0];
+		
 	},
 
 	/*****************************************************************************************
