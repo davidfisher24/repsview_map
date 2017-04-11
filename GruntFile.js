@@ -9,7 +9,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: [
-          /*'node_modules/d3/build/d3.min.js',*/
+          'node_modules/d3/d3.min.js',
           'node_modules/d3-tip/index.js',
           'node_modules/topojson/dist/topojson.min.js',
           'node_modules/jquery/dist/jquery.js',
