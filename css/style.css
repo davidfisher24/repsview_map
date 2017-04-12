@@ -20,7 +20,9 @@
   overflow:hidden;
 }
 
-#returnLevel {
+/* Buttons on the map */
+
+#mapButtons {
   position:absolute;
   top: 1%;
   left: 1%;

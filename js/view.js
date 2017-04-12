@@ -8,6 +8,7 @@ var MapView = Backbone.View.extend({
 	},
 
 	events: {
+		'click #changeNetwork' : "changeNetwork",
 		'click #returnLevel' : "moveUpALevel",
 		"click #controlCities" : "showHideCities",
 		"change #controlCitiesSize" : "showHideCitiesBySize",
@@ -622,6 +623,15 @@ var MapView = Backbone.View.extend({
 	//----------------------------------------------------------------------------------------------------
 	// EVENTS
 	//-----------------------------------------------------------------------------------------------------
+
+	changeNetwork:function(e){
+		var changeTo = $(e.target).val() === "gp" ? "sp" : "gp";
+		$(e.target).html(changeTo.toUpperCase());
+		$(e.target).val(changeTo);
+		this.model.changeNetwork(changeTo);
+		d3.selectAll("#franceMap").remove();
+		this.renderMap();
+	},
 
 	moveUpALevel:function(){
 		$('#selection').html('');

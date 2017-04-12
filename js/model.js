@@ -11,7 +11,7 @@ MapModel = Backbone.Model.extend({
 		"reservedKeys" : ["loc","lat","lon"], // Reserved keys in the current data array
 		"defaultCenter" : [4.8, 47.35], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
-		"deepestLevel" : 2,  // Maximum level that can be drilled to
+		"deepestLevel" : 2,  // Maximum level that can be drilled to. Is set to 2 for gp and 3 for sp.
 		"pieColors" : ["#5bc0de","#5cb85c","#d9534f","#428bca"], // Colours to use in the segments of the pies
 		"mapColors" : ["407020","609040","80b060","a0d080","306010","508030","70a050","90c070","b0e090","205000"],
 
@@ -27,11 +27,6 @@ MapModel = Backbone.Model.extend({
 
 		"citiesVisible" : true, // Linked to the checkbox for this element. If the cities are visible or not
 		"citiesVisibleLimit" : 250000,
-
-		"citiesWithGroupedUgas" : ["BREST","VANNES","RENNES","CAEN","MANS","NANTES","ANGERS","DUNKERQUE","LILLE",
-		"AMIENS","REIMS","TROYES","STRASBOURG","MULHOUSE","COLMAR","NANCY","METZ","BESANCON","BELFORT","TOURS",
-		"CLERMONT-FERRAND","NIORT","LYON","VILLEURBANNE","SAINT-ETIENNE","VALENCE","CHAMBERY","GRENOBLE","BORDEAUX","PAU",
-		"TOULOUSE","NIMES","MONTPELLIER","PERPIGNAN","MARSEILLE","AIX-EN-PROVENCE","ANTIBES","NICE"],
 
 		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>"
 	},
@@ -51,11 +46,24 @@ MapModel = Backbone.Model.extend({
 	increaseLevel: function(data){
 		if (data.level === 0) this.set("currentRegion",data.name);
 		if (data.level === 1) this.set("currentSector",data.name);
+		if (data.level === 2) this.set("currentUgaGroup", data.name);
 		this.set("level", this.get("level") + 1);
 	},
 
 	decreaseLevel: function(data){
 		this.set("level", this.get("level") - 1);
+	},
+
+	changeNetwork: function(changeTo) {
+		if (changeTo === "gp") {
+			this.set("network","gp");
+			this.set("deepestLevel",2);
+		}
+		if (changeTo === "sp") {
+			this.set("network","sp");
+			this.set("deepestLevel",3);
+		}
+		this.set("level",0);
 	},
 
 	//----------------------------------------------------------------------------------------------------
@@ -66,9 +74,14 @@ MapModel = Backbone.Model.extend({
 
 	getData: function(){
 		var level = this.get("level");
+		var network = this.get("network");
 		if (level === 0) return this.getRegions();
 		if (level === 1) return this.getSectors();
-		if (level === 2) return this.getUgas();
+		if (level === 2) {
+			if (network === "gp") return this.getUgas();
+			if (network === "sp") return this.getUgaGroups();
+		}
+		if (level === 3) return this.getUgas();
 	},
 
 	getRegions:function(){
@@ -109,19 +122,44 @@ MapModel = Backbone.Model.extend({
 		return sectorsArray;
 	},
 
-
-	getUgas:function(region,sector){
+	getUgaGroups:function(){
 		var _this = this;
 		var data = this.data();
 		var region = this.get("currentRegion");
 		var sector = this.get("currentSector");
-		var ugasArray = [];
+		var ugaGroupsArray = [];
 		for (var key in data[region][sector]) {
-			if (_this.get("reservedKeys").indexOf(key) === -1) ugasArray.push({
+			if (_this.get("reservedKeys").indexOf(key) === -1) ugaGroupsArray.push({
 				lat: data[region][sector][key].lat,
 				lon: data[region][sector][key].lon,
 				name: key,
 				level: 2,
+				contacts: Math.floor(Math.random() * 100),
+				visits: Math.floor(Math.random() * 100),
+				doctors: Math.floor(Math.random() * 100),
+			});
+		}
+		return ugaGroupsArray;
+	},
+
+
+	getUgas:function(){
+		var _this = this;
+		var data = this.data();
+		var region = this.get("currentRegion");
+		var sector = this.get("currentSector");
+		var ugaGroup = this.get("currentUgaGroup");
+		var ugasArray = [];
+
+		var selectedData = this.get("network") === "gp" ? data[region][sector] : data[region][sector][ugaGroup];
+		var level = this.get("network") === "gp" ? 2 : 3;
+
+		for (var key in selectedData) {
+			if (_this.get("reservedKeys").indexOf(key) === -1) ugasArray.push({
+				lat: selectedData[key].lat,
+				lon: selectedData[key].lon,
+				name: key,
+				level: level,
 				contacts: Math.floor(Math.random() * 100),
 				visits: Math.floor(Math.random() * 100),
 				doctors: Math.floor(Math.random() * 100),
