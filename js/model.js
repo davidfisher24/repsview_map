@@ -20,7 +20,9 @@ MapModel = Backbone.Model.extend({
 		"level" : 0, // Level of drilling of data
 		"currentRegion" : null, // Current region selected for setting data
 		"currentSector" : null, // Current secot select for setting data
+		"currentUgaGroup" : null, // Current uga group selected for setting data
 		"currentBoundingBox" : null, // Current bounding box to draw within lat/lon bounds
+		"currentMapBounds" : null, // current ouzel bounds of the map
 
 		"currentCities" : null,
 		"currentRegions" : null,
@@ -290,6 +292,7 @@ MapModel = Backbone.Model.extend({
 	testAreaBoundingBoxesForCollisions:function(testElement,projection){
 		var boxes = [];
 		var clashes = [];
+		//var recommendedMovements = [];
 		d3.selectAll(testElement).each(function(d,i){
 			var proj = projection([d.lon, d.lat]);
 			var box = d3.select(this).node().getBBox();
@@ -303,9 +306,51 @@ MapModel = Backbone.Model.extend({
 		for (var a=0; a < boxes.length - 1; a++) {
 			var check = this.checkBounds(boxes[a], boxes.slice(a + 1));
 			if (check) $.each(check,function(i,e){
-				if (clashes.indexOf(e) === -1) clashes.push(e);
+				if (typeof(e) == 'string' && clashes.indexOf(e) === -1) clashes.push(e);
+				//else recommendedMovements[e.name] = e;
 			})
 		}
+		
+		/*$.each(clashes,function(index,obj){
+			element = d3.selectAll('.area-element').filter(function(d,i){
+				return d.name === obj;
+			})
+
+			var movement = recommendedMovements[obj];
+
+			if (movement) {
+				var overlapPoints = [movement.left, movement.right, movement.top, movement.bottom];
+				var point = overlapPoints.reduce((iMax, x, i, arr) => x > arr[iMax] ? i : iMax, 0);
+
+				d3.selectAll('.area-element')
+					.filter(function(d,i){
+						return d.name === obj;
+					})
+					.transition().duration(1)
+					.attr('transform',function(d,i){
+						var originalTransform = $(this).attr('transform');
+						console.log(originalTransform);
+						var transform = originalTransform.substring(originalTransform.indexOf("(")+1, originalTransform.indexOf(")")).split(",");
+
+						if (point === 0) transform[0] = parseFloat(transform[0]) - movement.left;
+						if (point === 1) transform[0] = parseFloat(transform[0]) + movement.right;
+						if (point === 2) transform[1] = parseFloat(transform[1]) - movement.top;
+						if (point === 3) transform[1] = parseFloat(transform[1]) + movement.bottom;
+						return "translate("+parseFloat(transform[0])+","+parseFloat(transform[1])+")";
+					})
+			};
+			
+			d3.selectAll('.area-element')
+				.filter(function(d,i){
+					return d.name === obj;
+				})
+				.transition().duration(1)
+				.attr('transform',function(d,i){
+					var originalTransform = $(this).attr('transform');
+					return originalTransform+ "scale(0.75)";
+				});
+		});*/
+
 
 		return clashes;
 	},
@@ -314,7 +359,15 @@ MapModel = Backbone.Model.extend({
 		var crash = null;
 		$.each(testArray,function(index,obj){
 			if (testElement.x[0] <= obj.x[1] && testElement.x[1] >= obj.x[0] && testElement.y[0] <= obj.y[1] && testElement.y[1] >= obj.y[0]) {
-				crash = [testElement.name,obj.name];
+				/*var recommendedMovements = {
+					name: testElement.name,
+					left: obj.x[1] - testElement.x[0], // left
+					right: testElement.x[1] - obj.x[0], // right
+					top: obj.y[1] - testElement.y[0], // top
+					bottom: testElement.y[1] - obj.y[0] // bottom
+				};*/
+
+				crash = [testElement.name,obj.name/*,recommendedMovements*/];
 				return false;
 			}
 		});

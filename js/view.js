@@ -221,7 +221,6 @@ var MapView = Backbone.View.extend({
 				})
 				.call(tip)
 				.on("click",function(d,i){
-					console.log(d.corsicaFlag);
 					if (that.model.get("level") < that.model.get("deepestLevel") && !d.corsicaFlag) {
 						tip.hide();
 						that.model.increaseLevel(d);
@@ -535,8 +534,8 @@ var MapView = Backbone.View.extend({
 			svg.transition()
 				.duration(750)
 				.attr("transform", "translate(0,0)scale(1)")
-
 			this.model.set("currentBoundingBox",null);
+			this.model.set("currentMapBounds",null);
 			return;
 		}
 
@@ -567,12 +566,13 @@ var MapView = Backbone.View.extend({
 		bounds[0][1] = shorterAxisId === "Y" ? bounds[0][1] + amountToAddToShorterAxis + buffer : bounds[0][1] + buffer;
 		bounds[1][0] = shorterAxisId === "X" ? bounds[1][0] + amountToAddToShorterAxis + buffer : bounds[1][0] + buffer;
 		bounds[1][1] = shorterAxisId === "Y" ? bounds[1][1] - amountToAddToShorterAxis - buffer : bounds[1][1] - buffer;
- 
+ 		this.model.set("currentMapBounds",bounds);
 
 		var dx = bounds[1][0] - bounds[0][0];
 		var dy = bounds[1][1] - bounds[0][1]; 
 		var x = (bounds[0][0] + bounds[1][0]) / 2;
 		var y = (bounds[0][1] + bounds[1][1]) / 2;
+
 
 		var scale = 1 / Math.max(dx / this.model.get("width"), dy / this.model.get("height"));
 		var translate = [this.model.get("width") / 2 - scale * x, this.model.get("height") / 2 - scale * y];
