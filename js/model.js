@@ -1,6 +1,10 @@
 MapModel = Backbone.Model.extend({
 
 	defaults: {
+		// Data for GP and SP networks
+		"gpdata" : "",
+		"spdata" : "",
+		"network" : "gp",
 		// Defined attribute
 		"width" : 800, // Width of the svg element
 		"height" : 600, // Height of the svg element
@@ -32,9 +36,16 @@ MapModel = Backbone.Model.extend({
 		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>"
 	},
 
+	data:function(){
+		if (this.get("network") === "gp") return this.get("gpdata");
+		if (this.get("network") === "sp") return this.get("spdata");
+	},
+
 	initialize:function(options){
 		this.set("width",options.mapSize);
 		this.set("height",options.mapSize);
+		this.set("gpdata",options.gpdata);
+		this.set("spdata",options.spdata);
 	},
 
 	increaseLevel: function(data){
@@ -62,6 +73,7 @@ MapModel = Backbone.Model.extend({
 
 	getRegions:function(){
 		var _this = this;
+		var data = this.data();
 		var regionsArray = [];
 		for (var key in data) {
 			if (_this.get("reservedKeys").indexOf(key) === -1) regionsArray.push({
@@ -80,6 +92,7 @@ MapModel = Backbone.Model.extend({
 
 	getSectors:function(){
 		var _this = this;
+		var data = this.data();
 		var region = this.get("currentRegion");
 		var sectorsArray = [];
 		for (var key in data[region]) {
@@ -99,6 +112,7 @@ MapModel = Backbone.Model.extend({
 
 	getUgas:function(region,sector){
 		var _this = this;
+		var data = this.data();
 		var region = this.get("currentRegion");
 		var sector = this.get("currentSector");
 		var ugasArray = [];
@@ -161,10 +175,7 @@ MapModel = Backbone.Model.extend({
 		var scale = mapBox.width/zoomBox.width;
 		var left = zoomBox.x - (mapBox.x / (scale));
 		var top = zoomBox.y - (mapBox.y / (scale));
-		//var right = (zoomBox.width / scale) - (mapBox.x / (scale));
-
-		console.log(left);
-		console.log(right);
+		//var right = (zoomBox.width / scale) - (mapBox.x / (scale));;
 		// offset y - if no space at the top we send back the tooltip height + the element height + 10px for bottom spacing, else we put 10 to the top
 		var offsetY = (elementY - ((elementSize + 10)/scale) < top) ? (d3.select(elementObject).node().getBBox().height * scale) + elementSize + 10 : -10;
 		return [offsetY,0];
