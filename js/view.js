@@ -229,6 +229,7 @@ var MapView = Backbone.View.extend({
 				})
 				.on('mouseover', tip.show)
 	      		.on('mouseout', tip.hide)
+	      		
 
 			var colors = that.model.get("pieColors");
 
