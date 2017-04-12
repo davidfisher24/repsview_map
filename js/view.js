@@ -182,8 +182,8 @@ var MapView = Backbone.View.extend({
 			var currentScale = (svg.attr('transform') && that.model.get("level") !== 0) ? svg.attr('transform').split(",")[3].replace(")","") : 1;
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
-
-		 var tip = d3.tip()
+ 	
+		 	var tip = d3.tip()
 			  .attr('class', 'd3-tip')
 			  .offset(function(d){
 			  	return that.model.calculateTooltipPosition(projection,this,d,150);
@@ -201,7 +201,6 @@ var MapView = Backbone.View.extend({
 			  	$('#tooltipGenerator').html('');
 			    return toolTipSvg;
 			 })
-
 
 			var arc = d3.svg.arc().innerRadius(0).outerRadius(10/currentScale);
 	      	var pie = d3.layout.pie().value(function(d){ return d });
@@ -229,7 +228,8 @@ var MapView = Backbone.View.extend({
 				})
 				.on('mouseover', tip.show)
 	      		.on('mouseout', tip.hide)
-	      		
+
+
 
 			var colors = that.model.get("pieColors");
 
@@ -255,7 +255,8 @@ var MapView = Backbone.View.extend({
 		        })
 		        .text(function(d,i){
 		        	return d.name;
-		        });
+		        })
+
 
 			that.model.set("currentRegions",dataArray);
 
@@ -550,7 +551,12 @@ var MapView = Backbone.View.extend({
 			Math.max.apply(Math,dataArray.map(function(d){return d.lon})),
 			Math.max.apply(Math,dataArray.map(function(d){return d.lat}))
 		]);
-		this.model.set("currentBoundingBox",[leftBottom,rightTop]);
+		// set the bounding box of lat/lon coords and the mapbound of projection pixels
+		this.model.set("currentBoundingBox",[
+			[Math.max.apply(Math,dataArray.map(function(d){return d.lon})),Math.max.apply(Math,dataArray.map(function(d){return d.lat}))],
+			[Math.min.apply(Math,dataArray.map(function(d){return d.lon})),Math.min.apply(Math,dataArray.map(function(d){return d.lat}))]
+		]);
+		this.model.set("currentMapBounds",[leftBottom,rightTop]);
 
 		// Caluclate the base bounds and modifiy the shoter axis to make a square.
 		// Add a buffer to each side of the square to prevent overflow

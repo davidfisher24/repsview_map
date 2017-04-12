@@ -15,14 +15,17 @@ MapModel = Backbone.Model.extend({
 		"pieColors" : ["#5bc0de","#5cb85c","#d9534f","#428bca"], // Colours to use in the segments of the pies
 		"mapColors" : ["407020","609040","80b060","a0d080","306010","508030","70a050","90c070","b0e090","205000"],
 
+
 		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
+		"currentBoundingBox" : null, // Current bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
+		"currentMapBounds" : null, // current ouzel bounds of the map
 		// Dynamic attributes
 		"level" : 0, // Level of drilling of data
 		"currentRegion" : null, // Current region selected for setting data
 		"currentSector" : null, // Current secot select for setting data
 		"currentUgaGroup" : null, // Current uga group selected for setting data
-		"currentBoundingBox" : null, // Current bounding box to draw within lat/lon bounds
-		"currentMapBounds" : null, // current ouzel bounds of the map
+
+		
 
 		"currentCities" : null,
 		"currentRegions" : null,
@@ -176,6 +179,7 @@ MapModel = Backbone.Model.extend({
 
 	getCities:function(){
 		var boundingBox = this.get("currentBoundingBox") ? this.get("currentBoundingBox") : this.get("defaultBoundingBox");
+		console.log(boundingBox);
 		switch (this.get("level")) {
 		    case 0:
 		        levelMinPopulation = 250000;
