@@ -248,7 +248,8 @@ var MapView = Backbone.View.extend({
 				})
 				.call(tip)
 				.on("click",function(d,i){
-					if (that.model.get("level") < that.model.get("deepestLevel")) {
+					console.log(d.corsicaFlag);
+					if (that.model.get("level") < that.model.get("deepestLevel") && !d.corsicaFlag) {
 						tip.hide();
 						that.model.increaseLevel(d);
 						that.drawRegions()

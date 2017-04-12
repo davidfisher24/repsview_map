@@ -104,6 +104,9 @@ MapModel = Backbone.Model.extend({
 
 
 	getSectors:function(){
+		var corsicaFlagRegion = "SPCorse";
+		var corsicaFlagSectors = ["20AJA","20BAS","20CAL","20SAR"];
+
 		var _this = this;
 		var data = this.data();
 		var region = this.get("currentRegion");
@@ -117,6 +120,7 @@ MapModel = Backbone.Model.extend({
 				contacts: Math.floor(Math.random() * 100),
 				visits: Math.floor(Math.random() * 100),
 				doctors: Math.floor(Math.random() * 100),
+				corsicaFlag: (region === corsicaFlagRegion && (corsicaFlagSectors.indexOf(key) !== -1)) ? true : false,
 			});
 		}
 		return sectorsArray;
