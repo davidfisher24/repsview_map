@@ -24,32 +24,6 @@ var MapView = Backbone.View.extend({
 		var svg = d3.json("./geoJson/FRA_adm2.json", function(json) {
 			regions = topojson.feature(json, json.objects.FRA_adm2);
 
-			// MANUAL ZOOM DEACTIVATED
-			/*var zoom = d3.behavior.zoom()
-			    .scaleExtent([1, 500])
-			    .on("zoom", zoomhandler);
-
-			function zoomhandler() {
-				var currentZoom = $('#zoomgroup').css('transform') === "none" ? 1 : parseFloat($('#zoomgroup').css('transform').split("(")[1].split(",")[0]);
-				if (that.model.get("currentAutoZoomEvent")) {
-					zoom.translate([
-						that.model.get("currentAutoZoomEvent").translate[0],
-						that.model.get("currentAutoZoomEvent").translate[1]
-					])
-					.scale(that.model.get("currentAutoZoomEvent").scale); 
-					that.model.set("currentAutoZoomEvent",null);
-					return
-				} else {
-					// Zoom group
-					svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-					// Pies
-					svg.selectAll('.area-element')
-					.attr("transform", function(d){
-						return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")scale(" + (currentZoom/d3.event.scale) + ")";
-					});
-				}
-			}*/
-
 			svg = d3.select("#map")
 				.append("svg")
 				.attr("width", that.model.get("width"))
@@ -59,7 +33,6 @@ var MapView = Backbone.View.extend({
 			    .attr("id","zoomgroup")
 			    .attr("width",that.model.get("width"))
 			    .attr("height",that.model.get("height"))
-			    //.call(zoom)  // MANUAL ZOOM DEACTIVATED
 
 
 			var projection = d3.geo.mercator()
