@@ -23,14 +23,13 @@ var MapView = Backbone.View.extend({
 
 		var svg = d3.json("./geoJson/FRA_adm2.json", function(json) {
 			regions = topojson.feature(json, json.objects.FRA_adm2);
-			var zoom = d3.behavior.zoom()
+
+			// MANUAL ZOOM DEACTIVATED
+			/*var zoom = d3.behavior.zoom()
 			    .scaleExtent([1, 500])
 			    .on("zoom", zoomhandler);
 
-
 			function zoomhandler() {
-				//svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")"); //AUTOMATIC D3 ZOOM
-				//zoom.translate([0,0]).scale(1); ZOOM RESET FUNCTION
 				var currentZoom = $('#zoomgroup').css('transform') === "none" ? 1 : parseFloat($('#zoomgroup').css('transform').split("(")[1].split(",")[0]);
 				if (that.model.get("currentAutoZoomEvent")) {
 					zoom.translate([
@@ -49,7 +48,7 @@ var MapView = Backbone.View.extend({
 						return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")scale(" + (currentZoom/d3.event.scale) + ")";
 					});
 				}
-			}
+			}*/
 
 			svg = d3.select("#map")
 				.append("svg")
@@ -60,11 +59,7 @@ var MapView = Backbone.View.extend({
 			    .attr("id","zoomgroup")
 			    .attr("width",that.model.get("width"))
 			    .attr("height",that.model.get("height"))
-			    .call(zoom)
-				//.on("mousedown.zoom", null)
-				//.on("touchstart.zoom", null)
-				//.on("touchmove.zoom", null)
-				//.on("touchend.zoom", null);
+			    //.call(zoom)  // MANUAL ZOOM DEACTIVATED
 
 
 			var projection = d3.geo.mercator()
@@ -568,32 +563,44 @@ var MapView = Backbone.View.extend({
 				.attr("transform", "translate(0,0)scale(1)")
 
 			this.model.set("currentBoundingBox",null);
-			this.model.set("currentAutoZoomEvent",{translate: [0,0], scale: 1});
 			return;
 		}
 
-		this.model.set("currentBoundingBox",[
-			[Math.max.apply(Math,dataArray.map(function(d){return d.lon})),Math.max.apply(Math,dataArray.map(function(d){return d.lat}))],
-			[Math.min.apply(Math,dataArray.map(function(d){return d.lon})),Math.min.apply(Math,dataArray.map(function(d){return d.lat}))]
-		]);
-
-		var maxProj = projection([
+		// Calculate the projection points of the corners from the longitudes and latitudes to make
+		// an appropriate geographical bounding box
+		var leftBottom = projection([
+			Math.min.apply(Math,dataArray.map(function(d){return d.lon})), 
+			Math.min.apply(Math,dataArray.map(function(d){return d.lat})) 
+		]);  
+		var rightTop = projection([
 			Math.max.apply(Math,dataArray.map(function(d){return d.lon})),
 			Math.max.apply(Math,dataArray.map(function(d){return d.lat}))
 		]);
+		this.model.set("currentBoundingBox",[leftBottom,rightTop]);
 
-		var minProj = projection([
-			Math.min.apply(Math,dataArray.map(function(d){return d.lon})),
-			Math.min.apply(Math,dataArray.map(function(d){return d.lat}))
-		]);
+		// Caluclate the base bounds and modifiy the shoter axis to make a square.
+		// Add a buffer to each side of the square to prevent overflow
+		var bounds = [[leftBottom[0],leftBottom[1]],[rightTop[0],rightTop[1]]];
+		var xAxisLength = bounds[1][0] - bounds[0][0];
+		var yAxisLength = bounds[0][1] - bounds[1][1];
+		var xAndYAxis = [bounds[1][0] - bounds[0][0], bounds[0][1] - bounds[1][1]]
+		var longerAxisSize = Math.max.apply(Math,xAndYAxis.map(function(d){return d}));
+		var longerAxisDiff = Math.max.apply(Math,xAndYAxis.map(function(d){return d})) - Math.min.apply(Math,xAndYAxis.map(function(d){return d}));
+		var shorterAxisId = longerAxisSize === xAndYAxis[0] ? "Y" : "X";
+		var amountToAddToShorterAxis = longerAxisDiff/2;
+		var buffer = 20;
+		bounds[0][0] = shorterAxisId === "X" ? bounds[0][0] - amountToAddToShorterAxis - buffer : bounds[0][0] - buffer;
+		bounds[0][1] = shorterAxisId === "Y" ? bounds[0][1] + amountToAddToShorterAxis + buffer : bounds[0][1] + buffer;
+		bounds[1][0] = shorterAxisId === "X" ? bounds[1][0] + amountToAddToShorterAxis + buffer : bounds[1][0] + buffer;
+		bounds[1][1] = shorterAxisId === "Y" ? bounds[1][1] - amountToAddToShorterAxis - buffer : bounds[1][1] - buffer;
+ 
 
-
-		var bounds = [[maxProj[0],maxProj[1]],[minProj[0],minProj[1]]];
 		var dx = bounds[1][0] - bounds[0][0];
-		var dy = bounds[1][1] - bounds[0][1];
+		var dy = bounds[1][1] - bounds[0][1]; 
 		var x = (bounds[0][0] + bounds[1][0]) / 2;
 		var y = (bounds[0][1] + bounds[1][1]) / 2;
-		var scale = .7 / Math.max(dx / this.model.get("width"), dy / this.model.get("height"));
+
+		var scale = 1 / Math.max(dx / this.model.get("width"), dy / this.model.get("height"));
 		var translate = [this.model.get("width") / 2 - scale * x, this.model.get("height") / 2 - scale * y];
 		svg.transition()
 			.duration(750)
@@ -605,10 +612,6 @@ var MapView = Backbone.View.extend({
 			.duration(750)
 			.style("stroke-width", 1.5 / scale + "px");
 
-		this.model.set("currentAutoZoomEvent",{
-			translate:translate,
-			scale:scale,
-		});
 
 	},
 

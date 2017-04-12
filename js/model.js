@@ -21,7 +21,7 @@ MapModel = Backbone.Model.extend({
 		"currentRegion" : null, // Current region selected for setting data
 		"currentSector" : null, // Current secot select for setting data
 		"currentBoundingBox" : null, // Current bounding box to draw within lat/lon bounds
-		"currentAutoZoomEvent" : null, // Records an auto zoom event temporarily to link into manual zoom
+
 		"currentCities" : null,
 		"currentRegions" : null,
 
