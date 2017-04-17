@@ -138,7 +138,8 @@ var MapView = Backbone.View.extend({
 			.append("text")
 			.attr("class", "city-text")
 			.attr("font-size",12/currentScale)
-			.attr("transform", function(d,i) {				var target = projection([d.lon,d.lat]);
+			.attr("transform", function(d,i) {				
+				var target = projection([d.lon,d.lat]);
 				return "translate(" + (target[0] + (12/currentScale)) + "," + (target[1] + (8/currentScale)) + ")"; // Square pixels. Width add 1.5
 			})
 			.attr("opacity",function(d){
@@ -232,7 +233,12 @@ var MapView = Backbone.View.extend({
 					tip.show(d);
 					// This is the only way to get tooltips hover events into the tooltips.
 					d3.selectAll("g.slice").on('mouseover', function(d,i) {
-		                //console.log(that.model.get("tooltipData")[i]);
+		                d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label);
+		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
+		            })
+		            .on('mouseleave', function(d,i){
+		            	d3.select('.tip-pie-hover-label').text("");
+		                d3.select('.tip-pie-hover-value').text("");
 		            });
 				});	
 	      		//.on('mouseout', tip.hide) // Not needed as showing a new one will hide the old one. This needs solving
@@ -425,6 +431,8 @@ var MapView = Backbone.View.extend({
 			{label: "Muco", value: Math.floor((Math.random() * 1000) + 1)},
 			{label: "ARV", value: Math.floor((Math.random() * 1000) + 1)},
 		];
+
+		
 		var colors = this.model.get("pieColors");  // Colors array
 		var labels = []; // Labels won't be used
 		var values = [];
@@ -449,11 +457,12 @@ var MapView = Backbone.View.extend({
 			.attr('stroke','#000')
 			.attr('stroke-width',2);
 
+
 		var centreLabel = d3.select(".tooltip-canvas")
 			.append("text")
 			.attr("x", radius)
 			.attr("y", radius * 0.9)
-			.text("Rhumato")
+			.text("")
 			.attr("class","tip-pie-hover-label")
 			.style("fill", "none")
 			.style("stroke", "#AAAAAA")
@@ -463,8 +472,8 @@ var MapView = Backbone.View.extend({
 			.append("text")
 			.attr("x", radius)
 			.attr("y", radius * 1.1)
-			.text("700")
-			.attr("class","tip-pie-hover-text")
+			.text("")
+			.attr("class","tip-pie-hover-value")
 			.style("fill", "none")
 			.style("stroke", "#AAAAAA")
 			.style("text-anchor","middle");
@@ -478,7 +487,7 @@ var MapView = Backbone.View.extend({
 			.attr("class", "slice")
 			.append("path")
 			.attr("fill", function(d, i) {
-				var index = i > 9 ? i-10 : i;
+				var index = i > 9 ? Math.floor((i / 1) % 10) : i;
 				return colors[index]; 
 			})
 			.attr("d", arc);

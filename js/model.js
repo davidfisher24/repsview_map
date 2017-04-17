@@ -225,7 +225,7 @@ MapModel = Backbone.Model.extend({
 		var top = zoomBox.y - (mapBox.y / (scale));
 		//var right = (zoomBox.width / scale) - (mapBox.x / (scale));;
 		// offset y - if no space at the top we send back the tooltip height + the element height + 10px for bottom spacing, else we put 10 to the top
-		var offsetY = (elementY - ((elementSize + 10)/scale) < top) ? (d3.select(elementObject).node().getBBox().height * scale) + elementSize + 10 : -10;
+		var offsetY = (elementY - ((elementSize + 10)/scale) < top) ? /*(d3.select(elementObject).node().getBBox().height * scale) +*/ elementSize + 10 : -10;
 		return [offsetY,0];
 		
 	},
