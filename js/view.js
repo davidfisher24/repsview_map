@@ -198,7 +198,7 @@ var MapView = Backbone.View.extend({
 					{name:"visits", value:d.visits, label: "cible"},
 				];
 
-			  	that.appendPieChartInToolTip(150,data);
+			  	that.appendPieChartInToolTip(150,data,d.name);
 			  	var toolTipSvg = d3.select('#tooltipGenerator').html();
 			  	$('#tooltipGenerator').html('');
 
@@ -236,9 +236,9 @@ var MapView = Backbone.View.extend({
 		                d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label);
 		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
 		            })
-		            .on('mouseleave', function(d,i){
-		            	d3.select('.tip-pie-hover-label').text("");
-		                d3.select('.tip-pie-hover-value').text("");
+		            .on('mouseleave', function(){
+		            	d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region);
+		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].total);
 		            });
 				});	
 	      		//.on('mouseout', tip.hide) // Not needed as showing a new one will hide the old one. This needs solving
@@ -412,7 +412,7 @@ var MapView = Backbone.View.extend({
 	},
 
 
-	appendPieChartInToolTip:function(size,data){
+	appendPieChartInToolTip:function(size,data,region){
 		data = [
 			{label: "VIP", value: Math.floor((Math.random() * 1000) + 1)},
 			{label: "Priortitar", value: Math.floor((Math.random() * 1000) + 1)},
@@ -430,8 +430,10 @@ var MapView = Backbone.View.extend({
 			{label: "Muco", value: Math.floor((Math.random() * 1000) + 1)},
 			{label: "ARV", value: Math.floor((Math.random() * 1000) + 1)},
 		];
+
+		/* Adding orders and sorting data */
 		var total = 0;
-		var autres = {label:"autres",value:0};
+		var autres = {label:"Autres",value:0};
 		data.forEach(function(d){
 			total += d.value;
 		});
@@ -441,10 +443,11 @@ var MapView = Backbone.View.extend({
 				d.value = 0;
 			}
 		});
+		data.sort(function(a,b) {return (a.value > b.value) ? -1 : ((b.value > a.value) ? 1 : 0);} ); 
 		data.push(autres);
 
 
-		var colors = this.model.get("pieColors");  // Colors array
+		var colors = this.model.get("pieColorsSegmentation");  // Colors array
 		var labels = []; // Labels won't be used
 		var values = [];
 		$.each(data, function(index,obj) {
@@ -454,7 +457,7 @@ var MapView = Backbone.View.extend({
 
 		var radius = size/2;
 		var arc = d3.svg.arc().innerRadius(radius * 0.45).outerRadius(radius * 0.9); 
-		var pie = d3.layout.pie().value(function(d) { return d.value; }) 
+		var pie = d3.layout.pie().value(function(d) { return d.value; }).sort(null);
 
 
 		var tooltipElement = d3.select("#tooltipGenerator")
@@ -473,7 +476,7 @@ var MapView = Backbone.View.extend({
 			.append("text")
 			.attr("x", radius)
 			.attr("y", radius * 0.9)
-			.text("")
+			.text(region)
 			.attr("class","tip-pie-hover-label")
 			.style("fill", "none")
 			.style("stroke", "#AAAAAA")
@@ -483,7 +486,7 @@ var MapView = Backbone.View.extend({
 			.append("text")
 			.attr("x", radius)
 			.attr("y", radius * 1.1)
-			.text("")
+			.text(total)
 			.attr("class","tip-pie-hover-value")
 			.style("fill", "none")
 			.style("stroke", "#AAAAAA")
@@ -498,14 +501,19 @@ var MapView = Backbone.View.extend({
 			.attr("class", "slice")
 			.append("path")
 			.attr("fill", function(d, i) {
-				var index = i > 9 ? Math.floor((i / 1) % 10) : i;
-				return colors[index]; 
+				var color = colors.filter(function(c){ 
+					return c.measure == labels[i];
+				});
+				return color[0].color;
+				//var index = i > 9 ? Math.floor((i / 1) % 10) : i;
+				//return colors[index]; 
 			})
 			.attr("d", arc);
 
 		// events to be used later
-		this.model.set("tooltipData",data);
-
+		var eventStorageData = data;
+		eventStorageData.push({region: region, total: total});
+		this.model.set("tooltipData",eventStorageData);
 	},
 
 

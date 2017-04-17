@@ -15,6 +15,24 @@ MapModel = Backbone.Model.extend({
 		"pieColors" :  ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1'], // Colours to use in the segments of the pies
 		"mapColors" : ["407020","609040","80b060","a0d080","306010","508030","70a050","90c070","b0e090","205000"],
 
+		"pieColorsSegmentation" :  [
+			{measure: "VIP", color: '#7cb5ec'}, 
+			{measure: "Priortitar", color: '#434348'}, 
+			{measure: "FideliserG", color: '#90ed7d'}, 
+			{measure: "FideliserM", color: '#f7a35c'}, 
+			{measure: "Conquerir", color: '#8085e9'}, 
+			{measure: "Rhumato", color: '#f15c80'}, 
+			{measure: "Pharm Hosp", color: '#e4d354'}, 
+			{measure: "Geriatrie", color: '#2b908f'}, 
+			{measure: "Chirugerie", color: '#f45b5b'}, 
+			{measure: "Douleur", color: '#91e8e1'}, 
+			{measure: "Cardio", color: '#DA70D6'}, 
+			{measure: "Uro", color: '#1E90FF'}, 
+			{measure: "Gastro", color: '#E0F000'},
+			{measure: "Muco", color: '#AA4643'},
+			{measure: "ARV", color: '#89A54E'},
+			{measure: "Autres", color: '#80699B'}
+		],
 
 		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
 		"currentBoundingBox" : null, // Current bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
