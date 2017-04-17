@@ -413,7 +413,6 @@ var MapView = Backbone.View.extend({
 
 
 	appendPieChartInToolTip:function(size,data){
-
 		data = [
 			{label: "VIP", value: Math.floor((Math.random() * 1000) + 1)},
 			{label: "Priortitar", value: Math.floor((Math.random() * 1000) + 1)},
@@ -431,8 +430,20 @@ var MapView = Backbone.View.extend({
 			{label: "Muco", value: Math.floor((Math.random() * 1000) + 1)},
 			{label: "ARV", value: Math.floor((Math.random() * 1000) + 1)},
 		];
+		var total = 0;
+		var autres = {label:"autres",value:0};
+		data.forEach(function(d){
+			total += d.value;
+		});
+		data.forEach(function(d,i){
+			if ((d.value/total) * 100 < 5) {
+				autres.value += d.value;
+				d.value = 0;
+			}
+		});
+		data.push(autres);
 
-		
+
 		var colors = this.model.get("pieColors");  // Colors array
 		var labels = []; // Labels won't be used
 		var values = [];
