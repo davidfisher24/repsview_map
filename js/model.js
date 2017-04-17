@@ -179,7 +179,6 @@ MapModel = Backbone.Model.extend({
 
 	getCities:function(){
 		var boundingBox = this.get("currentBoundingBox") ? this.get("currentBoundingBox") : this.get("defaultBoundingBox");
-		console.log(boundingBox);
 		switch (this.get("level")) {
 		    case 0:
 		        levelMinPopulation = 250000;

@@ -179,6 +179,7 @@ var MapView = Backbone.View.extend({
 		if (initialLoad) delay = 0;
 
 		window.setTimeout(function(){
+
 			var currentScale = (svg.attr('transform') && that.model.get("level") !== 0) ? svg.attr('transform').split(",")[3].replace(")","") : 1;
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
@@ -568,7 +569,7 @@ var MapView = Backbone.View.extend({
 		var longerAxisDiff = Math.max.apply(Math,xAndYAxis.map(function(d){return d})) - Math.min.apply(Math,xAndYAxis.map(function(d){return d}));
 		var shorterAxisId = longerAxisSize === xAndYAxis[0] ? "Y" : "X";
 		var amountToAddToShorterAxis = longerAxisDiff/2;
-		var buffer = 20;
+		var buffer = Math.max(xAxisLength,yAxisLength) / 8;
 		bounds[0][0] = shorterAxisId === "X" ? bounds[0][0] - amountToAddToShorterAxis - buffer : bounds[0][0] - buffer;
 		bounds[0][1] = shorterAxisId === "Y" ? bounds[0][1] + amountToAddToShorterAxis + buffer : bounds[0][1] + buffer;
 		bounds[1][0] = shorterAxisId === "X" ? bounds[1][0] + amountToAddToShorterAxis + buffer : bounds[1][0] + buffer;
@@ -639,8 +640,6 @@ var MapView = Backbone.View.extend({
 	},
 
 	showHideCities:function(e){
-		console.log("Showing hiding cities");
-		console.log("clicked");
 		var that = this;
 		if (e.target.checked === false) {
 			d3.selectAll('.city-label').attr('opacity',0)
@@ -665,10 +664,8 @@ var MapView = Backbone.View.extend({
 	},
 
 	showHideCitiesBySize:function(e){
-		console.log("Changing city size");
 		var that = this;
 		var populationLimit = e.target.value;
-		console.log(populationLimit);
 		this.model.set("citiesVisibleLimit",populationLimit);
 
 		d3.selectAll('.city-label')
