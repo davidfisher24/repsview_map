@@ -562,6 +562,9 @@ var MapView = Backbone.View.extend({
 		// Caluclate the base bounds and modifiy the shoter axis to make a square.
 		// Add a buffer to each side of the square to prevent overflow
 		var bounds = [[leftBottom[0],leftBottom[1]],[rightTop[0],rightTop[1]]];
+		if (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1]) 
+			bounds = [[bounds[0][0] * 0.9, bounds[0][1] * 0.9],[bounds[1][0] * 1.1,bounds[1][1] * 1.1]];
+
 		var xAxisLength = bounds[1][0] - bounds[0][0];
 		var yAxisLength = bounds[0][1] - bounds[1][1];
 		var xAndYAxis = [bounds[1][0] - bounds[0][0], bounds[0][1] - bounds[1][1]]
