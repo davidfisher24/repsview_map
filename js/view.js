@@ -190,6 +190,7 @@ var MapView = Backbone.View.extend({
 			  	return that.model.calculateTooltipPosition(projection,this,d,150);
 			  })
 			  .html(function(d) {
+			  	// This was example data that won't be used now.
 			  	var data = [
 					{name:"doctors", value:d.doctors, label: "medecins"},
 					{name:"contacts", value:d.contacts, label: "hors cible"},
@@ -197,9 +198,9 @@ var MapView = Backbone.View.extend({
 				];
 
 			  	that.appendPieChartInToolTip(150,data);
-			  	//that.appendBarChartInToolTip(80,data);
-			  	var toolTipSvg = $('#tooltipGenerator').html();
+			  	var toolTipSvg = d3.select('#tooltipGenerator').html();
 			  	$('#tooltipGenerator').html('');
+
 			    return toolTipSvg;
 			 })
 
@@ -227,8 +228,14 @@ var MapView = Backbone.View.extend({
 						that.drawRegions()
 					};
 				})
-				.on('mouseover', tip.show)
-	      		.on('mouseout', tip.hide)
+				.on('mouseover', function(d){
+					tip.show(d);
+					// This is the only way to get tooltips hover events into the tooltips.
+					d3.selectAll("g.slice").on('mouseover', function(d,i) {
+		                //console.log(that.model.get("tooltipData")[i]);
+		            });
+				});	
+	      		//.on('mouseout', tip.hide) // Not needed as showing a new one will hide the old one. This needs solving
 
 
 
@@ -398,63 +405,37 @@ var MapView = Backbone.View.extend({
 
 	},
 
-	_appendBarChartInToolTip:function(size,data){
-		var x = d3.scale.ordinal().rangeRoundBands([0, size], .05);
-		var y = d3.scale.linear().range([0,(size * 0.8)]);
-		x.domain(data.map(function(d,i) { return i; }));
-		y.domain([0, d3.max(data, function(d) { return d.value; })]);
-
-      	var svg = d3.select('#tooltipGenerator') 
-      		.append("svg")
-			.attr("width", size)
-			.attr("height", size)
-			.attr("class",'tooltip-canvas')
-
-      	var bars = svg.selectAll("rect")
-			.data(data)
-			.enter()
-			.append("rect")
-			.attr("width", function(d){
-				 return (size / data.length) * 0.75;
-			})
-			.attr("fill", function(d,i){
-				if(i===0) return "red";
-				if(i===1) return "blue";
-				if(i===2) return "green";
-				if(i===3) return "yellow";
-			})
-			.attr("class","bar")
-			.attr("x", function(d,i) { return x(i); })
-			.attr("height", 0)
-			.transition()
-			.duration(400)
-			.delay(function (d, i) {
-				return (i === 0) ? 400 : 400/(i+1);
-			})
-			.attr("y", function (d, i) {
-				return size - y(d.value); 
-			})
-			.attr("height", function (d, i) {
-				return y(d.value);
-			})
-	},
-
 
 	appendPieChartInToolTip:function(size,data){
-		var colors = this.model.get("pieColors");
-		var labels = [];
+
+		data = [
+			{label: "VIP", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "Priortitar", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "FideliserG", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "FideliserM", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "Conquerir", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "Rhumato", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "Pharm Hosp", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "Geriatrie", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "Chirugerie", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "Douleur", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "Cardio", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "Uro", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "Gastro", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "Muco", value: Math.floor((Math.random() * 1000) + 1)},
+			{label: "ARV", value: Math.floor((Math.random() * 1000) + 1)},
+		];
+		var colors = this.model.get("pieColors");  // Colors array
+		var labels = []; // Labels won't be used
 		var values = [];
 		$.each(data, function(index,obj) {
 			labels.push(obj.label);
 			values.push(obj.value);
 		});
 
-		var arc = d3.svg.arc().innerRadius(0).outerRadius(size/4); 
-		var outerArc = d3.svg.arc().innerRadius(size/2).outerRadius(size/4);
-		var radius = (size/4) + 20;
-		var labelArc = d3.svg.arc().outerRadius(radius + 20).innerRadius(radius-5);
-		var pie = d3.layout.pie() 
-      		.value(function(d) { return d.value; }) 
+		var radius = size/2;
+		var arc = d3.svg.arc().innerRadius(radius * 0.45).outerRadius(radius * 0.9); 
+		var pie = d3.layout.pie().value(function(d) { return d.value; }) 
 
 
 		var tooltipElement = d3.select("#tooltipGenerator")
@@ -468,47 +449,43 @@ var MapView = Backbone.View.extend({
 			.attr('stroke','#000')
 			.attr('stroke-width',2);
 
+		var centreLabel = d3.select(".tooltip-canvas")
+			.append("text")
+			.attr("x", radius)
+			.attr("y", radius * 0.9)
+			.text("Rhumato")
+			.attr("class","tip-pie-hover-label")
+			.style("fill", "none")
+			.style("stroke", "#AAAAAA")
+			.style("text-anchor","middle");
+
+		var centreValue = d3.select(".tooltip-canvas")
+			.append("text")
+			.attr("x", radius)
+			.attr("y", radius * 1.1)
+			.text("700")
+			.attr("class","tip-pie-hover-text")
+			.style("fill", "none")
+			.style("stroke", "#AAAAAA")
+			.style("text-anchor","middle");
+
 		var arcs = tooltipElement.selectAll("g.slice")
 			.data(function(d){
 				return pie(data);
 			})
 			.enter()
 			.append("g")
-			.attr("class", "slice");  
-
-
-		arcs.append("path")
-			.attr("fill", function(d, i) { return colors[i]; } )
+			.attr("class", "slice")
+			.append("path")
+			.attr("fill", function(d, i) {
+				var index = i > 9 ? i-10 : i;
+				return colors[index]; 
+			})
 			.attr("d", arc);
 
+		// events to be used later
+		this.model.set("tooltipData",data);
 
-		arcs.append("text")
-			.attr("transform", function(d) {
-				d.outerRadius = (size/2);
-				d.innerRadius = (size/2); 
-				return "translate(" + arc.centroid(d) + ")";
-			})
-			.attr("text-anchor", "middle") //center the text on it's origin
-			.style("stroke", "000")
-			.style("font", "10px verdana")
-			.text(function(d, i) { 
-				return values[i]; 
-			});
-
-		arcs.filter(function(d) { 
-				return d.endAngle - d.startAngle > .2; 
-			}).append("text")
-			.attr("dy", ".35em")
-			.attr("text-anchor", "middle")
-			.attr("transform", function(d) { 
-				var midAngle = d.endAngle < Math.PI ? d.startAngle/2 + d.endAngle/2 : d.startAngle/2  + d.endAngle/2 + Math.PI ;
-			  	return "translate(" + labelArc.centroid(d)[0] + "," + labelArc.centroid(d)[1] + ") rotate(-90) rotate(" + (midAngle * 180/Math.PI) + ")"; 
-			})
-			.style("stroke", "428bca")
-			.style("font", "10px verdana")
-			.text(function(i) { 
-				return i.data.label; 
-			});
 	},
 
 

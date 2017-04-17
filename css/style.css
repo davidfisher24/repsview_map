@@ -29,7 +29,7 @@
 }
 
 #tooltipGenerator {
-	display:none;
+	display:block;
 }
 
 /* D3 TOOLTIPS */

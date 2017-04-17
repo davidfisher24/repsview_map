@@ -12,7 +12,7 @@ MapModel = Backbone.Model.extend({
 		"defaultCenter" : [4.8, 47.35], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
 		"deepestLevel" : 2,  // Maximum level that can be drilled to. Is set to 2 for gp and 3 for sp.
-		"pieColors" : ["#5bc0de","#5cb85c","#d9534f","#428bca"], // Colours to use in the segments of the pies
+		"pieColors" :  ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1'], // Colours to use in the segments of the pies
 		"mapColors" : ["407020","609040","80b060","a0d080","306010","508030","70a050","90c070","b0e090","205000"],
 
 
@@ -25,7 +25,7 @@ MapModel = Backbone.Model.extend({
 		"currentSector" : null, // Current secot select for setting data
 		"currentUgaGroup" : null, // Current uga group selected for setting data
 
-		
+			
 
 		"currentCities" : null,
 		"currentRegions" : null,
@@ -33,7 +33,8 @@ MapModel = Backbone.Model.extend({
 		"citiesVisible" : true, // Linked to the checkbox for this element. If the cities are visible or not
 		"citiesVisibleLimit" : 250000,
 
-		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>"
+		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>",
+		"tooltipData" : null, // Problematic. This needs to be handled differently, but is the only way to get data back to the tooltip
 	},
 
 	data:function(){
