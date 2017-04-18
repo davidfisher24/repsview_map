@@ -136,9 +136,9 @@ MapModel = Backbone.Model.extend({
 				gastro: Math.floor((Math.random() * 1000) + 1),
 				muco: Math.floor((Math.random() * 1000) + 1),
 				arv: Math.floor((Math.random() * 1000) + 1),
-				creon: Math.floor((Math.random() * 100) + 1),
-				tarka: Math.floor((Math.random() * 100) + 1),
-				lamaline: Math.floor((Math.random() * 100) + 1),
+				creon: Math.floor((Math.random() * 100) + 51),
+				tarka: Math.floor((Math.random() * 100) + 51),
+				lamaline: Math.floor((Math.random() * 100) + 51),
 			});
 		}
 		return regionsArray;

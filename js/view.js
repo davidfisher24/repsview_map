@@ -181,7 +181,7 @@ var MapView = Backbone.View.extend({
 					return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")";
 				})
 				.on('mouseleave', function(d){
-					tip.hide();
+					//tip.hide();
 				}) 
 
 			var pies = svg.selectAll('g.area-element')
@@ -259,14 +259,20 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	appendBarChartInToolTip:function(size,data){
-
 		//Original linear range
 		// var y = d3.scale.linear().range([0 ,size * 0.75]);
 
 
-		var y = d3.scale.linear().range([size * 0.75,0]);
-		y.domain([0, d3.max(data, function(d) {;return d.value; })]);
-		// y.domain(d3.extent(data, function(d) { return d.value; }));
+		/*var y = d3.scale.linear().range([size * 0.75,0]);
+		y.domain([0, d3.max(data, function(d) {;return d.value; })]);*/
+		console.log(data);
+		var dataMin = d3.min(data, function(d) {;return d.value; });
+		var dataMax = d3.max(data, function(d) {;return d.value; });
+
+		var y = d3.scale.linear().domain([
+			(dataMin >= 100) ? 80 : dataMin * 0.9, 
+			(dataMax <= 100) ? 120 : dataMax * 1.1
+		]).range([0,size]);
 
 
 		var yAxis = d3.svg.axis().scale(y).orient("left").tickSubdivide(true).ticks(10);
@@ -333,7 +339,7 @@ var MapView = Backbone.View.extend({
 
 			// x.domain([0, d3.max(data, function(d) {console.log(d.value);return d.label; })]);
 
-			var xAxis =  d3.svg.axis() .scale(x).orient("bottom");
+			var xAxis =  d3.svg.axis().scale(x).orient("bottom");
 
 			var padding= 20;
 			svg.append("g").attr("class","y axis")
