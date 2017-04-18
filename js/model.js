@@ -113,14 +113,14 @@ MapModel = Backbone.Model.extend({
 		var data = this.data();
 		var regionsArray = [];
 		for (var key in data) {
+			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
 			if (_this.get("reservedKeys").indexOf(key) === -1) regionsArray.push({
 				lat: data[key].lat,
 				lon: data[key].lon,
 				name: key,
 				level: 0,
-				contacts: Math.floor(Math.random() * 100),
-				visits: Math.floor(Math.random() * 100),
-				doctors: Math.floor(Math.random() * 100),
+				visits: visits,
+				nonVisits : 100 - visits, 
 			});
 		}
 		return regionsArray;
@@ -136,14 +136,14 @@ MapModel = Backbone.Model.extend({
 		var region = this.get("currentRegion");
 		var sectorsArray = [];
 		for (var key in data[region]) {
+			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
 			if (_this.get("reservedKeys").indexOf(key) === -1) sectorsArray.push({
 				lat: data[region][key].lat,
 				lon: data[region][key].lon,
 				name: key,
 				level: 1,
-				contacts: Math.floor(Math.random() * 100),
-				visits: Math.floor(Math.random() * 100),
-				doctors: Math.floor(Math.random() * 100),
+				visits: visits,
+				nonVisits : 100 - visits, 
 				corsicaFlag: (region === corsicaFlagRegion && (corsicaFlagSectors.indexOf(key) !== -1)) ? true : false,
 			});
 		}
@@ -157,14 +157,14 @@ MapModel = Backbone.Model.extend({
 		var sector = this.get("currentSector");
 		var ugaGroupsArray = [];
 		for (var key in data[region][sector]) {
+			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
 			if (_this.get("reservedKeys").indexOf(key) === -1) ugaGroupsArray.push({
 				lat: data[region][sector][key].lat,
 				lon: data[region][sector][key].lon,
 				name: key,
 				level: 2,
-				contacts: Math.floor(Math.random() * 100),
-				visits: Math.floor(Math.random() * 100),
-				doctors: Math.floor(Math.random() * 100),
+				visits: visits,
+				nonVisits : 100 - visits, 
 			});
 		}
 		return ugaGroupsArray;
@@ -183,14 +183,14 @@ MapModel = Backbone.Model.extend({
 		var level = this.get("network") === "gp" ? 2 : 3;
 
 		for (var key in selectedData) {
+			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
 			if (_this.get("reservedKeys").indexOf(key) === -1) ugasArray.push({
 				lat: selectedData[key].lat,
 				lon: selectedData[key].lon,
 				name: key,
 				level: level,
-				contacts: Math.floor(Math.random() * 100),
-				visits: Math.floor(Math.random() * 100),
-				doctors: Math.floor(Math.random() * 100),
+				visits: visits,
+				nonVisits : 100 - visits, 
 			});
 		}
 		return ugasArray;

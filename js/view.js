@@ -14,6 +14,7 @@ var MapView = Backbone.View.extend({
 		"change #controlCitiesSize" : "showHideCitiesBySize",
 	},
 
+
 	//----------------------------------------------------------------------------------------------------
 	// RENDERS THE MAP ON FIRST LOAD
 	//-----------------------------------------------------------------------------------------------------
@@ -83,6 +84,7 @@ var MapView = Backbone.View.extend({
 				.style("stroke", function(d,i){
 					return "#000000";
 				})
+
 
 			that.drawRegions(true);
 		});
@@ -191,17 +193,9 @@ var MapView = Backbone.View.extend({
 			  	return that.model.calculateTooltipPosition(projection,this,d,150);
 			  })
 			  .html(function(d) {
-			  	// This was example data that won't be used now.
-			  	var data = [
-					{name:"doctors", value:d.doctors, label: "medecins"},
-					{name:"contacts", value:d.contacts, label: "hors cible"},
-					{name:"visits", value:d.visits, label: "cible"},
-				];
-
-			  	that.appendPieChartInToolTip(150,data,d.name);
+			  	that.appendPieChartInToolTip(150,d.name,d.visits);
 			  	var toolTipSvg = d3.select('#tooltipGenerator').html();
 			  	$('#tooltipGenerator').html('');
-
 			    return toolTipSvg;
 			 })
 
@@ -217,8 +211,6 @@ var MapView = Backbone.View.extend({
 					return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")";
 				})
 				//.on('mouseleave', tip.hide) 
-
-
 
 			var pies = svg.selectAll('g.area-element')
 				.append('g')
@@ -244,7 +236,7 @@ var MapView = Backbone.View.extend({
 		            })
 		            .on('mouseleave', function(){
 		            	d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region);
-		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].total);
+		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].visits + " %");
 		            });
 				})
 			
@@ -253,7 +245,7 @@ var MapView = Backbone.View.extend({
 
 			pies.selectAll('.slice')
 				.data(function(d){
-					return pie([d.contacts,d.visits,d.doctors]);
+					return pie([d.visits,d.nonVisits]);
 				})
 				.enter()
 				.append('path')
@@ -275,6 +267,7 @@ var MapView = Backbone.View.extend({
 		        .text(function(d,i){
 		        	return d.name;
 		        })
+		        .attr("class","region-text")
 
 
 			that.model.set("currentRegions",dataArray);
@@ -417,7 +410,8 @@ var MapView = Backbone.View.extend({
 	},
 
 
-	appendPieChartInToolTip:function(size,data,region){
+	appendPieChartInToolTip:function(size,region,visits){
+
 		data = [
 			{label: "VIP", value: Math.floor((Math.random() * 1000) + 1)},
 			{label: "Priortitar", value: Math.floor((Math.random() * 1000) + 1)},
@@ -491,7 +485,7 @@ var MapView = Backbone.View.extend({
 			.append("text")
 			.attr("x", radius)
 			.attr("y", radius * 1.1)
-			.text(total)
+			.text(visits + " %")
 			.attr("class","tip-pie-hover-value")
 			.style("fill", "none")
 			.style("stroke", "#AAAAAA")
@@ -517,7 +511,7 @@ var MapView = Backbone.View.extend({
 
 		// events to be used later
 		var eventStorageData = data;
-		eventStorageData.push({region: region, total: total});
+		eventStorageData.push({region: region, visits: visits});
 		this.model.set("tooltipData",eventStorageData);
 	},
 
