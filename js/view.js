@@ -195,7 +195,7 @@ var MapView = Backbone.View.extend({
 			  	return that.model.calculateTooltipPosition(projection,elementObject.node().getBBox(),d,150);
 			  })
 			  .html(function(d) {
-			  	that.appendPieChartInToolTip(150,d.name,d.visits);
+			  	that.appendPieChartInToolTip(150,d);
 			  	var toolTipSvg = d3.select('#tooltipGenerator').html();
 			  	$('#tooltipGenerator').html('');
 			    return toolTipSvg;
@@ -231,7 +231,7 @@ var MapView = Backbone.View.extend({
 				})
 				.on('mouseenter', function(d){
 					tip.show(d);
-					// This is the only way to get tooltips hover events into the tooltips.
+					// Tooltip specific events
 					d3.selectAll("g.slice").on('mouseover', function(d,i) {
 		                d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label);
 		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
@@ -412,26 +412,19 @@ var MapView = Backbone.View.extend({
 	},
 
 
-	appendPieChartInToolTip:function(size,region,visits){
+	appendPieChartInToolTip:function(size,d){
+		var region = d.name;
+		var visits = d.visits;
+		var data = [];
 
-		data = [
-			{label: "VIP", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "Priortitar", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "FideliserG", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "FideliserM", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "Conquerir", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "Rhumato", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "Pharm Hosp", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "Geriatrie", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "Chirugerie", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "Douleur", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "Cardio", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "Uro", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "Gastro", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "Muco", value: Math.floor((Math.random() * 1000) + 1)},
-			{label: "ARV", value: Math.floor((Math.random() * 1000) + 1)},
-		];
-
+		this.model.get("pieLegendSegmentation").forEach(function(seg){
+			if (seg.measure !== "autres") {
+				data.push({
+					label: seg.label,
+					value: d[seg.measure]
+				})
+			}
+		});
 
 		/* Adding orders and sorting data */
 		var total = 0;
@@ -453,10 +446,7 @@ var MapView = Backbone.View.extend({
 		var labels = []; 
 		var values = [];
 		$.each(data, function(index,obj) {
-			var label = legend.filter(function(c){ 
-				return c.measure == obj.label;
-			});
-			labels.push(label[0].label);
+			labels.push(obj.label);
 			values.push(obj.value);
 		});
 
@@ -507,15 +497,12 @@ var MapView = Backbone.View.extend({
 			.append("path")
 			.attr("fill", function(d, i) {
 				var color = legend.filter(function(l){ 
-					return l.measure == d.data.label;
+					return l.label == d.data.label;
 				});
 				return color[0].color;
-				//var index = i > 9 ? Math.floor((i / 1) % 10) : i;
-				//return colors[index]; 
 			})
 			.attr("d", arc);
 
-		// events to be used later
 		var eventStorageData = data;
 		eventStorageData.push({region: region, visits: visits});
 		this.model.set("tooltipData",eventStorageData);
@@ -535,6 +522,7 @@ var MapView = Backbone.View.extend({
 		if ($('.graphic').length !== 0) svg.selectAll(".graphic").remove();
 		if ($('.area-element').length !== 0) svg.selectAll(".area-element").remove();
 		if ($('.tooltip-canvas').length !== 0) d3.selectAll(".tooltip-canvas").remove();
+		if ($('.d3-tip').length !== 0) d3.selectAll(".d3-tip").remove();
 		$('#informationPanel').html(this.model.get("infoPanelDefault"));
 	},
 

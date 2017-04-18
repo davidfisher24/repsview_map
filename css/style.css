@@ -13,16 +13,11 @@
 #map {
   overflow: hidden;
   position:relative;
-  border: 1px solid red;
 }
 
 #zoomgroup {
 	pointer-events:all;
   overflow:hidden;
-}
-
-.click-capture {
-  pointer-events:all;
 }
 
 

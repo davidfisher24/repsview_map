@@ -16,22 +16,22 @@ MapModel = Backbone.Model.extend({
 		"mapColors" : ["407020","609040","80b060","a0d080","306010","508030","70a050","90c070","b0e090","205000"],
 
 		"pieLegendSegmentation" :  [
-			{measure: "VIP", color: '#7cb5ec', label: "VIP"}, 
-			{measure: "Priortitar", color: '#434348', label: "Prior."}, 
-			{measure: "FideliserG", color: '#90ed7d', label: "Fid. G"}, 
-			{measure: "FideliserM", color: '#f7a35c', label: "Fid. M"}, 
-			{measure: "Conquerir", color: '#8085e9', label: "Conquerir"}, 
-			{measure: "Rhumato", color: '#f15c80', label: "Rhumato"}, 
-			{measure: "Pharm Hosp", color: '#e4d354', label: "PH Hosp"}, 
-			{measure: "Geriatrie", color: '#2b908f', label: "Geriatrie"}, 
-			{measure: "Chirugerie", color: '#f45b5b', label: "Chirugerie"}, 
-			{measure: "Douleur", color: '#91e8e1', label: "Douleur"}, 
-			{measure: "Cardio", color: '#DA70D6', label: "Cardio"}, 
-			{measure: "Uro", color: '#1E90FF', label: "Uro"}, 
-			{measure: "Gastro", color: '#E0F000', label: "Gastro"},
-			{measure: "Muco", color: '#AA4643', label: "Muco"},
-			{measure: "ARV", color: '#89A54E', label: "ARC"},
-			{measure: "Autres", color: '#80699B', label: "Autres"}
+			{measure: "vip", color: '#7cb5ec', label: "VIP"}, 
+			{measure: "priortitar", color: '#434348', label: "Prior."}, 
+			{measure: "fideliserG", color: '#90ed7d', label: "Fid. G"}, 
+			{measure: "fideliserM", color: '#f7a35c', label: "Fid. M"}, 
+			{measure: "conquerir", color: '#8085e9', label: "Conq"}, 
+			{measure: "rhumato", color: '#f15c80', label: "Rhumato"}, 
+			{measure: "pharmHosp", color: '#e4d354', label: "Ph Hosp"}, 
+			{measure: "geriatrie", color: '#2b908f', label: "Geriatrie"}, 
+			{measure: "chirugerie", color: '#f45b5b', label: "Chir"}, 
+			{measure: "douleur", color: '#91e8e1', label: "Douleur"}, 
+			{measure: "cardio", color: '#DA70D6', label: "Cardio"}, 
+			{measure: "uro", color: '#1E90FF', label: "Uro"}, 
+			{measure: "gastro", color: '#E0F000', label: "Gastro"},
+			{measure: "muco", color: '#AA4643', label: "Muco"},
+			{measure: "arv", color: '#89A54E', label: "ARC"},
+			{measure: "autres", color: '#80699B', label: "Autres"}
 		],
 
 		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
@@ -61,8 +61,9 @@ MapModel = Backbone.Model.extend({
 	},
 
 	initialize:function(options){
-		this.set("width",options.mapSize);
-		this.set("height",options.mapSize);
+		console.log(options);
+		this.set("width",options.mapWidth);
+		this.set("height",options.mapHeight);
 		this.set("gpdata",options.gpdata);
 		this.set("spdata",options.spdata);
 	},
@@ -121,6 +122,21 @@ MapModel = Backbone.Model.extend({
 				level: 0,
 				visits: visits,
 				nonVisits : 100 - visits, 
+				vip: Math.floor((Math.random() * 1000) + 1),
+				priortitar: Math.floor((Math.random() * 1000) + 1),
+				fideliserG: Math.floor((Math.random() * 1000) + 1),
+				fideliserM: Math.floor((Math.random() * 1000) + 1),
+				conquerir: Math.floor((Math.random() * 1000) + 1),
+				rhumato: Math.floor((Math.random() * 1000) + 1),
+				pharmHosp: Math.floor((Math.random() * 1000) + 1),
+				geriatrie: Math.floor((Math.random() * 1000) + 1),
+				chirugerie: Math.floor((Math.random() * 1000) + 1),
+				douleur: Math.floor((Math.random() * 1000) + 1),
+				cardio: Math.floor((Math.random() * 1000) + 1),
+				uro: Math.floor((Math.random() * 1000) + 1),
+				gastro: Math.floor((Math.random() * 1000) + 1),
+				muco: Math.floor((Math.random() * 1000) + 1),
+				arv: Math.floor((Math.random() * 1000) + 1),
 			});
 		}
 		return regionsArray;
@@ -144,6 +160,21 @@ MapModel = Backbone.Model.extend({
 				level: 1,
 				visits: visits,
 				nonVisits : 100 - visits, 
+				vip: Math.floor((Math.random() * 1000) + 1),
+				priortitar: Math.floor((Math.random() * 1000) + 1),
+				fideliserG: Math.floor((Math.random() * 1000) + 1),
+				fideliserM: Math.floor((Math.random() * 1000) + 1),
+				conquerir: Math.floor((Math.random() * 1000) + 1),
+				rhumato: Math.floor((Math.random() * 1000) + 1),
+				pharmHosp: Math.floor((Math.random() * 1000) + 1),
+				geriatrie: Math.floor((Math.random() * 1000) + 1),
+				chirugerie: Math.floor((Math.random() * 1000) + 1),
+				douleur: Math.floor((Math.random() * 1000) + 1),
+				cardio: Math.floor((Math.random() * 1000) + 1),
+				uro: Math.floor((Math.random() * 1000) + 1),
+				gastro: Math.floor((Math.random() * 1000) + 1),
+				muco: Math.floor((Math.random() * 1000) + 1),
+				arv: Math.floor((Math.random() * 1000) + 1),
 				corsicaFlag: (region === corsicaFlagRegion && (corsicaFlagSectors.indexOf(key) !== -1)) ? true : false,
 			});
 		}
@@ -165,6 +196,21 @@ MapModel = Backbone.Model.extend({
 				level: 2,
 				visits: visits,
 				nonVisits : 100 - visits, 
+				vip: Math.floor((Math.random() * 1000) + 1),
+				priortitar: Math.floor((Math.random() * 1000) + 1),
+				fideliserG: Math.floor((Math.random() * 1000) + 1),
+				fideliserM: Math.floor((Math.random() * 1000) + 1),
+				conquerir: Math.floor((Math.random() * 1000) + 1),
+				rhumato: Math.floor((Math.random() * 1000) + 1),
+				pharmHosp: Math.floor((Math.random() * 1000) + 1),
+				geriatrie: Math.floor((Math.random() * 1000) + 1),
+				chirugerie: Math.floor((Math.random() * 1000) + 1),
+				douleur: Math.floor((Math.random() * 1000) + 1),
+				cardio: Math.floor((Math.random() * 1000) + 1),
+				uro: Math.floor((Math.random() * 1000) + 1),
+				gastro: Math.floor((Math.random() * 1000) + 1),
+				muco: Math.floor((Math.random() * 1000) + 1),
+				arv: Math.floor((Math.random() * 1000) + 1),
 			});
 		}
 		return ugaGroupsArray;
@@ -191,6 +237,21 @@ MapModel = Backbone.Model.extend({
 				level: level,
 				visits: visits,
 				nonVisits : 100 - visits, 
+				vip: Math.floor((Math.random() * 1000) + 1),
+				priortitar: Math.floor((Math.random() * 1000) + 1),
+				fideliserG: Math.floor((Math.random() * 1000) + 1),
+				fideliserM: Math.floor((Math.random() * 1000) + 1),
+				conquerir: Math.floor((Math.random() * 1000) + 1),
+				rhumato: Math.floor((Math.random() * 1000) + 1),
+				pharmHosp: Math.floor((Math.random() * 1000) + 1),
+				geriatrie: Math.floor((Math.random() * 1000) + 1),
+				chirugerie: Math.floor((Math.random() * 1000) + 1),
+				douleur: Math.floor((Math.random() * 1000) + 1),
+				cardio: Math.floor((Math.random() * 1000) + 1),
+				uro: Math.floor((Math.random() * 1000) + 1),
+				gastro: Math.floor((Math.random() * 1000) + 1),
+				muco: Math.floor((Math.random() * 1000) + 1),
+				arv: Math.floor((Math.random() * 1000) + 1),
 			});
 		}
 		return ugasArray;

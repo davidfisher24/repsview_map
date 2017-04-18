@@ -1,7 +1,8 @@
 window.onload = function() {
 
 	var options = {
-		mapSize: $('#map').width(),
+		mapWidth: $('#map').width(),
+		mapHeight: $(window).height() - $('#map').offset().top,
 		gpdata: gpdata,
 		spdata: spdata,
 	}
