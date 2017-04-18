@@ -205,9 +205,9 @@ var MapView = Backbone.View.extend({
 			    return toolTipSvg;
 			 })
 
+
 			var arc = d3.svg.arc().innerRadius(0).outerRadius(10/currentScale);
 	      	var pie = d3.layout.pie().value(function(d){ return d });
-
 
 			var pies = svg.selectAll('.pie')
 				.data(dataArray)
@@ -232,7 +232,7 @@ var MapView = Backbone.View.extend({
 				.on('mouseover', function(d){
 					tip.show(d);
 					// This is the only way to get tooltips hover events into the tooltips.
-					d3.selectAll("g.slice").on('mouseover', function(d,i) {
+					d3.selectAll("g").on('mouseover', function(d,i) {
 		                d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label);
 		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
 		            })
