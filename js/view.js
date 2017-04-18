@@ -259,39 +259,39 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	appendBarChartInToolTip:function(size,data){
+		var size = 200;
 		//Original linear range
 		// var y = d3.scale.linear().range([0 ,size * 0.75]);
-
-
 		/*var y = d3.scale.linear().range([size * 0.75,0]);
 		y.domain([0, d3.max(data, function(d) {;return d.value; })]);*/
 		console.log(data);
-		var dataMin = d3.min(data, function(d) {;return d.value; });
-		var dataMax = d3.max(data, function(d) {;return d.value; });
+		var dataMin = d3.min(data, function(d) {return d.value; });
+		var dataMax = d3.max(data, function(d) {return d.value; });
 
 		var y = d3.scale.linear().domain([
 			(dataMin >= 100) ? 80 : dataMin * 0.9, 
-			(dataMax <= 100) ? 120 : dataMax * 1.1
+			(dataMax <= 100) ? 120 : dataMax * 1.1,
 		]).range([0,size]);
 
 
-		var yAxis = d3.svg.axis().scale(y).orient("left").tickSubdivide(true).ticks(10);
+
+		var yAxis = d3.svg.axis().scale(y).orient("left").ticks(8);
 
 		var svg = d3.select("#informationPanel")
-      .append("svg")
-      .attr("width", size)
-      .attr("height", size)
-      .attr("class",'tooltip-canvas')
+	      .append("svg")
+	      .attr("width", size)
+	      .attr("height", size)
+	      .attr("class",'tooltip-canvas')
 
 
 		var colors = that.model.get("barColors");
 
-				var bars = svg.selectAll("rect")
+		var bars = svg.selectAll("rect")
 		   .data(data)
 		   .enter()
 		   .append("rect")
 		   .attr("x", function(d, i) {
-			    return i * (size / data.length);
+			    return i * (size / data.length) + 5;
 			})
 		   .attr("y",size)
 		   .attr("width", size/data.length -10)
@@ -301,16 +301,15 @@ var MapView = Backbone.View.extend({
 			 .attr("fill", function(d, i) {
     		var index = i > 9 ? Math.floor((i / 1) % 10) : i;
     		return colors[index];
-   })
-
-			.transition()
-			.duration(400)
-			.delay(function (d, i) {
-				return (i === 0) ? 400 : 400/(i+1);
-			})
-			.attr("y", function(d,i){
-		   		return size - y(d.value)
-		   })
+   		})
+		.transition()
+		.duration(400)
+		.delay(function (d, i) {
+			return (i === 0) ? 400 : 400/(i+1);
+		})
+		.attr("y", function(d,i){
+	   		return size - y(d.value)
+	   })
 
 		svg.selectAll("text")
 		   .data(data)
@@ -334,7 +333,7 @@ var MapView = Backbone.View.extend({
 		   })
 
 			//  var gEnter =svappend("svg").append("g");
-			var x= d3.scale.linear().range([0,size*0.85]);
+			var x= d3.scale.linear().range([0,size]);
 			x.domain(d3.extent(data, function(d) { return d.label; }));
 
 			// x.domain([0, d3.max(data, function(d) {console.log(d.value);return d.label; })]);
@@ -343,14 +342,34 @@ var MapView = Backbone.View.extend({
 
 			var padding= 20;
 			svg.append("g").attr("class","y axis")
-			.attr("transform", "translate(" + padding + ","+(size-200)+")")
+			//.attr("transform", "translate(" + padding + ","+(size-200)+")")
 			// .attr("transform", "rotate(90)")
-			.call(yAxis);
+			.call(yAxis)
+
 
 			svg.append("g").attr("class"," x axis").call(xAxis)
 			.attr("transform", "translate(" + padding + ","+(size)+")");
 
 
+			// Line Points
+			var linePoints = [];
+			for (var i = Math.ceil(dataMin / 20) * 20; i <= dataMax; i = i + 20) {
+				linePoints.push(i);
+			} 
+			linePoints.forEach(function(line){
+				d3.select('.tooltip-canvas').append("line")
+					.attr("x1", 0)
+		            .attr("y1", size - y(line))
+		            .attr("x2", size)
+		            .attr("y2", size - y(line))
+		            .attr("stroke-width", function(d,i){
+		            	return line === 100 ? 3 : 1;
+		            })
+		            .attr("stroke", function(d,i){
+		            	return line === 100 ? "red" : "black";
+		            })
+			})
+			
 					// .attr("transform", "translate(10,40)").call(yAxis);
 		// svg.append("g").attr("class","y axis").attr("transform", "translate(3 ,0)").call(yAxis);
 
