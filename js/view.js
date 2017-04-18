@@ -14,7 +14,6 @@ var MapView = Backbone.View.extend({
 		"change #controlCitiesSize" : "showHideCitiesBySize",
 	},
 
-
 	//----------------------------------------------------------------------------------------------------
 	// RENDERS THE MAP ON FIRST LOAD
 	//-----------------------------------------------------------------------------------------------------
@@ -50,41 +49,43 @@ var MapView = Backbone.View.extend({
 				.style("stroke-width", "0.5px")
 				.attr("class","stroke-path")
 				.style("fill",function(d,i){
-					var colors = [];
-					for (var key in department_map) {
-						if (department_map[key].departments.indexOf(departments[i].department) !== -1) 
-							colors.push(that.model.get("mapColors")[parseInt(key) - 1]);
-					}
+					// var colors = [];
+					// for (var key in department_map) {
+					// 	if (department_map[key].departments.indexOf(departments[i].department) !== -1)
+					// 		colors.push(that.model.get("mapColors")[parseInt(key) - 1]);
+					// }
+					//
+					// if (colors.length === 0) {return that.model.get("mapColors")[9]} // Hard coding corsica
+					// if (colors.length === 1) {return colors[0];}
+					// if (colors.length === 2) {
+					// 	var gradient = svg.append("defs")
+					// 	  .append("linearGradient")
+					// 	    .attr("id", "gradient")
+					// 	    .attr("x1", "0%")
+					// 	    .attr("y1", "0%")
+					// 	    .attr("x2", "100%")
+					// 	    .attr("y2", "100%")
+					// 	    .attr("spreadMethod", "pad");
+					//
+					// 	gradient.append("stop")
+					// 	    .attr("offset", "0%")
+					// 	    .attr("stop-color", "#"+colors[0])
+					// 	    .attr("stop-opacity", 1);
+					//
+					// 	gradient.append("stop")
+					// 	    .attr("offset", "100%")
+					// 	    .attr("stop-color", "#"+colors[1])
+					// 	    .attr("stop-opacity", 1);
+					//
+					// 	return "url(#gradient)";
+					// }
+					return " #B3B3B3";
 
-					if (colors.length === 0) {return that.model.get("mapColors")[9]} // Hard coding corsica
-					if (colors.length === 1) {return colors[0];}
-					if (colors.length === 2) {
-						var gradient = svg.append("defs")
-						  .append("linearGradient")
-						    .attr("id", "gradient")
-						    .attr("x1", "0%")
-						    .attr("y1", "0%")
-						    .attr("x2", "100%")
-						    .attr("y2", "100%")
-						    .attr("spreadMethod", "pad");
 
-						gradient.append("stop")
-						    .attr("offset", "0%")
-						    .attr("stop-color", "#"+colors[0])
-						    .attr("stop-opacity", 1);
-
-						gradient.append("stop")
-						    .attr("offset", "100%")
-						    .attr("stop-color", "#"+colors[1])
-						    .attr("stop-opacity", 1);
-
-						return "url(#gradient)";
-					}
 				})
 				.style("stroke", function(d,i){
 					return "#000000";
 				})
-
 
 			that.drawRegions(true);
 		});
@@ -140,8 +141,7 @@ var MapView = Backbone.View.extend({
 			.append("text")
 			.attr("class", "city-text")
 			.attr("font-size",12/currentScale)
-			.attr("transform", function(d,i) {				
-				var target = projection([d.lon,d.lat]);
+			.attr("transform", function(d,i) {				var target = projection([d.lon,d.lat]);
 				return "translate(" + (target[0] + (12/currentScale)) + "," + (target[1] + (8/currentScale)) + ")"; // Square pixels. Width add 1.5
 			})
 			.attr("opacity",function(d){
@@ -172,7 +172,7 @@ var MapView = Backbone.View.extend({
 
 		var dataArray = that.model.getData();
 
-		
+
 		if (!initialLoad) {
 			this.removeElementsOnChange(svg);
 			this.zoomToBoundingBox(svg,projection,dataArray)
@@ -186,17 +186,22 @@ var MapView = Backbone.View.extend({
 			var currentScale = (svg.attr('transform') && that.model.get("level") !== 0) ? svg.attr('transform').split(",")[3].replace(")","") : 1;
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
- 	
+
 		 	var tip = d3.tip()
 			  .attr('class', 'd3-tip')
 			  .offset(function(d){
-			  	var elementRef = d.name;
-			  	var elementObject = d3.selectAll('.area-element').filter(function(d){return d.name === elementRef});
-			  	return that.model.calculateTooltipPosition(projection,elementObject.node().getBBox(),d,150);
+			  	return that.model.calculateTooltipPosition(projection,this,d,150);
 			  })
 			  .html(function(d) {
-			  	that.appendPieChartInToolTip(150,d);
-			  	var toolTipSvg = d3.select('#tooltipGenerator').html();
+			  	var data = [
+					{name:"doctors", value:d.doctors, label: "medecins"},
+					{name:"contacts", value:d.contacts, label: "hors cible"},
+					{name:"visits", value:d.visits, label: "cible"},
+				];
+
+			  	that.appendPieChartInToolTip(150,data);
+			  	//that.appendBarChartInToolTip(80,data);
+			  	var toolTipSvg = $('#tooltipGenerator').html();
 			  	$('#tooltipGenerator').html('');
 			    return toolTipSvg;
 			 })
@@ -204,19 +209,15 @@ var MapView = Backbone.View.extend({
 			var arc = d3.svg.arc().innerRadius(0).outerRadius(10/currentScale);
 	      	var pie = d3.layout.pie().value(function(d){ return d });
 
-	      	var areas = svg.selectAll('g')
-	      		.data(dataArray)
+
+			var pies = svg.selectAll('.pie')
+				.data(dataArray)
 				.enter()
 				.append('g')
 				.attr('class', 'area-element')
 				.attr("transform", function(d) {
 					return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")";
 				})
-				//.on('mouseleave', tip.hide) 
-
-			var pies = svg.selectAll('g.area-element')
-				.append('g')
-				.attr('class', 'area-pie')
 				.attr('stroke','#000')
 				.attr('stroke-width',function(d){
 					return (1.3/currentScale) + "px";
@@ -229,25 +230,16 @@ var MapView = Backbone.View.extend({
 						that.drawRegions()
 					};
 				})
-				.on('mouseenter', function(d){
-					tip.show(d);
-					// Tooltip specific events
-					d3.selectAll("g.slice").on('mouseover', function(d,i) {
-		                d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label);
-		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
-		            })
-		            .on('mouseleave', function(){
-		            	d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region);
-		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].visits + " %");
-		            });
-				})
-			
+				.on('mouseover', tip.show)
+	      		.on('mouseout', tip.hide)
+
+
 
 			var colors = that.model.get("pieColors");
 
 			pies.selectAll('.slice')
 				.data(function(d){
-					return pie([d.visits,d.nonVisits]);
+					return pie([d.contacts,d.visits,d.doctors]);
 				})
 				.enter()
 				.append('path')
@@ -257,9 +249,8 @@ var MapView = Backbone.View.extend({
 					return colors[i];
 				})
 
-
 			pies.append("text")
-				.data(dataArray)          
+				.data(dataArray)
 		        .attr("x", 0)
 		        .attr("y", 25/currentScale)
 		        .attr("text-anchor", "middle")
@@ -269,7 +260,6 @@ var MapView = Backbone.View.extend({
 		        .text(function(d,i){
 		        	return d.name;
 		        })
-		        .attr("class","region-text")
 
 
 			that.model.set("currentRegions",dataArray);
@@ -318,7 +308,7 @@ var MapView = Backbone.View.extend({
 	appendPieCharts: function(svg,projection,dataArray,currentScale) {
 
 		var pieData = this.model.getTestPieData(dataArray);
-    
+
 		var arc = d3.svg.arc().innerRadius(0).outerRadius(15/currentScale);
       	var pie = d3.layout.pie().value(function(d){ return d });
 
@@ -354,16 +344,29 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	appendBarChartInToolTip:function(size,data){
-		var y = d3.scale.linear().range([0,size * 0.75]);
-		y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+
+		//Original linear range
+		// var y = d3.scale.linear().range([0 ,size * 0.75]);
+
+
+		var y = d3.scale.linear().range([size * 0.75,0]);
+		y.domain([0, d3.max(data, function(d) {;return d.value; })]);
+		// y.domain(d3.extent(data, function(d) { return d.value; }));
+
+
+		var yAxis = d3.svg.axis().scale(y).orient("left").tickSubdivide(true).ticks(10);
 
 		var svg = d3.select("#informationPanel")
-            .append("svg")
-            .attr("width", size)
-            .attr("height", size)
-            .attr("class",'tooltip-canvas')
+      .append("svg")
+      .attr("width", size)
+      .attr("height", size)
+      .attr("class",'tooltip-canvas')
 
-        var bars = svg.selectAll("rect")
+
+		var colors = that.model.get("chartColors");
+
+				var bars = svg.selectAll("rect")
 		   .data(data)
 		   .enter()
 		   .append("rect")
@@ -371,13 +374,15 @@ var MapView = Backbone.View.extend({
 			    return i * (size / data.length);
 			})
 		   .attr("y",size)
-		   .attr("width", size/data.length - 20)
+		   .attr("width", size/data.length -10)
 		   .attr("height", function(d,i){
 		   		return y(d.value);
 		   })
-		   .attr("fill", function(d) {
-			    return "rgb(0, 0, " + (d.value * 5) + ")";
-			})
+			 .attr("fill", function(d, i) {
+    		var index = i > 9 ? Math.floor((i / 1) % 10) : i;
+    		return colors[index];
+   })
+
 			.transition()
 			.duration(400)
 			.delay(function (d, i) {
@@ -386,7 +391,7 @@ var MapView = Backbone.View.extend({
 			.attr("y", function(d,i){
 		   		return size - y(d.value)
 		   })
-		   
+
 		svg.selectAll("text")
 		   .data(data)
 		   .enter()
@@ -408,84 +413,102 @@ var MapView = Backbone.View.extend({
 		        return d.label;
 		   })
 
+			//  var gEnter =svappend("svg").append("g");
+			var x= d3.scale.linear().range([0,size*0.85]);
+			x.domain(d3.extent(data, function(d) { return d.label; }));
+
+			// x.domain([0, d3.max(data, function(d) {console.log(d.value);return d.label; })]);
+
+			var xAxis =  d3.svg.axis() .scale(x).orient("bottom");
+
+			var padding= 20;
+			svg.append("g").attr("class","y axis")
+			.attr("transform", "translate(" + padding + ","+(size-200)+")")
+			// .attr("transform", "rotate(90)")
+			.call(yAxis);
+
+			svg.append("g").attr("class"," x axis").call(xAxis)
+			.attr("transform", "translate(" + padding + ","+(size)+")");
+
+
+					// .attr("transform", "translate(10,40)").call(yAxis);
+		// svg.append("g").attr("class","y axis").attr("transform", "translate(3 ,0)").call(yAxis);
+
+			// svg.append("g").attr("class","y axis").attr("transform", "translate(" + 300 + ",0)").call(yAxis);
+			// var g = svg.select("g").attr("transform", "translate(" +25 + "," + 50 + ")");
+
 
 	},
 
+	_appendBarChartInToolTip:function(size,data){
+		var x = d3.scale.ordinal().rangeRoundBands([0, size], .05);
+		var y = d3.scale.linear().range([0,(size * 0.8)]);
+		x.domain(data.map(function(d,i) { return i; }));
+		y.domain([0, d3.max(data, function(d) { return d.value; })]);
 
-	appendPieChartInToolTip:function(size,d){
-		var region = d.name;
-		var visits = d.visits;
-		var data = [];
+      	var svg = d3.select('#tooltipGenerator')
+      		.append("svg")
+			.attr("width", size)
+			.attr("height", size)
+			.attr("class",'tooltip-canvas')
 
-		this.model.get("pieLegendSegmentation").forEach(function(seg){
-			if (seg.measure !== "autres") {
-				data.push({
-					label: seg.label,
-					value: d[seg.measure]
-				})
-			}
-		});
+      	var bars = svg.selectAll("rect")
+			.data(data)
+			.enter()
+			.append("rect")
+			.attr("width", function(d){
+				 return (size / data.length) * 0.75;
+			})
+			.attr("fill", function(d,i){
+				if(i===0) return "red";
+				if(i===1) return "blue";
+				if(i===2) return "green";
+				if(i===3) return "yellow";
+			})
+			.attr("class","bar")
+			.attr("x", function(d,i) { return x(i); })
+			.attr("height", 0)
+			.transition()
+			.duration(400)
+			.delay(function (d, i) {
+				return (i === 0) ? 400 : 400/(i+1);
+			})
+			.attr("y", function (d, i) {
+				return size - y(d.value);
+			})
+			.attr("height", function (d, i) {
+				return y(d.value);
+			})
+	},
 
-		/* Adding orders and sorting data */
-		var total = 0;
-		var autres = {label:"Autres",value:0};
-		data.forEach(function(d){
-			total += d.value;
-		});
-		data.forEach(function(d,i){
-			if ((d.value/total) * 100 < 5) {
-				autres.value += d.value;
-				d.value = 0;
-			}
-		});
-		data.sort(function(a,b) {return (a.value > b.value) ? -1 : ((b.value > a.value) ? 1 : 0);} ); 
-		data.push(autres);
 
-
-		var legend = this.model.get("pieLegendSegmentation");  // Colors array
-		var labels = []; 
+	appendPieChartInToolTip:function(size,data){
+		var colors = this.model.get("pieColors");
+		var labels = [];
 		var values = [];
 		$.each(data, function(index,obj) {
 			labels.push(obj.label);
 			values.push(obj.value);
 		});
 
-		var radius = size/2;
-		var arc = d3.svg.arc().innerRadius(radius * 0.45).outerRadius(radius * 0.9); 
-		var pie = d3.layout.pie().value(function(d) { return d.value; }).sort(null);
+		var arc = d3.svg.arc().innerRadius(0).outerRadius(size/4);
+		var outerArc = d3.svg.arc().innerRadius(size/2).outerRadius(size/4);
+		var radius = (size/4) + 20;
+		var labelArc = d3.svg.arc().outerRadius(radius + 20).innerRadius(radius-5);
+		var pie = d3.layout.pie()
+      		.value(function(d) { return d.value; })
 
 
 		var tooltipElement = d3.select("#tooltipGenerator")
-			.append("svg") 
-			.data(data) 
-			.attr("width", size) 
-			.attr("height", size) 
+			.append("svg")
+			.data(data)
+			.attr("width", size)
+			.attr("height", size)
 			.attr("class","tooltip-canvas")
-			.append("g") 
+			.append("g")
 			.attr("transform", "translate(" + (size/2) + "," + (size/2) + ")")
 			.attr('stroke','#000')
 			.attr('stroke-width',2);
-
-
-		var centreLabel = d3.select(".tooltip-canvas")
-			.append("text")
-			.attr("x", radius)
-			.attr("y", radius * 0.9)
-			.text(region)
-			.attr("class","tip-pie-hover-label")
-			.style("fill", "none")
-			.style("stroke", "#AAAAAA")
-			.style("text-anchor","middle");
-
-		var centreValue = d3.select(".tooltip-canvas")
-			.append("text")
-			.attr("x", radius)
-			.attr("y", radius * 1.1)
-			.text(visits + " %")
-			.attr("class","tip-pie-hover-value")
-			.style("fill", "none")
-			.style("stroke", "#AAAAAA")
-			.style("text-anchor","middle");
 
 		var arcs = tooltipElement.selectAll("g.slice")
 			.data(function(d){
@@ -493,19 +516,41 @@ var MapView = Backbone.View.extend({
 			})
 			.enter()
 			.append("g")
-			.attr("class", "slice")
-			.append("path")
-			.attr("fill", function(d, i) {
-				var color = legend.filter(function(l){ 
-					return l.label == d.data.label;
-				});
-				return color[0].color;
-			})
+			.attr("class", "slice");
+
+
+		arcs.append("path")
+			.attr("fill", function(d, i) { return colors[i]; } )
 			.attr("d", arc);
 
-		var eventStorageData = data;
-		eventStorageData.push({region: region, visits: visits});
-		this.model.set("tooltipData",eventStorageData);
+
+		arcs.append("text")
+			.attr("transform", function(d) {
+				d.outerRadius = (size/2);
+				d.innerRadius = (size/2);
+				return "translate(" + arc.centroid(d) + ")";
+			})
+			.attr("text-anchor", "middle") //center the text on it's origin
+			.style("stroke", "000")
+			.style("font", "10px verdana")
+			.text(function(d, i) {
+				return values[i];
+			});
+
+		arcs.filter(function(d) {
+				return d.endAngle - d.startAngle > .2;
+			}).append("text")
+			.attr("dy", ".35em")
+			.attr("text-anchor", "middle")
+			.attr("transform", function(d) {
+				var midAngle = d.endAngle < Math.PI ? d.startAngle/2 + d.endAngle/2 : d.startAngle/2  + d.endAngle/2 + Math.PI ;
+			  	return "translate(" + labelArc.centroid(d)[0] + "," + labelArc.centroid(d)[1] + ") rotate(-90) rotate(" + (midAngle * 180/Math.PI) + ")";
+			})
+			.style("stroke", "428bca")
+			.style("font", "10px verdana")
+			.text(function(i) {
+				return i.data.label;
+			});
 	},
 
 
@@ -522,7 +567,6 @@ var MapView = Backbone.View.extend({
 		if ($('.graphic').length !== 0) svg.selectAll(".graphic").remove();
 		if ($('.area-element').length !== 0) svg.selectAll(".area-element").remove();
 		if ($('.tooltip-canvas').length !== 0) d3.selectAll(".tooltip-canvas").remove();
-		if ($('.d3-tip').length !== 0) d3.selectAll(".d3-tip").remove();
 		$('#informationPanel').html(this.model.get("infoPanelDefault"));
 	},
 
@@ -543,9 +587,9 @@ var MapView = Backbone.View.extend({
 		// Calculate the projection points of the corners from the longitudes and latitudes to make
 		// an appropriate geographical bounding box
 		var leftBottom = projection([
-			Math.min.apply(Math,dataArray.map(function(d){return d.lon})), 
-			Math.min.apply(Math,dataArray.map(function(d){return d.lat})) 
-		]);  
+			Math.min.apply(Math,dataArray.map(function(d){return d.lon})),
+			Math.min.apply(Math,dataArray.map(function(d){return d.lat}))
+		]);
 		var rightTop = projection([
 			Math.max.apply(Math,dataArray.map(function(d){return d.lon})),
 			Math.max.apply(Math,dataArray.map(function(d){return d.lat}))
@@ -560,7 +604,7 @@ var MapView = Backbone.View.extend({
 		// Caluclate the base bounds and modifiy the shoter axis to make a square.
 		// Add a buffer to each side of the square to prevent overflow
 		var bounds = [[leftBottom[0],leftBottom[1]],[rightTop[0],rightTop[1]]];
-		if (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1]) 
+		if (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1])
 			bounds = [[bounds[0][0] * 0.9, bounds[0][1] * 0.9],[bounds[1][0] * 1.1,bounds[1][1] * 1.1]];
 
 		var xAxisLength = bounds[1][0] - bounds[0][0];
@@ -578,7 +622,7 @@ var MapView = Backbone.View.extend({
  		this.model.set("currentMapBounds",bounds);
 
 		var dx = bounds[1][0] - bounds[0][0];
-		var dy = bounds[1][1] - bounds[0][1]; 
+		var dy = bounds[1][1] - bounds[0][1];
 		var x = (bounds[0][0] + bounds[1][0]) / 2;
 		var y = (bounds[0][1] + bounds[1][1]) / 2;
 
