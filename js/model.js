@@ -12,26 +12,26 @@ MapModel = Backbone.Model.extend({
 		"defaultCenter" : [4.8, 47.35], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
 		"deepestLevel" : 2,  // Maximum level that can be drilled to. Is set to 2 for gp and 3 for sp.
-		"pieColors" :  ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1'], // Colours to use in the segments of the pies
+		"pieColors" :  ['#55BF3B', '#DF5353'], // Colours to use in the segments of the pies
 		"mapColors" : ["407020","609040","80b060","a0d080","306010","508030","70a050","90c070","b0e090","205000"],
 
-		"pieColorsSegmentation" :  [
-			{measure: "VIP", color: '#7cb5ec'}, 
-			{measure: "Priortitar", color: '#434348'}, 
-			{measure: "FideliserG", color: '#90ed7d'}, 
-			{measure: "FideliserM", color: '#f7a35c'}, 
-			{measure: "Conquerir", color: '#8085e9'}, 
-			{measure: "Rhumato", color: '#f15c80'}, 
-			{measure: "Pharm Hosp", color: '#e4d354'}, 
-			{measure: "Geriatrie", color: '#2b908f'}, 
-			{measure: "Chirugerie", color: '#f45b5b'}, 
-			{measure: "Douleur", color: '#91e8e1'}, 
-			{measure: "Cardio", color: '#DA70D6'}, 
-			{measure: "Uro", color: '#1E90FF'}, 
-			{measure: "Gastro", color: '#E0F000'},
-			{measure: "Muco", color: '#AA4643'},
-			{measure: "ARV", color: '#89A54E'},
-			{measure: "Autres", color: '#80699B'}
+		"pieLegendSegmentation" :  [
+			{measure: "VIP", color: '#7cb5ec', label: "VIP"}, 
+			{measure: "Priortitar", color: '#434348', label: "Prior."}, 
+			{measure: "FideliserG", color: '#90ed7d', label: "Fid. G"}, 
+			{measure: "FideliserM", color: '#f7a35c', label: "Fid. M"}, 
+			{measure: "Conquerir", color: '#8085e9', label: "Conquerir"}, 
+			{measure: "Rhumato", color: '#f15c80', label: "Rhumato"}, 
+			{measure: "Pharm Hosp", color: '#e4d354', label: "PH Hosp"}, 
+			{measure: "Geriatrie", color: '#2b908f', label: "Geriatrie"}, 
+			{measure: "Chirugerie", color: '#f45b5b', label: "Chirugerie"}, 
+			{measure: "Douleur", color: '#91e8e1', label: "Douleur"}, 
+			{measure: "Cardio", color: '#DA70D6', label: "Cardio"}, 
+			{measure: "Uro", color: '#1E90FF', label: "Uro"}, 
+			{measure: "Gastro", color: '#E0F000', label: "Gastro"},
+			{measure: "Muco", color: '#AA4643', label: "Muco"},
+			{measure: "ARV", color: '#89A54E', label: "ARC"},
+			{measure: "Autres", color: '#80699B', label: "Autres"}
 		],
 
 		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
@@ -224,7 +224,7 @@ MapModel = Backbone.Model.extend({
 	/*******************************************************************************************
 	/ FUNCTION TO LOOK FOR ELEMENTS OVERLAPPING THE EDGE OF THE MAP (CURRENTLY USED FOR TOOLTIPS)
 	* projection - map projection
-	* elementObject - original element to be used
+	* elementObject - original element to be used. Send the bounding box to use the height and width values
 	* element - currently the tooptip that will be placed on the map
 	* size of the tooltip to be place (current height and widt are the same)
 	********************************************************************************************/
@@ -239,12 +239,22 @@ MapModel = Backbone.Model.extend({
 		var mapBox = d3.select('#franceMap').node().getBBox();
 		var zoomBox = d3.select('#zoomgroup').node().getBBox();
 		var scale = mapBox.width/zoomBox.width;
-		var left = zoomBox.x - (mapBox.x / (scale));
 		var top = zoomBox.y - (mapBox.y / (scale));
-		//var right = (zoomBox.width / scale) - (mapBox.x / (scale));;
-		// offset y - if no space at the top we send back the tooltip height + the element height + 10px for bottom spacing, else we put 10 to the top
-		var offsetY = (elementY - ((elementSize + 10)/scale) < top) ? /*(d3.select(elementObject).node().getBBox().height * scale) +*/ elementSize + 10 : -10;
-		return [offsetY,0];
+		var left = zoomBox.x - (mapBox.x / (scale));
+		var right = left + zoomBox.width/scale;
+
+		// calculations of offsets
+		var offsetY = (elementY - ((elementSize + 10)/scale) < top) ? elementObject.height * scale + elementSize + 10 : -10;
+		var offsetX = 0;
+		if ((elementSize/scale)/2 > elementX - left) {
+			offsetX = elementSize/2 + 15;
+			offsetY = (offsetY === -10) ? 100 : offsetY/2;
+		}
+		if (elementX > right) {
+			offsetX = -(elementSize/2) - 15;
+			offsetY = (offsetY === -10) ? 100 : offsetY/2;
+		}
+		return [offsetY,offsetX];
 		
 	},
 

@@ -190,7 +190,9 @@ var MapView = Backbone.View.extend({
 		 	var tip = d3.tip()
 			  .attr('class', 'd3-tip')
 			  .offset(function(d){
-			  	return that.model.calculateTooltipPosition(projection,this,d,150);
+			  	var elementRef = d.name;
+			  	var elementObject = d3.selectAll('.area-element').filter(function(d){return d.name === elementRef});
+			  	return that.model.calculateTooltipPosition(projection,elementObject.node().getBBox(),d,150);
 			  })
 			  .html(function(d) {
 			  	that.appendPieChartInToolTip(150,d.name,d.visits);
@@ -430,6 +432,7 @@ var MapView = Backbone.View.extend({
 			{label: "ARV", value: Math.floor((Math.random() * 1000) + 1)},
 		];
 
+
 		/* Adding orders and sorting data */
 		var total = 0;
 		var autres = {label:"Autres",value:0};
@@ -446,11 +449,14 @@ var MapView = Backbone.View.extend({
 		data.push(autres);
 
 
-		var colors = this.model.get("pieColorsSegmentation");  // Colors array
-		var labels = []; // Labels won't be used
+		var legend = this.model.get("pieLegendSegmentation");  // Colors array
+		var labels = []; 
 		var values = [];
 		$.each(data, function(index,obj) {
-			labels.push(obj.label);
+			var label = legend.filter(function(c){ 
+				return c.measure == obj.label;
+			});
+			labels.push(label[0].label);
 			values.push(obj.value);
 		});
 
@@ -500,8 +506,8 @@ var MapView = Backbone.View.extend({
 			.attr("class", "slice")
 			.append("path")
 			.attr("fill", function(d, i) {
-				var color = colors.filter(function(c){ 
-					return c.measure == labels[i];
+				var color = legend.filter(function(l){ 
+					return l.measure == d.data.label;
 				});
 				return color[0].color;
 				//var index = i > 9 ? Math.floor((i / 1) % 10) : i;
