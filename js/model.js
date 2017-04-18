@@ -303,17 +303,24 @@ MapModel = Backbone.Model.extend({
 		var top = zoomBox.y - (mapBox.y / (scale));
 		var left = zoomBox.x - (mapBox.x / (scale));
 		var right = left + zoomBox.width/scale;
+		var bottom = top + zoomBox.height/scale;
 
 		// calculations of offsets
 		var offsetY = (elementY - ((elementSize + 10)/scale) < top) ? elementObject.height * scale + elementSize + 10 : -10;
 		var offsetX = 0;
 		if ((elementSize/scale)/2 > elementX - left) {
 			offsetX = elementSize/2 + 15;
-			offsetY = (offsetY === -10) ? 100 : offsetY/2;
+			//offsetY = (offsetY === -10) ? 100 : offsetY/2;
+			if (elementY - (elementSize/scale/2) < top)  offsetY = elementObject.height * scale + -(elementSize) + 10;
+			if (elementY + (elementSize/scale/2) > bottom) offsetY = -10;
+			else offsetY = 100;
 		}
 		if (elementX > right) {
 			offsetX = -(elementSize/2) - 15;
-			offsetY = (offsetY === -10) ? 100 : offsetY/2;
+			//offsetY = (offsetY === -10) ? 100 : offsetY/2;
+			if (elementY - (elementSize/scale/2) < top)  offsetY = elementObject.height * scale + -(elementSize) + 10;
+			if (elementY + (elementSize/scale/2) > bottom)  offsetY = -10;
+			else offsetY = 100;
 		}
 		return [offsetY,offsetX];
 		
