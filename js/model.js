@@ -61,7 +61,6 @@ MapModel = Backbone.Model.extend({
 	},
 
 	initialize:function(options){
-		console.log(options);
 		this.set("width",options.mapWidth);
 		this.set("height",options.mapHeight);
 		this.set("gpdata",options.gpdata);

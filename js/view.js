@@ -212,7 +212,9 @@ var MapView = Backbone.View.extend({
 				.attr("transform", function(d) {
 					return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")";
 				})
-				//.on('mouseleave', tip.hide) 
+				.on('mouseleave', function(d){
+					tip.hide();
+				}) 
 
 			var pies = svg.selectAll('g.area-element')
 				.append('g')
