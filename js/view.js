@@ -49,10 +49,10 @@ var MapView = Backbone.View.extend({
 				.style("stroke-width", "0.5px")
 				.attr("class","stroke-path")
 				.style("fill",function(d,i){
-					return " #B3B3B3";
+					return " #5bc0de";
 				})
 				.style("stroke", function(d,i){
-					return "#000000";
+					return "#f9f9f9";
 				})
 
 			that.drawRegions(true);
@@ -259,59 +259,107 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	appendBarChartInToolTip:function(size,data){
-		var size = 200;
-		//Original linear range
-		// var y = d3.scale.linear().range([0 ,size * 0.75]);
-		/*var y = d3.scale.linear().range([size * 0.75,0]);
-		y.domain([0, d3.max(data, function(d) {;return d.value; })]);*/
-		console.log(data);
+		// STATIC ELEMENTS 
+		var colors = this.model.get("barColors");
+		var margin = 50;
 		var dataMin = d3.min(data, function(d) {return d.value; });
 		var dataMax = d3.max(data, function(d) {return d.value; });
 
-		var y = d3.scale.linear().domain([
-			(dataMin >= 100) ? 80 : dataMin * 0.9, 
-			(dataMax <= 100) ? 120 : dataMax * 1.1,
-		]).range([0,size]);
+		var x = d3.scale.ordinal().rangeRoundBands([0, size], .05);
+		var y = d3.scale.linear().range([size, 0]);
+
+		var xAxis = d3.svg.axis()
+		    .scale(x)
+		    .orient("bottom")
+
+		var yAxis = d3.svg.axis()
+		    .scale(y)
+		    .orient("left")
+		    .ticks(5);
+
+		var svg = d3.select("#informationPanel").append("svg")
+		    .attr("width", size)
+		    .attr("height", size)
+		  	.append("g")
+		    .attr("transform","translate("+margin/2+",-"+margin/2+")");
+
+		  x.domain(data.map(function(d) { return d.label; }));
+		  y.domain([
+			/*(dataMin >= 100) ? 80 : */dataMin * 0.9, 
+			/*(dataMax <= 100) ? 120 : */dataMax * 1.1,
+		  ]);
 
 
+		  svg.append("g")
+		      .attr("class", "x axis")
+		      .attr("transform", "translate(0," + size + ")")
+		      .call(xAxis)
+		    .selectAll("text")
+		      .style("text-anchor", "middle")
+		      .attr("dx","-0.5em")
 
-		var yAxis = d3.svg.axis().scale(y).orient("left").ticks(8);
 
-		var svg = d3.select("#informationPanel")
-	      .append("svg")
-	      .attr("width", size)
-	      .attr("height", size)
-	      .attr("class",'tooltip-canvas')
+		  svg.append("g")
+		      .attr("class", "y axis")
+		      .call(yAxis)
+		    .append("text")
+		      .attr("transform", "rotate(-90)")
+		      .attr("y", 6)
+		      .attr("dx","1em")
+		      .attr("dy", ".71em")
+		      .style("text-anchor", "middle")
 
 
-		var colors = that.model.get("barColors");
+		  svg.selectAll("bar")
+		      .data(data)
+		      .enter().append("rect")
+		      .style("fill", function(d,i){
+		      	console.log(colors);
+		      	console.log(i);
+		      	return colors[i];
+		      })
+		      .attr("x", function(d) { return x(d.label); })
+		      .attr("width", x.rangeBand() - 50/data.length)
+		      .attr("height",0)
+		      .attr("y",size)
+		      .transition()
+			  .duration(400)
+			  .delay(function (d, i) {
+					return (i === 0) ? 400 : 400/(i+1);
+				})
+			  .attr("height", function(d) { return size - y(d.value); })
+		      .attr("y", function(d) { return y(d.value); })
+			  
+		      
 
-		var bars = svg.selectAll("rect")
-		   .data(data)
-		   .enter()
-		   .append("rect")
-		   .attr("x", function(d, i) {
-			    return i * (size / data.length) + 5;
+		    // LINE POINTS
+		 	var linePoints = [];
+			for (var i = Math.ceil(dataMin / 20) * 20; i <= dataMax + 20; i = i + 20) {
+				console.log(i);
+				linePoints.push(i);
+			} 
+			console.log(linePoints);
+			linePoints.forEach(function(line){
+				svg.append("line")
+					.attr("x1", 0)
+		            .attr("y1", y(line))
+		            .attr("x2", size)
+		            .attr("y2", y(line))
+		            .attr("stroke-width", function(d,i){
+		            	return line === 100 ? 3 : 1;
+		            })
+		            .attr("stroke", function(d,i){
+		            	return line === 100 ? "red" : "black";
+		            })
 			})
-		   .attr("y",size)
-		   .attr("width", size/data.length -10)
-		   .attr("height", function(d,i){
-		   		return y(d.value);
-		   })
-			 .attr("fill", function(d, i) {
-    		var index = i > 9 ? Math.floor((i / 1) % 10) : i;
-    		return colors[index];
-   		})
-		.transition()
-		.duration(400)
-		.delay(function (d, i) {
-			return (i === 0) ? 400 : 400/(i+1);
-		})
-		.attr("y", function(d,i){
-	   		return size - y(d.value)
-	   })
 
-		svg.selectAll("text")
+			$('.tick line').hide();
+			return;
+
+       ////////////////////////////////////////
+		
+
+		/*svg.selectAll("text")
 		   .data(data)
 		   .enter()
 		   .append("text")
@@ -330,51 +378,21 @@ var MapView = Backbone.View.extend({
 			})
 			.text(function(d) {
 		        return d.label;
-		   })
+		   })*/
 
 			//  var gEnter =svappend("svg").append("g");
-			var x= d3.scale.linear().range([0,size]);
-			x.domain(d3.extent(data, function(d) { return d.label; }));
+			/*var x= d3.scale.linear().range([0,size]);
+			x.domain(d3.extent(data, function(d) { return d.label; }));*/
 
 			// x.domain([0, d3.max(data, function(d) {console.log(d.value);return d.label; })]);
 
-			var xAxis =  d3.svg.axis().scale(x).orient("bottom");
-
-			var padding= 20;
-			svg.append("g").attr("class","y axis")
-			//.attr("transform", "translate(" + padding + ","+(size-200)+")")
-			// .attr("transform", "rotate(90)")
-			.call(yAxis)
-
-
-			svg.append("g").attr("class"," x axis").call(xAxis)
-			.attr("transform", "translate(" + padding + ","+(size)+")");
-
-
-			// Line Points
-			var linePoints = [];
-			for (var i = Math.ceil(dataMin / 20) * 20; i <= dataMax; i = i + 20) {
-				linePoints.push(i);
-			} 
-			linePoints.forEach(function(line){
-				d3.select('.tooltip-canvas').append("line")
-					.attr("x1", 0)
-		            .attr("y1", size - y(line))
-		            .attr("x2", size)
-		            .attr("y2", size - y(line))
-		            .attr("stroke-width", function(d,i){
-		            	return line === 100 ? 3 : 1;
-		            })
-		            .attr("stroke", function(d,i){
-		            	return line === 100 ? "red" : "black";
-		            })
-			})
 			
-					// .attr("transform", "translate(10,40)").call(yAxis);
-		// svg.append("g").attr("class","y axis").attr("transform", "translate(3 ,0)").call(yAxis);
+			//var xAxis =  d3.svg.axis().scale(x).orient("bottom");
 
-			// svg.append("g").attr("class","y axis").attr("transform", "translate(" + 300 + ",0)").call(yAxis);
-			// var g = svg.select("g").attr("transform", "translate(" +25 + "," + 50 + ")");
+			
+			/*svg.append("g").attr("class","yaxis")
+				attr("transform", "translate(0," + size + ")")
+				.call(xAxis)*/
 
 
 	},
@@ -701,11 +719,11 @@ var MapView = Backbone.View.extend({
 					return obj.name === data.id;
 				});
 				var data = [
-					{name:"doctors", value:dataForRegion.creon, label: "medecins"},
-					{name:"contacts", value:dataForRegion.tarka, label: "hors cible"},
-					{name:"visits", value:dataForRegion.lamaline, label: "cible"},
+					{name:"creon", value:dataForRegion.creon, label: "CREON"},
+					{name:"tarka", value:dataForRegion.tarka, label: "TARKA"},
+					{name:"lam", value:dataForRegion.lamaline, label: "LAM"},
 				];
-				that.appendBarChartInToolTip($('#controls-panel').width(),data);
+				that.appendBarChartInToolTip($('#informationPanel').width(),data);
 			},
 			onNodeUnselected: function(){
 				$('#informationPanel').html(that.model.get("infoPanelDefault"));
