@@ -20,6 +20,11 @@
   overflow:hidden;
 }
 
+.click-capture {
+  pointer-events:all;
+}
+
+
 /* Buttons on the map */
 
 #mapButtons {

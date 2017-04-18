@@ -205,18 +205,24 @@ var MapView = Backbone.View.extend({
 			    return toolTipSvg;
 			 })
 
-
 			var arc = d3.svg.arc().innerRadius(0).outerRadius(10/currentScale);
 	      	var pie = d3.layout.pie().value(function(d){ return d });
 
-			var pies = svg.selectAll('.pie')
-				.data(dataArray)
+	      	var areas = svg.selectAll('g')
+	      		.data(dataArray)
 				.enter()
 				.append('g')
 				.attr('class', 'area-element')
 				.attr("transform", function(d) {
 					return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")";
 				})
+				//.on('mouseleave', tip.hide) 
+
+
+
+			var pies = svg.selectAll('g.area-element')
+				.append('g')
+				.attr('class', 'area-pie')
 				.attr('stroke','#000')
 				.attr('stroke-width',function(d){
 					return (1.3/currentScale) + "px";
@@ -229,10 +235,10 @@ var MapView = Backbone.View.extend({
 						that.drawRegions()
 					};
 				})
-				.on('mouseover', function(d){
+				.on('mouseenter', function(d){
 					tip.show(d);
 					// This is the only way to get tooltips hover events into the tooltips.
-					d3.selectAll("g").on('mouseover', function(d,i) {
+					d3.selectAll("g.slice").on('mouseover', function(d,i) {
 		                d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label);
 		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
 		            })
@@ -240,10 +246,8 @@ var MapView = Backbone.View.extend({
 		            	d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region);
 		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].total);
 		            });
-				});	
-	      		//.on('mouseout', tip.hide) // Not needed as showing a new one will hide the old one. This needs solving
-
-
+				})
+			
 
 			var colors = that.model.get("pieColors");
 
@@ -258,6 +262,7 @@ var MapView = Backbone.View.extend({
 				.style('fill', function(d,i){
 					return colors[i];
 				})
+
 
 			pies.append("text")
 				.data(dataArray)          
