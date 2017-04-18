@@ -49,39 +49,7 @@ var MapView = Backbone.View.extend({
 				.style("stroke-width", "0.5px")
 				.attr("class","stroke-path")
 				.style("fill",function(d,i){
-					// var colors = [];
-					// for (var key in department_map) {
-					// 	if (department_map[key].departments.indexOf(departments[i].department) !== -1)
-					// 		colors.push(that.model.get("mapColors")[parseInt(key) - 1]);
-					// }
-					//
-					// if (colors.length === 0) {return that.model.get("mapColors")[9]} // Hard coding corsica
-					// if (colors.length === 1) {return colors[0];}
-					// if (colors.length === 2) {
-					// 	var gradient = svg.append("defs")
-					// 	  .append("linearGradient")
-					// 	    .attr("id", "gradient")
-					// 	    .attr("x1", "0%")
-					// 	    .attr("y1", "0%")
-					// 	    .attr("x2", "100%")
-					// 	    .attr("y2", "100%")
-					// 	    .attr("spreadMethod", "pad");
-					//
-					// 	gradient.append("stop")
-					// 	    .attr("offset", "0%")
-					// 	    .attr("stop-color", "#"+colors[0])
-					// 	    .attr("stop-opacity", 1);
-					//
-					// 	gradient.append("stop")
-					// 	    .attr("offset", "100%")
-					// 	    .attr("stop-color", "#"+colors[1])
-					// 	    .attr("stop-opacity", 1);
-					//
-					// 	return "url(#gradient)";
-					// }
 					return " #B3B3B3";
-
-
 				})
 				.style("stroke", function(d,i){
 					return "#000000";
@@ -162,7 +130,7 @@ var MapView = Backbone.View.extend({
 	// The chooses a type of graph to append to the labels
 	//-----------------------------------------------------------------------------------------------------
 
-	drawRegions:function(initialLoad) {
+		drawRegions:function(initialLoad) {
 		var that = this;
 		var svg = d3.select($("#zoomgroup")[0]);
 		var projection = d3.geo.mercator()
@@ -172,7 +140,7 @@ var MapView = Backbone.View.extend({
 
 		var dataArray = that.model.getData();
 
-
+		
 		if (!initialLoad) {
 			this.removeElementsOnChange(svg);
 			this.zoomToBoundingBox(svg,projection,dataArray)
@@ -186,22 +154,17 @@ var MapView = Backbone.View.extend({
 			var currentScale = (svg.attr('transform') && that.model.get("level") !== 0) ? svg.attr('transform').split(",")[3].replace(")","") : 1;
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
-
+ 	
 		 	var tip = d3.tip()
 			  .attr('class', 'd3-tip')
 			  .offset(function(d){
-			  	return that.model.calculateTooltipPosition(projection,this,d,150);
+			  	var elementRef = d.name;
+			  	var elementObject = d3.selectAll('.area-element').filter(function(d){return d.name === elementRef});
+			  	return that.model.calculateTooltipPosition(projection,elementObject.node().getBBox(),d,150);
 			  })
 			  .html(function(d) {
-			  	var data = [
-					{name:"doctors", value:d.doctors, label: "medecins"},
-					{name:"contacts", value:d.contacts, label: "hors cible"},
-					{name:"visits", value:d.visits, label: "cible"},
-				];
-
-			  	that.appendPieChartInToolTip(150,data);
-			  	//that.appendBarChartInToolTip(80,data);
-			  	var toolTipSvg = $('#tooltipGenerator').html();
+			  	that.appendPieChartInToolTip(150,d);
+			  	var toolTipSvg = d3.select('#tooltipGenerator').html();
 			  	$('#tooltipGenerator').html('');
 			    return toolTipSvg;
 			 })
@@ -209,15 +172,21 @@ var MapView = Backbone.View.extend({
 			var arc = d3.svg.arc().innerRadius(0).outerRadius(10/currentScale);
 	      	var pie = d3.layout.pie().value(function(d){ return d });
 
-
-			var pies = svg.selectAll('.pie')
-				.data(dataArray)
+	      	var areas = svg.selectAll('g')
+	      		.data(dataArray)
 				.enter()
 				.append('g')
 				.attr('class', 'area-element')
 				.attr("transform", function(d) {
 					return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")";
 				})
+				.on('mouseleave', function(d){
+					tip.hide();
+				}) 
+
+			var pies = svg.selectAll('g.area-element')
+				.append('g')
+				.attr('class', 'area-pie')
 				.attr('stroke','#000')
 				.attr('stroke-width',function(d){
 					return (1.3/currentScale) + "px";
@@ -230,16 +199,25 @@ var MapView = Backbone.View.extend({
 						that.drawRegions()
 					};
 				})
-				.on('mouseover', tip.show)
-	      		.on('mouseout', tip.hide)
-
-
+				.on('mouseenter', function(d){
+					tip.show(d);
+					// Tooltip specific events
+					d3.selectAll("g.slice").on('mouseover', function(d,i) {
+		                d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label);
+		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
+		            })
+		            .on('mouseleave', function(){
+		            	d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region);
+		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].visits + " %");
+		            });
+				})
+			
 
 			var colors = that.model.get("pieColors");
 
 			pies.selectAll('.slice')
 				.data(function(d){
-					return pie([d.contacts,d.visits,d.doctors]);
+					return pie([d.visits,d.nonVisits]);
 				})
 				.enter()
 				.append('path')
@@ -249,8 +227,9 @@ var MapView = Backbone.View.extend({
 					return colors[i];
 				})
 
+
 			pies.append("text")
-				.data(dataArray)
+				.data(dataArray)          
 		        .attr("x", 0)
 		        .attr("y", 25/currentScale)
 		        .attr("text-anchor", "middle")
@@ -260,6 +239,7 @@ var MapView = Backbone.View.extend({
 		        .text(function(d,i){
 		        	return d.name;
 		        })
+		        .attr("class","region-text")
 
 
 			that.model.set("currentRegions",dataArray);
@@ -273,78 +253,12 @@ var MapView = Backbone.View.extend({
 	},
 
 
-	//----------------------------------------------------------------------------------------------------
-	// FUNCTIONS TO APPEND CHARTS DIRECTLY TO THE GRAPHIC
-	//-----------------------------------------------------------------------------------------------------
-
-	appendBarCharts: function(svg,projection,dataArray,currentScale) {
-		var contactsData = this.model.getTestContactsData(dataArray);
-		var height = this.model.get("height");
-		svg.selectAll("rect")
-			.data(contactsData).enter()
-			.append("rect")
-			.attr("width", function(){
-				return 10/currentScale;
-			})
-			.attr("x", function (d) { return projection([d.lon,d.lat])[0]; })
-			.attr('y', function (d) {
-				return (parseInt(projection([d.lon,d.lat])[1]) - ((d.value / 10) /currentScale));
-			})
-			.attr("height", function(d){
-				return (d.value / 10) / currentScale;
-			})
-
-			.attr("class","graphic")
-			.attr("fill", function(d){
-				if (d.measure === 'contacts') return 'red';
-				if (d.measure === 'visits') return 'blue';
-			})
-			.attr("transform", function(d){
-				if (d.measure === 'contacts') return 'translate('+ (6/currentScale) +','+ (-(6/currentScale)) +')';
-				if (d.measure === 'visits') return 'translate('+ (18/currentScale) +','+ (-(18/currentScale)) +')';
-			})
-	},
-
-	appendPieCharts: function(svg,projection,dataArray,currentScale) {
-
-		var pieData = this.model.getTestPieData(dataArray);
-
-		var arc = d3.svg.arc().innerRadius(0).outerRadius(15/currentScale);
-      	var pie = d3.layout.pie().value(function(d){ return d });
-
-		var pies = svg.selectAll('.pie')
-			.data(pieData)
-			.enter()
-			.append('g')
-			.attr('class', 'pie')
-			.attr("transform", function(d) {
-				return "translate(" + (projection([d.lon, d.lat])[0] + (12/currentScale)) + "," + (projection([d.lon, d.lat])[1] - (22/currentScale))  + ")";
-			})
-			.attr('stroke','#000')
-			.attr('stroke-width',function(d){
-				return (2/currentScale) + "px";
-			})
-
-		var colors = this.model.get("pieColors");
-
-		pies.selectAll('.slice')
-			.data(function(d){
-				return pie([d.contacts, d.doctors, d.visits]);
-			})
-			.enter()
-			.append('path')
-			.attr('d',  arc)
-			.style('fill', function(d,i){
-				return colors[i];
-			});
-	},
 
 	//----------------------------------------------------------------------------------------------------
 	// FUNCTIONS TO APPEND CHARTS TO TOOLTIPS ABOVE GRAPHICS
 	//-----------------------------------------------------------------------------------------------------
 
 	appendBarChartInToolTip:function(size,data){
-
 
 		//Original linear range
 		// var y = d3.scale.linear().range([0 ,size * 0.75]);
@@ -364,7 +278,7 @@ var MapView = Backbone.View.extend({
       .attr("class",'tooltip-canvas')
 
 
-		var colors = that.model.get("chartColors");
+		var colors = that.model.get("barColors");
 
 				var bars = svg.selectAll("rect")
 		   .data(data)
@@ -440,75 +354,82 @@ var MapView = Backbone.View.extend({
 
 	},
 
-	_appendBarChartInToolTip:function(size,data){
-		var x = d3.scale.ordinal().rangeRoundBands([0, size], .05);
-		var y = d3.scale.linear().range([0,(size * 0.8)]);
-		x.domain(data.map(function(d,i) { return i; }));
-		y.domain([0, d3.max(data, function(d) { return d.value; })]);
-
-      	var svg = d3.select('#tooltipGenerator')
-      		.append("svg")
-			.attr("width", size)
-			.attr("height", size)
-			.attr("class",'tooltip-canvas')
-
-      	var bars = svg.selectAll("rect")
-			.data(data)
-			.enter()
-			.append("rect")
-			.attr("width", function(d){
-				 return (size / data.length) * 0.75;
-			})
-			.attr("fill", function(d,i){
-				if(i===0) return "red";
-				if(i===1) return "blue";
-				if(i===2) return "green";
-				if(i===3) return "yellow";
-			})
-			.attr("class","bar")
-			.attr("x", function(d,i) { return x(i); })
-			.attr("height", 0)
-			.transition()
-			.duration(400)
-			.delay(function (d, i) {
-				return (i === 0) ? 400 : 400/(i+1);
-			})
-			.attr("y", function (d, i) {
-				return size - y(d.value);
-			})
-			.attr("height", function (d, i) {
-				return y(d.value);
-			})
-	},
 
 
-	appendPieChartInToolTip:function(size,data){
-		var colors = this.model.get("pieColors");
-		var labels = [];
+		appendPieChartInToolTip:function(size,d){
+		var region = d.name;
+		var visits = d.visits;
+		var data = [];
+
+		this.model.get("pieLegendSegmentation").forEach(function(seg){
+			if (seg.measure !== "autres") {
+				data.push({
+					label: seg.label,
+					value: d[seg.measure]
+				})
+			}
+		});
+
+		/* Adding orders and sorting data */
+		var total = 0;
+		var autres = {label:"Autres",value:0};
+		data.forEach(function(d){
+			total += d.value;
+		});
+		data.forEach(function(d,i){
+			if ((d.value/total) * 100 < 5) {
+				autres.value += d.value;
+				d.value = 0;
+			}
+		});
+		data.sort(function(a,b) {return (a.value > b.value) ? -1 : ((b.value > a.value) ? 1 : 0);} ); 
+		data.push(autres);
+
+
+		var legend = this.model.get("pieLegendSegmentation");  // Colors array
+		var labels = []; 
 		var values = [];
 		$.each(data, function(index,obj) {
 			labels.push(obj.label);
 			values.push(obj.value);
 		});
 
-		var arc = d3.svg.arc().innerRadius(0).outerRadius(size/4);
-		var outerArc = d3.svg.arc().innerRadius(size/2).outerRadius(size/4);
-		var radius = (size/4) + 20;
-		var labelArc = d3.svg.arc().outerRadius(radius + 20).innerRadius(radius-5);
-		var pie = d3.layout.pie()
-      		.value(function(d) { return d.value; })
+		var radius = size/2;
+		var arc = d3.svg.arc().innerRadius(radius * 0.45).outerRadius(radius * 0.9); 
+		var pie = d3.layout.pie().value(function(d) { return d.value; }).sort(null);
 
 
 		var tooltipElement = d3.select("#tooltipGenerator")
-			.append("svg")
-			.data(data)
-			.attr("width", size)
-			.attr("height", size)
+			.append("svg") 
+			.data(data) 
+			.attr("width", size) 
+			.attr("height", size) 
 			.attr("class","tooltip-canvas")
-			.append("g")
+			.append("g") 
 			.attr("transform", "translate(" + (size/2) + "," + (size/2) + ")")
 			.attr('stroke','#000')
 			.attr('stroke-width',2);
+
+
+		var centreLabel = d3.select(".tooltip-canvas")
+			.append("text")
+			.attr("x", radius)
+			.attr("y", radius * 0.9)
+			.text(region)
+			.attr("class","tip-pie-hover-label")
+			.style("fill", "none")
+			.style("stroke", "#AAAAAA")
+			.style("text-anchor","middle");
+
+		var centreValue = d3.select(".tooltip-canvas")
+			.append("text")
+			.attr("x", radius)
+			.attr("y", radius * 1.1)
+			.text(visits + " %")
+			.attr("class","tip-pie-hover-value")
+			.style("fill", "none")
+			.style("stroke", "#AAAAAA")
+			.style("text-anchor","middle");
 
 		var arcs = tooltipElement.selectAll("g.slice")
 			.data(function(d){
@@ -516,41 +437,19 @@ var MapView = Backbone.View.extend({
 			})
 			.enter()
 			.append("g")
-			.attr("class", "slice");
-
-
-		arcs.append("path")
-			.attr("fill", function(d, i) { return colors[i]; } )
+			.attr("class", "slice")
+			.append("path")
+			.attr("fill", function(d, i) {
+				var color = legend.filter(function(l){ 
+					return l.label == d.data.label;
+				});
+				return color[0].color;
+			})
 			.attr("d", arc);
 
-
-		arcs.append("text")
-			.attr("transform", function(d) {
-				d.outerRadius = (size/2);
-				d.innerRadius = (size/2);
-				return "translate(" + arc.centroid(d) + ")";
-			})
-			.attr("text-anchor", "middle") //center the text on it's origin
-			.style("stroke", "000")
-			.style("font", "10px verdana")
-			.text(function(d, i) {
-				return values[i];
-			});
-
-		arcs.filter(function(d) {
-				return d.endAngle - d.startAngle > .2;
-			}).append("text")
-			.attr("dy", ".35em")
-			.attr("text-anchor", "middle")
-			.attr("transform", function(d) {
-				var midAngle = d.endAngle < Math.PI ? d.startAngle/2 + d.endAngle/2 : d.startAngle/2  + d.endAngle/2 + Math.PI ;
-			  	return "translate(" + labelArc.centroid(d)[0] + "," + labelArc.centroid(d)[1] + ") rotate(-90) rotate(" + (midAngle * 180/Math.PI) + ")";
-			})
-			.style("stroke", "428bca")
-			.style("font", "10px verdana")
-			.text(function(i) {
-				return i.data.label;
-			});
+		var eventStorageData = data;
+		eventStorageData.push({region: region, visits: visits});
+		this.model.set("tooltipData",eventStorageData);
 	},
 
 
@@ -777,9 +676,9 @@ var MapView = Backbone.View.extend({
 					return obj.name === data.id;
 				});
 				var data = [
-					{name:"doctors", value:dataForRegion.doctors, label: "medecins"},
-					{name:"contacts", value:dataForRegion.contacts, label: "hors cible"},
-					{name:"visits", value:dataForRegion.visits, label: "cible"},
+					{name:"doctors", value:dataForRegion.creon, label: "medecins"},
+					{name:"contacts", value:dataForRegion.tarka, label: "hors cible"},
+					{name:"visits", value:dataForRegion.lamaline, label: "cible"},
 				];
 				that.appendBarChartInToolTip($('#controls-panel').width(),data);
 			},

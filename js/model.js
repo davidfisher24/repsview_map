@@ -6,15 +6,33 @@ MapModel = Backbone.Model.extend({
 		"spdata" : "",
 		"network" : "gp",
 		// Defined attribute
-		"width" : 1024, // Width of the svg element
-		"height" : 800, // Height of the svg element
+		"width" : 800, // Width of the svg element
+		"height" : 600, // Height of the svg element
 		"reservedKeys" : ["loc","lat","lon"], // Reserved keys in the current data array
 		"defaultCenter" : [4.8, 47.35], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
 		"deepestLevel" : 2,  // Maximum level that can be drilled to. Is set to 2 for gp and 3 for sp.
-		"pieColors" : ["#5bc0de","#5cb85c","#d9534f","#428bca"], // Colours to use in the segments of the pies
-		"mapColors" : ["407020","609040","80b060","a0d080","306010","508030","70a050","90c070","b0e090","205000"],
-		"chartColors" :  ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1'],
+		"pieColors" :  ['#55BF3B', '#DF5353'], // Colours to use in the segments of the pies
+		"barColors" : ["#407020","#609040","#80b060","#a0d080","#306010","#508030","#70a050","#90c070","#b0e090","#205000"],
+
+		"pieLegendSegmentation" :  [
+			{measure: "vip", color: '#7cb5ec', label: "VIP"}, 
+			{measure: "priortitar", color: '#434348', label: "Prior."}, 
+			{measure: "fideliserG", color: '#90ed7d', label: "Fid. G"}, 
+			{measure: "fideliserM", color: '#f7a35c', label: "Fid. M"}, 
+			{measure: "conquerir", color: '#8085e9', label: "Conq"}, 
+			{measure: "rhumato", color: '#f15c80', label: "Rhumato"}, 
+			{measure: "pharmHosp", color: '#e4d354', label: "Ph Hosp"}, 
+			{measure: "geriatrie", color: '#2b908f', label: "Geriatrie"}, 
+			{measure: "chirugerie", color: '#f45b5b', label: "Chir"}, 
+			{measure: "douleur", color: '#91e8e1', label: "Douleur"}, 
+			{measure: "cardio", color: '#DA70D6', label: "Cardio"}, 
+			{measure: "uro", color: '#1E90FF', label: "Uro"}, 
+			{measure: "gastro", color: '#E0F000', label: "Gastro"},
+			{measure: "muco", color: '#AA4643', label: "Muco"},
+			{measure: "arv", color: '#89A54E', label: "ARC"},
+			{measure: "autres", color: '#80699B', label: "Autres"}
+		],
 
 		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
 		"currentBoundingBox" : null, // Current bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
@@ -25,15 +43,15 @@ MapModel = Backbone.Model.extend({
 		"currentSector" : null, // Current secot select for setting data
 		"currentUgaGroup" : null, // Current uga group selected for setting data
 
-
-
+		
 		"currentCities" : null,
 		"currentRegions" : null,
 
 		"citiesVisible" : true, // Linked to the checkbox for this element. If the cities are visible or not
 		"citiesVisibleLimit" : 250000,
 
-		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>"
+		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>",
+		"tooltipData" : null, // Problematic. This needs to be handled differently, but is the only way to get data back to the tooltip
 	},
 
 	data:function(){
@@ -42,8 +60,9 @@ MapModel = Backbone.Model.extend({
 	},
 
 	initialize:function(options){
-		this.set("width",options.mapSize);
-		this.set("height",options.mapSize);
+		console.log(options);
+		this.set("width",options.mapWidth);
+		this.set("height",options.mapHeight);
 		this.set("gpdata",options.gpdata);
 		this.set("spdata",options.spdata);
 	},
@@ -94,14 +113,32 @@ MapModel = Backbone.Model.extend({
 		var data = this.data();
 		var regionsArray = [];
 		for (var key in data) {
+			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
 			if (_this.get("reservedKeys").indexOf(key) === -1) regionsArray.push({
 				lat: data[key].lat,
 				lon: data[key].lon,
 				name: key,
 				level: 0,
-				contacts: Math.floor(Math.random() * 100),
-				visits: Math.floor(Math.random() * 100),
-				doctors: Math.floor(Math.random() * 100),
+				visits: visits,
+				nonVisits : 100 - visits, 
+				vip: Math.floor((Math.random() * 1000) + 1),
+				priortitar: Math.floor((Math.random() * 1000) + 1),
+				fideliserG: Math.floor((Math.random() * 1000) + 1),
+				fideliserM: Math.floor((Math.random() * 1000) + 1),
+				conquerir: Math.floor((Math.random() * 1000) + 1),
+				rhumato: Math.floor((Math.random() * 1000) + 1),
+				pharmHosp: Math.floor((Math.random() * 1000) + 1),
+				geriatrie: Math.floor((Math.random() * 1000) + 1),
+				chirugerie: Math.floor((Math.random() * 1000) + 1),
+				douleur: Math.floor((Math.random() * 1000) + 1),
+				cardio: Math.floor((Math.random() * 1000) + 1),
+				uro: Math.floor((Math.random() * 1000) + 1),
+				gastro: Math.floor((Math.random() * 1000) + 1),
+				muco: Math.floor((Math.random() * 1000) + 1),
+				arv: Math.floor((Math.random() * 1000) + 1),
+				creon: Math.floor((Math.random() * 100) + 1),
+				tarka: Math.floor((Math.random() * 100) + 1),
+				lamaline: Math.floor((Math.random() * 100) + 1),
 			});
 		}
 		return regionsArray;
@@ -117,14 +154,32 @@ MapModel = Backbone.Model.extend({
 		var region = this.get("currentRegion");
 		var sectorsArray = [];
 		for (var key in data[region]) {
+			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
 			if (_this.get("reservedKeys").indexOf(key) === -1) sectorsArray.push({
 				lat: data[region][key].lat,
 				lon: data[region][key].lon,
 				name: key,
 				level: 1,
-				contacts: Math.floor(Math.random() * 100),
-				visits: Math.floor(Math.random() * 100),
-				doctors: Math.floor(Math.random() * 100),
+				visits: visits,
+				nonVisits : 100 - visits, 
+				vip: Math.floor((Math.random() * 1000) + 1),
+				priortitar: Math.floor((Math.random() * 1000) + 1),
+				fideliserG: Math.floor((Math.random() * 1000) + 1),
+				fideliserM: Math.floor((Math.random() * 1000) + 1),
+				conquerir: Math.floor((Math.random() * 1000) + 1),
+				rhumato: Math.floor((Math.random() * 1000) + 1),
+				pharmHosp: Math.floor((Math.random() * 1000) + 1),
+				geriatrie: Math.floor((Math.random() * 1000) + 1),
+				chirugerie: Math.floor((Math.random() * 1000) + 1),
+				douleur: Math.floor((Math.random() * 1000) + 1),
+				cardio: Math.floor((Math.random() * 1000) + 1),
+				uro: Math.floor((Math.random() * 1000) + 1),
+				gastro: Math.floor((Math.random() * 1000) + 1),
+				muco: Math.floor((Math.random() * 1000) + 1),
+				arv: Math.floor((Math.random() * 1000) + 1),
+				creon: Math.floor((Math.random() * 100) + 1),
+				tarka: Math.floor((Math.random() * 100) + 1),
+				lamaline: Math.floor((Math.random() * 100) + 1),
 				corsicaFlag: (region === corsicaFlagRegion && (corsicaFlagSectors.indexOf(key) !== -1)) ? true : false,
 			});
 		}
@@ -138,14 +193,32 @@ MapModel = Backbone.Model.extend({
 		var sector = this.get("currentSector");
 		var ugaGroupsArray = [];
 		for (var key in data[region][sector]) {
+			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
 			if (_this.get("reservedKeys").indexOf(key) === -1) ugaGroupsArray.push({
 				lat: data[region][sector][key].lat,
 				lon: data[region][sector][key].lon,
 				name: key,
 				level: 2,
-				contacts: Math.floor(Math.random() * 100),
-				visits: Math.floor(Math.random() * 100),
-				doctors: Math.floor(Math.random() * 100),
+				visits: visits,
+				nonVisits : 100 - visits, 
+				vip: Math.floor((Math.random() * 1000) + 1),
+				priortitar: Math.floor((Math.random() * 1000) + 1),
+				fideliserG: Math.floor((Math.random() * 1000) + 1),
+				fideliserM: Math.floor((Math.random() * 1000) + 1),
+				conquerir: Math.floor((Math.random() * 1000) + 1),
+				rhumato: Math.floor((Math.random() * 1000) + 1),
+				pharmHosp: Math.floor((Math.random() * 1000) + 1),
+				geriatrie: Math.floor((Math.random() * 1000) + 1),
+				chirugerie: Math.floor((Math.random() * 1000) + 1),
+				douleur: Math.floor((Math.random() * 1000) + 1),
+				cardio: Math.floor((Math.random() * 1000) + 1),
+				uro: Math.floor((Math.random() * 1000) + 1),
+				gastro: Math.floor((Math.random() * 1000) + 1),
+				muco: Math.floor((Math.random() * 1000) + 1),
+				arv: Math.floor((Math.random() * 1000) + 1),
+				creon: Math.floor((Math.random() * 100) + 1),
+				tarka: Math.floor((Math.random() * 100) + 1),
+				lamaline: Math.floor((Math.random() * 100) + 1),
 			});
 		}
 		return ugaGroupsArray;
@@ -164,14 +237,32 @@ MapModel = Backbone.Model.extend({
 		var level = this.get("network") === "gp" ? 2 : 3;
 
 		for (var key in selectedData) {
+			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
 			if (_this.get("reservedKeys").indexOf(key) === -1) ugasArray.push({
 				lat: selectedData[key].lat,
 				lon: selectedData[key].lon,
 				name: key,
 				level: level,
-				contacts: Math.floor(Math.random() * 100),
-				visits: Math.floor(Math.random() * 100),
-				doctors: Math.floor(Math.random() * 100),
+				visits: visits,
+				nonVisits : 100 - visits, 
+				vip: Math.floor((Math.random() * 1000) + 1),
+				priortitar: Math.floor((Math.random() * 1000) + 1),
+				fideliserG: Math.floor((Math.random() * 1000) + 1),
+				fideliserM: Math.floor((Math.random() * 1000) + 1),
+				conquerir: Math.floor((Math.random() * 1000) + 1),
+				rhumato: Math.floor((Math.random() * 1000) + 1),
+				pharmHosp: Math.floor((Math.random() * 1000) + 1),
+				geriatrie: Math.floor((Math.random() * 1000) + 1),
+				chirugerie: Math.floor((Math.random() * 1000) + 1),
+				douleur: Math.floor((Math.random() * 1000) + 1),
+				cardio: Math.floor((Math.random() * 1000) + 1),
+				uro: Math.floor((Math.random() * 1000) + 1),
+				gastro: Math.floor((Math.random() * 1000) + 1),
+				muco: Math.floor((Math.random() * 1000) + 1),
+				arv: Math.floor((Math.random() * 1000) + 1),
+				creon: Math.floor((Math.random() * 100) + 1),
+				tarka: Math.floor((Math.random() * 100) + 1),
+				lamaline: Math.floor((Math.random() * 100) + 1),
 			});
 		}
 		return ugasArray;
@@ -205,14 +296,14 @@ MapModel = Backbone.Model.extend({
 	/*******************************************************************************************
 	/ FUNCTION TO LOOK FOR ELEMENTS OVERLAPPING THE EDGE OF THE MAP (CURRENTLY USED FOR TOOLTIPS)
 	* projection - map projection
-	* elementObject - original element to be used
+	* elementObject - original element to be used. Send the bounding box to use the height and width values
 	* element - currently the tooptip that will be placed on the map
 	* size of the tooltip to be place (current height and widt are the same)
 	********************************************************************************************/
 
 	calculateTooltipPosition:function(projection,elementObject,element,elementSize){
 		// Projection of current element
-		var proj = projection([element.lon,element.lat]);
+		var proj = projection([element.lon,element.lat]);  
 		var elementX = proj[0];
 		var elementY = proj[1];
 
@@ -220,13 +311,30 @@ MapModel = Backbone.Model.extend({
 		var mapBox = d3.select('#franceMap').node().getBBox();
 		var zoomBox = d3.select('#zoomgroup').node().getBBox();
 		var scale = mapBox.width/zoomBox.width;
-		var left = zoomBox.x - (mapBox.x / (scale));
 		var top = zoomBox.y - (mapBox.y / (scale));
-		//var right = (zoomBox.width / scale) - (mapBox.x / (scale));;
-		// offset y - if no space at the top we send back the tooltip height + the element height + 10px for bottom spacing, else we put 10 to the top
-		var offsetY = (elementY - ((elementSize + 10)/scale) < top) ? (d3.select(elementObject).node().getBBox().height * scale) + elementSize + 10 : -10;
-		return [offsetY,0];
+		var left = zoomBox.x - (mapBox.x / (scale));
+		var right = left + zoomBox.width/scale;
+		var bottom = top + zoomBox.height/scale;
 
+		// calculations of offsets
+		var offsetY = (elementY - ((elementSize + 10)/scale) < top) ? elementObject.height * scale + elementSize + 10 : -10;
+		var offsetX = 0;
+		if ((elementSize/scale)/2 > elementX - left) {
+			offsetX = elementSize/2 + 15;
+			//offsetY = (offsetY === -10) ? 100 : offsetY/2;
+			if (elementY - (elementSize/scale/2) < top)  offsetY = elementObject.height * scale + -(elementSize) + 10;
+			if (elementY + (elementSize/scale/2) > bottom) offsetY = -10;
+			else offsetY = 100;
+		}
+		if (elementX > right) {
+			offsetX = -(elementSize/2) - 15;
+			//offsetY = (offsetY === -10) ? 100 : offsetY/2;
+			if (elementY - (elementSize/scale/2) < top)  offsetY = elementObject.height * scale + -(elementSize) + 10;
+			if (elementY + (elementSize/scale/2) > bottom)  offsetY = -10;
+			else offsetY = 100;
+		}
+		return [offsetY,offsetX];
+		
 	},
 
 	/*****************************************************************************************
@@ -310,46 +418,9 @@ MapModel = Backbone.Model.extend({
 			var check = this.checkBounds(boxes[a], boxes.slice(a + 1));
 			if (check) $.each(check,function(i,e){
 				if (typeof(e) == 'string' && clashes.indexOf(e) === -1) clashes.push(e);
-				//else recommendedMovements[e.name] = e;
 			})
 		}
-
-		/*$.each(clashes,function(index,obj){
-			element = d3.selectAll('.area-element').filter(function(d,i){
-				return d.name === obj;
-			})
-			var movement = recommendedMovements[obj];
-			if (movement) {
-				var overlapPoints = [movement.left, movement.right, movement.top, movement.bottom];
-				var point = overlapPoints.reduce((iMax, x, i, arr) => x > arr[iMax] ? i : iMax, 0);
-				d3.selectAll('.area-element')
-					.filter(function(d,i){
-						return d.name === obj;
-					})
-					.transition().duration(1)
-					.attr('transform',function(d,i){
-						var originalTransform = $(this).attr('transform');
-						console.log(originalTransform);
-						var transform = originalTransform.substring(originalTransform.indexOf("(")+1, originalTransform.indexOf(")")).split(",");
-						if (point === 0) transform[0] = parseFloat(transform[0]) - movement.left;
-						if (point === 1) transform[0] = parseFloat(transform[0]) + movement.right;
-						if (point === 2) transform[1] = parseFloat(transform[1]) - movement.top;
-						if (point === 3) transform[1] = parseFloat(transform[1]) + movement.bottom;
-						return "translate("+parseFloat(transform[0])+","+parseFloat(transform[1])+")";
-					})
-			};
-
-			d3.selectAll('.area-element')
-				.filter(function(d,i){
-					return d.name === obj;
-				})
-				.transition().duration(1)
-				.attr('transform',function(d,i){
-					var originalTransform = $(this).attr('transform');
-					return originalTransform+ "scale(0.75)";
-				});
-		});*/
-
+		
 
 		return clashes;
 	},
@@ -358,64 +429,11 @@ MapModel = Backbone.Model.extend({
 		var crash = null;
 		$.each(testArray,function(index,obj){
 			if (testElement.x[0] <= obj.x[1] && testElement.x[1] >= obj.x[0] && testElement.y[0] <= obj.y[1] && testElement.y[1] >= obj.y[0]) {
-				/*var recommendedMovements = {
-					name: testElement.name,
-					left: obj.x[1] - testElement.x[0], // left
-					right: testElement.x[1] - obj.x[0], // right
-					top: obj.y[1] - testElement.y[0], // top
-					bottom: testElement.y[1] - obj.y[0] // bottom
-				};*/
-
-				crash = [testElement.name,obj.name/*,recommendedMovements*/];
+				crash = [testElement.name,obj.name];
 				return false;
 			}
 		});
 		return crash;
-	},
-
-	//----------------------------------------------------------------------------------------------------
-	// FUNCTIONS TO RETURN TEST DATA
-	// One function each for returning test data in bar format, and pie format
-	//-----------------------------------------------------------------------------------------------------
-
-	getTestContactsData:function(dataArray){
-		// Array of objects {name:"01", value:894, measure:"contacts", lat:47.97, lon:-1.58};
-		// One object is needed for each measure. Identified by "name" of the region and "measure" of the value
-		var contactsData = [];
-		for (var key in dataArray) {
-			contactsData.push({
-				name: dataArray[key].name,
-				lat: dataArray[key].lat,
-				lon: dataArray[key].lon,
-				measure: "contacts",
-				value: Math.floor((Math.random() * 500) + 500),
-			});
-
-			contactsData.push({
-				name: dataArray[key].name,
-				lat: dataArray[key].lat,
-				lon: dataArray[key].lon,
-				measure: "visits",
-				value: Math.floor((Math.random() * 500) + 500),
-			});
-		}
-		return contactsData;
-	},
-
-	getTestPieData:function(dataArray){
-		// Array of objects {name:"01", param1:10, param2:12, param3:24, param4:12, lat:47.97, lon:-1.58};
-		var pieData = [];
-		for (var key in dataArray) {
-			pieData.push({
-				name: dataArray[key].name,
-				contacts: Math.floor(Math.random() * 10),
-				visits: Math.floor(Math.random() * 10),
-				doctors: Math.floor(Math.random() * 10),
-				lat: dataArray[key].lat,
-				lon: dataArray[key].lon,
-			})
-		}
-		return pieData;
 	},
 
 
