@@ -57,15 +57,21 @@
 }
 
 
+/* BAR CHARTS */
 
-.axis path,
-    .axis line {
-      fill: none;
-      stroke: black;
-      shape-rendering: crispEdges;
-    }
+.axis path, .axis line {
+  fill: none;
+  stroke: #606060;
+  shape-rendering: crispEdges;
+}
 
-    .axis text {
-      font-family: sans-serif;
-      font-size: 11px;
-    }
+.axis text {
+  font-family: sans-serif;
+  font-size: 11px;
+  color: #606060;
+  fill: #606060;
+}
+
+.bar-label {
+  
+}

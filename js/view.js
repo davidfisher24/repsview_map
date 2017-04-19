@@ -258,14 +258,28 @@ var MapView = Backbone.View.extend({
 	// FUNCTIONS TO APPEND CHARTS TO TOOLTIPS ABOVE GRAPHICS
 	//-----------------------------------------------------------------------------------------------------
 
-	appendBarChartInToolTip:function(size,data){
-		// STATIC ELEMENTS 
+	appendBarChartInToolTip:function(size,dataForRegion){
+
+		// RANDOM DATA PARSING
+		// NEEDS TO COME OUT IN THE CORRECT FORMAT {name, label,value}
+		var data = [];
+		var products = ["creon","tarka","lamaline","dymista","ceris"];
+		products.sort(function() {
+		  return .5 - Math.random();
+		});
+		var dynamicNumber = Math.floor(Math.random() * 3) + 3;
+		for (var i=0; i < dynamicNumber; i++) {
+			data.push({name:products[i], value:dataForRegion[products[i]], label: products[i].toUpperCase().substr(0,5)});
+		}
+
+		// Define colours and margin and minimum and maximum values
 		var colors = this.model.get("barColors");
 		var margin = 50;
 		var dataMin = d3.min(data, function(d) {return d.value; });
 		var dataMax = d3.max(data, function(d) {return d.value; });
 
-		var x = d3.scale.ordinal().rangeRoundBands([0, size], .05);
+		// Scales and axis formats
+		var x = d3.scale.ordinal().rangeRoundBands([0, size-(margin * 0.4)], .05);
 		var y = d3.scale.linear().range([size, 0]);
 
 		var xAxis = d3.svg.axis()
@@ -275,30 +289,32 @@ var MapView = Backbone.View.extend({
 		var yAxis = d3.svg.axis()
 		    .scale(y)
 		    .orient("left")
-		    .ticks(5);
+		    .ticks(5)
 
+		// Main SVG Element
 		var svg = d3.select("#informationPanel").append("svg")
 		    .attr("width", size)
 		    .attr("height", size)
 		  	.append("g")
 		    .attr("transform","translate("+margin/2+",-"+margin/2+")");
 
+		// Definition of minimums and maximums. Absolute min and max are 90 and 100
 		  x.domain(data.map(function(d) { return d.label; }));
 		  y.domain([
-			/*(dataMin >= 100) ? 80 : */dataMin * 0.9, 
-			/*(dataMax <= 100) ? 120 : */dataMax * 1.1,
+			(dataMin >= 100) ? 90 : dataMin * 0.9, 
+			(dataMax <= 100) ? 110 : dataMax * 1.1,
 		  ]);
 
-
+		  // x axis and labels
 		  svg.append("g")
 		      .attr("class", "x axis")
-		      .attr("transform", "translate(0," + size + ")")
+		      .attr("transform", "translate(0," + (size + 1) + ")")
 		      .call(xAxis)
 		    .selectAll("text")
 		      .style("text-anchor", "middle")
 		      .attr("dx","-0.5em")
 
-
+		 // y axis and labels
 		  svg.append("g")
 		      .attr("class", "y axis")
 		      .call(yAxis)
@@ -310,16 +326,34 @@ var MapView = Backbone.View.extend({
 		      .style("text-anchor", "middle")
 
 
-		  svg.selectAll("bar")
+		  // LINE POINTS
+		 	var linePoints = [];
+			for (var i = Math.ceil(dataMin / 20) * 20; i <= dataMax + 20; i = i + 20) {
+				linePoints.push(i);
+			} 
+			linePoints.forEach(function(line){
+				svg.append("line")
+					.attr("x1", 0)
+		            .attr("y1", y(line))
+		            .attr("x2", size)
+		            .attr("y2", y(line))
+		            .attr("stroke-width", function(d,i){
+		            	return line === 100 ? 2 : 2;
+		            })
+		            .attr("stroke", function(d,i){
+		            	return line === 100 ? "#d9534f" : "#A8A8A8";
+		            })
+			})
+
+	     // BARS
+		  var bars = svg.selectAll("bar")
 		      .data(data)
 		      .enter().append("rect")
 		      .style("fill", function(d,i){
-		      	console.log(colors);
-		      	console.log(i);
 		      	return colors[i];
 		      })
 		      .attr("x", function(d) { return x(d.label); })
-		      .attr("width", x.rangeBand() - 50/data.length)
+		      .attr("width", x.rangeBand() - margin/data.length)
 		      .attr("height",0)
 		      .attr("y",size)
 		      .transition()
@@ -329,72 +363,40 @@ var MapView = Backbone.View.extend({
 				})
 			  .attr("height", function(d) { return size - y(d.value); })
 		      .attr("y", function(d) { return y(d.value); })
-			  
-		      
 
-		    // LINE POINTS
-		 	var linePoints = [];
-			for (var i = Math.ceil(dataMin / 20) * 20; i <= dataMax + 20; i = i + 20) {
-				console.log(i);
-				linePoints.push(i);
-			} 
-			console.log(linePoints);
-			linePoints.forEach(function(line){
-				svg.append("line")
-					.attr("x1", 0)
-		            .attr("y1", y(line))
-		            .attr("x2", size)
-		            .attr("y2", y(line))
-		            .attr("stroke-width", function(d,i){
-		            	return line === 100 ? 3 : 1;
-		            })
-		            .attr("stroke", function(d,i){
-		            	return line === 100 ? "red" : "black";
-		            })
-			})
+		  // LABELS
+		  var labels = svg.selectAll("label")
+		  	  .data(data)
+		      .enter().append("text")
+		      .text(function(d,i){
+		      	return d.value + "%";
+		      })
+		      .attr("class","bar-label")
+		      .attr("x", function(d) { 
+		      	return d.value > 99 ? x(d.label) : x(d.label) + 5; 
+		      })
+		      .attr("y", function(d) { 
+		      	return d.value  <= dataMin ? y(d.value) - 5 : y(d.value) + 14;
+		      })
+		      .attr("opacity",0)
+		      .attr("fill", function(d,i){
+		      	return d.value <= dataMin ? "#333333" : "#f9f9f9";
+		      })
+		      .attr("font-size",function(d){
+		      	return 50 / data.length;
+		      })
+		      .transition()
+			  .duration(400)
+			  .delay(400)
+			  .attr("opacity",1)
 
+			// CSS MODS - hide the tick marks, and change the 100 marker for a bold red marker
 			$('.tick line').hide();
-			return;
-
-       ////////////////////////////////////////
-		
-
-		/*svg.selectAll("text")
-		   .data(data)
-		   .enter()
-		   .append("text")
-		   .text("")
-		   .attr("x", function(d, i) {
-		        return i * (size / data.length);
-		   })
-		   .attr("y", function(d) {
-		        return size - y(d.value) -5;
-		   })
-		   .attr('font','8px Verdana')
-		   .transition()
-			.duration(400)
-			.delay(function (d, i) {
-				return (i === 0) ? 400 : 400/(i+1);
+			$('.y text').filter(function(i,e){
+				return e.innerHTML === "100"
+			}).css({
+				"fill": "#d9534f", "color": "#d9534f", "font-weight" : "700"
 			})
-			.text(function(d) {
-		        return d.label;
-		   })*/
-
-			//  var gEnter =svappend("svg").append("g");
-			/*var x= d3.scale.linear().range([0,size]);
-			x.domain(d3.extent(data, function(d) { return d.label; }));*/
-
-			// x.domain([0, d3.max(data, function(d) {console.log(d.value);return d.label; })]);
-
-			
-			//var xAxis =  d3.svg.axis().scale(x).orient("bottom");
-
-			
-			/*svg.append("g").attr("class","yaxis")
-				attr("transform", "translate(0," + size + ")")
-				.call(xAxis)*/
-
-
 	},
 
 
@@ -718,12 +720,7 @@ var MapView = Backbone.View.extend({
 					if (obj.name === data.id) {dataForRegion = obj; return false;}
 					return obj.name === data.id;
 				});
-				var data = [
-					{name:"creon", value:dataForRegion.creon, label: "CREON"},
-					{name:"tarka", value:dataForRegion.tarka, label: "TARKA"},
-					{name:"lam", value:dataForRegion.lamaline, label: "LAM"},
-				];
-				that.appendBarChartInToolTip($('#informationPanel').width(),data);
+				that.appendBarChartInToolTip($('#informationPanel').width(),dataForRegion);
 			},
 			onNodeUnselected: function(){
 				$('#informationPanel').html(that.model.get("infoPanelDefault"));

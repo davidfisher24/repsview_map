@@ -13,7 +13,7 @@ MapModel = Backbone.Model.extend({
 		"defaultScale" : 2400, // Default scale (France)
 		"deepestLevel" : 2,  // Maximum level that can be drilled to. Is set to 2 for gp and 3 for sp.
 		"pieColors" :  ['#55BF3B', '#DF5353'], // Colours to use in the segments of the pies
-		"barColors" : ["#5bc0de","#5cb85c","#428bca"],
+		"barColors" : ["#7cb5ec","#434348","#90ed7d","#f7a35c","#8085e9","#f15c80"],
 
 		"pieLegendSegmentation" :  [
 			{measure: "vip", color: '#7cb5ec', label: "VIP"}, 
@@ -139,6 +139,8 @@ MapModel = Backbone.Model.extend({
 				creon: Math.floor((Math.random() * 100) + 51),
 				tarka: Math.floor((Math.random() * 100) + 51),
 				lamaline: Math.floor((Math.random() * 100) + 51),
+				dymista: Math.floor((Math.random() * 100) + 51),
+				ceris: Math.floor((Math.random() * 100) + 51),
 			});
 		}
 		return regionsArray;
