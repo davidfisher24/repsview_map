@@ -21,8 +21,25 @@ var MapView = Backbone.View.extend({
 	renderMap: function() {
 		var that = this;
 
+		
+		var testCities = ["Lyon","Marseille","Nantes","Nancy","Toulouse"];
+		
+
 		var svg = d3.json("./geoJson/FRA_adm2.json", function(json) {
-			regions = topojson.feature(json, json.objects.FRA_adm2);
+		d3.csv("./geoJson/FRA_adm4.csv", function(data) {
+	  	d3.json("./geoJson/FRA_adm4.json", function(json2){
+
+			var regions = topojson.feature(json, json.objects.FRA_adm2);
+			var cities = topojson.feature(json2, json2.objects.FRA_adm4);
+			cities.features = cities.features.filter(function(e,i){
+				e.properties.flagCity = true;
+				e.properties.name = data[i].NAME_3;
+	  			return testCities.indexOf(data[i].NAME_3) !== -1 && data[i].NAME_4.search(data[i].NAME_3) !== -1;
+	  		})
+	  		console.log(cities)
+			cities.features.forEach(function(el){
+				regions.features.push(el);
+			})
 
 			svg = d3.select("#map")
 				.append("svg")
@@ -33,7 +50,6 @@ var MapView = Backbone.View.extend({
 			    .attr("id","zoomgroup")
 			    .attr("width",that.model.get("width"))
 			    .attr("height",that.model.get("height"))
-
 
 			var projection = d3.geo.mercator()
 				.center(that.model.get("defaultCenter"))
@@ -49,13 +65,20 @@ var MapView = Backbone.View.extend({
 				.style("stroke-width", "0.5px")
 				.attr("class","stroke-path")
 				.style("fill",function(d,i){
-					return " #5bc0de";
+					console.log(d.properties.flagCity);
+					//return " #5bc0de";
+					return d.properties.flagCity ? "white" : " #5bc0de";
 				})
 				.style("stroke", function(d,i){
-					return "#f9f9f9";
+					//return "#f9f9f9";
+					return d.properties.flagCity ? "#cccccc" : " #f9f9f9";
 				})
 
+			
+
 			that.drawRegions(true);
+		});
+		});
 		});
 	},
 
