@@ -197,9 +197,14 @@ var MapView = Backbone.View.extend({
 						tip.hide();
 						that.model.increaseLevel(d);
 						that.drawRegions()
+						$('#graphs').show();
+						$('#segmentationLegend').hide();
 					};
 				})
 				.on('mouseenter', function(d){
+					$('#graphs').hide();
+					$('#informationPanel').html('');
+					that.appendBarChartInToolTip($('#informationPanel').width(),d);
 					tip.show(d);
 					// Tooltip specific events
 					d3.selectAll("g.slice").on('mouseover', function(d,i) {
@@ -397,6 +402,8 @@ var MapView = Backbone.View.extend({
 			}).css({
 				"fill": "#d9534f", "color": "#d9534f", "font-weight" : "700"
 			})
+
+
 	},
 
 
@@ -410,14 +417,15 @@ var MapView = Backbone.View.extend({
 			if (seg.measure !== "autres") {
 				data.push({
 					label: seg.label,
-					value: d[seg.measure]
+					value: d[seg.measure],
+					legendLabel: seg.measure,
 				})
 			}
 		});
 
 		/* Adding orders and sorting data */
 		var total = 0;
-		var autres = {label:"Autres",value:0};
+		var autres = {label:"Autres",value:0,legendLabel:"Autres"};
 		data.forEach(function(d){
 			total += d.value;
 		});
@@ -434,9 +442,11 @@ var MapView = Backbone.View.extend({
 		var legend = this.model.get("pieLegendSegmentation");  // Colors array
 		var labels = []; 
 		var values = [];
+		var legendLabels = [];
 		$.each(data, function(index,obj) {
 			labels.push(obj.label);
 			values.push(obj.value);
+			legendLabels.push(obj.legendLabel);
 		});
 
 		var radius = size/2;
@@ -488,6 +498,7 @@ var MapView = Backbone.View.extend({
 				var color = legend.filter(function(l){ 
 					return l.label == d.data.label;
 				});
+				d.data.color = color[0].color;
 				return color[0].color;
 			})
 			.attr("d", arc);
@@ -495,6 +506,54 @@ var MapView = Backbone.View.extend({
 		var eventStorageData = data;
 		eventStorageData.push({region: region, visits: visits});
 		this.model.set("tooltipData",eventStorageData);
+		$('#segmentationLegend').html('');
+		this.appendSegmentationLegend(data);
+	},
+
+	appendSegmentationLegend:function(data){
+		$('#segmentationLegend').show();
+		data = data.slice(0,data.length-2);
+		var width = $("#segmentationLegend").width();
+		var numElements = data.length;
+		var halfPoint = Math.ceil(numElements/2);
+
+		var svg = d3.select("#segmentationLegend").append("svg")
+		    .attr("width", width)
+		    .attr("height", halfPoint * 15) // Height depends on elements
+		  	.append("g")
+
+		var legends = svg.selectAll("leg")
+		      .data(data)
+		      .enter().append("rect")
+		      .style("fill", function(d,i){
+		      	return d.color;
+		      })
+		      .attr("x", function(d,i){
+		      	return (i+1 <= halfPoint) ? 0 : width/2;
+		      })
+		      .attr("width", 25)
+		      .attr("height",14)
+		      .attr("y",function(d,i){
+		      	return (i+1 <= halfPoint) ? 3 + i * 15 : (3 + i * 15) - halfPoint * 15;
+		      })
+
+		 var labels = svg.selectAll("label")
+		  	  .data(data)
+		      .enter().append("text")
+		      .text(function(d,i){
+		      	return d.legendLabel;
+		      })
+		      .attr("class","bar-label")
+		      .attr("x", function(d,i){
+		      	return (i+1 <= halfPoint) ? 30 : width/2 + 30;
+		      })
+		      .attr("y", function(d,i){
+		      	return (i+1 <= halfPoint) ? 14 + i * 15 : (14 + i * 15) - halfPoint * 15;
+		      })
+		      .attr("fill", "black")
+		      .attr("font-size",14)
+		      .attr("class","test")
+		 
 	},
 
 
@@ -511,6 +570,7 @@ var MapView = Backbone.View.extend({
 		if ($('.graphic').length !== 0) svg.selectAll(".graphic").remove();
 		if ($('.area-element').length !== 0) svg.selectAll(".area-element").remove();
 		if ($('.tooltip-canvas').length !== 0) d3.selectAll(".tooltip-canvas").remove();
+		if ($('.d3-tip').length !== 0) d3.selectAll(".d3-tip").remove();
 		$('#informationPanel').html(this.model.get("infoPanelDefault"));
 	},
 
@@ -609,6 +669,8 @@ var MapView = Backbone.View.extend({
 
 	moveUpALevel:function(){
 		$('#selection').html('');
+		$('#graphs').show();
+		$('#segmentationLegend').hide();
 		if (this.model.get("level") > 0) {
 			this.model.decreaseLevel();
 			this.drawRegions()
@@ -720,7 +782,7 @@ var MapView = Backbone.View.extend({
 					if (obj.name === data.id) {dataForRegion = obj; return false;}
 					return obj.name === data.id;
 				});
-				that.appendBarChartInToolTip($('#informationPanel').width(),dataForRegion);
+				//that.appendBarChartInToolTip($('#informationPanel').width(),dataForRegion);
 			},
 			onNodeUnselected: function(){
 				$('#informationPanel').html(that.model.get("infoPanelDefault"));

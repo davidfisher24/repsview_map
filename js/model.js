@@ -182,6 +182,8 @@ MapModel = Backbone.Model.extend({
 				creon: Math.floor((Math.random() * 100) + 51),
 				tarka: Math.floor((Math.random() * 100) + 51),
 				lamaline: Math.floor((Math.random() * 100) + 51),
+				dymista: Math.floor((Math.random() * 100) + 51),
+				ceris: Math.floor((Math.random() * 100) + 51),
 				corsicaFlag: (region === corsicaFlagRegion && (corsicaFlagSectors.indexOf(key) !== -1)) ? true : false,
 			});
 		}
@@ -221,6 +223,8 @@ MapModel = Backbone.Model.extend({
 				creon: Math.floor((Math.random() * 100) + 51),
 				tarka: Math.floor((Math.random() * 100) + 51),
 				lamaline: Math.floor((Math.random() * 100) + 51),
+				dymista: Math.floor((Math.random() * 100) + 51),
+				ceris: Math.floor((Math.random() * 100) + 51),
 			});
 		}
 		return ugaGroupsArray;
@@ -265,6 +269,8 @@ MapModel = Backbone.Model.extend({
 				creon: Math.floor((Math.random() * 100) + 51),
 				tarka: Math.floor((Math.random() * 100) + 51),
 				lamaline: Math.floor((Math.random() * 100) + 51),
+				dymista: Math.floor((Math.random() * 100) + 51),
+				ceris: Math.floor((Math.random() * 100) + 51),
 			});
 		}
 		return ugasArray;
