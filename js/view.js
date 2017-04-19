@@ -26,11 +26,11 @@ var MapView = Backbone.View.extend({
 		
 
 		var svg = d3.json("./geoJson/FRA_adm2.json", function(json) {
-		d3.csv("./geoJson/FRA_adm4.csv", function(data) {
-	  	d3.json("./geoJson/FRA_adm4.json", function(json2){
+		//d3.csv("./geoJson/FRA_adm4.csv", function(data) {
+	  	//d3.json("./geoJson/FRA_adm4.json", function(json2){
 
 			var regions = topojson.feature(json, json.objects.FRA_adm2);
-			var cities = topojson.feature(json2, json2.objects.FRA_adm4);
+			/*var cities = topojson.feature(json2, json2.objects.FRA_adm4);
 			cities.features = cities.features.filter(function(e,i){
 				e.properties.flagCity = true;
 				e.properties.name = data[i].NAME_3;
@@ -39,7 +39,7 @@ var MapView = Backbone.View.extend({
 	  		console.log(cities)
 			cities.features.forEach(function(el){
 				regions.features.push(el);
-			})
+			})*/
 
 			svg = d3.select("#map")
 				.append("svg")
@@ -65,7 +65,6 @@ var MapView = Backbone.View.extend({
 				.style("stroke-width", "0.5px")
 				.attr("class","stroke-path")
 				.style("fill",function(d,i){
-					console.log(d.properties.flagCity);
 					//return " #5bc0de";
 					return d.properties.flagCity ? "white" : " #5bc0de";
 				})
@@ -74,11 +73,9 @@ var MapView = Backbone.View.extend({
 					return d.properties.flagCity ? "#cccccc" : " #f9f9f9";
 				})
 
-			
-
 			that.drawRegions(true);
-		});
-		});
+		//});
+		//});
 		});
 	},
 
@@ -177,7 +174,30 @@ var MapView = Backbone.View.extend({
 			var currentScale = (svg.attr('transform') && that.model.get("level") !== 0) ? svg.attr('transform').split(",")[3].replace(")","") : 1;
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
- 	
+ 			
+
+			var drag = d3.behavior.drag()
+				.on("drag", dragMove)
+				.on("dragend", recordNewPosition);
+
+			function dragMove(d) {
+				d[0] = d3.event.x, d[1] = d3.event.y;
+				d3.select(this).attr("transform", "translate(" + d[0] + "," + d[1] + ")");
+				var baseProj = projection.invert([0,0]);
+				var pointProj = projection.invert([d[0],d[1]]);
+				var movement = [pointProj[0] - baseProj[0], pointProj[1] - baseProj[1]];
+				console.log((d.lon + movement[0]) + " " + (d.lat + movement[1]));
+			}
+
+			function recordNewPosition(d) {
+				d3.event.sourceEvent.stopPropagation()
+				var newPoint = d3.select(this).node().getBoundingClientRect();
+				var newX = ((newPoint.right - newPoint.left) /2) + newPoint.left;
+				var newY = ((newPoint.bottom - newPoint.top) /2) + newPoint.top;
+				var newLatLon = projection.invert([newX,newY]);
+			}
+
+
 		 	var tip = d3.tip()
 			  .attr('class', 'd3-tip')
 			  .offset(function(d){
@@ -214,9 +234,11 @@ var MapView = Backbone.View.extend({
 				.attr('stroke-width',function(d){
 					return (1.3/currentScale) + "px";
 				})
+				.call(drag)
 				.call(tip)
 				.on("click",function(d,i){
 					if (that.model.get("level") < that.model.get("deepestLevel") && !d.corsicaFlag) {
+						if (d3.event.defaultPrevented) return;
 						tip.hide();
 						that.model.increaseLevel(d);
 						that.drawRegions()

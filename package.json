@@ -13,6 +13,7 @@
     "bootstrap": "^3.3.7",
     "bootstrap-treeview": "^1.2.0",
     "d3": "^3.5.17",
+    "d3-drag": "^1.0.4",
     "d3-tip": "^0.7.1",
     "grunt": "^1.0.1",
     "grunt-contrib-concat": "^1.0.0",

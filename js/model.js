@@ -60,7 +60,6 @@ MapModel = Backbone.Model.extend({
 	},
 
 	initialize:function(options){
-		console.log(options);
 		this.set("width",options.mapWidth);
 		this.set("height",options.mapHeight);
 		this.set("gpdata",options.gpdata);
@@ -297,7 +296,6 @@ MapModel = Backbone.Model.extend({
 			return pop > levelMinPopulation && lat && lon;
 			//return lat && lon;
 		});
-		console.log(selection);
 		return selection;
 
 	},
@@ -363,44 +361,6 @@ MapModel = Backbone.Model.extend({
 		});
 	},
 
-	/*****************************************************************************************
-	/FUNCTION TO CHECK UGAS THAT FALL INSIDE A CITY BOUNDS
-	* "citiesWithGroupedUgas" is an array of cities stored in the model which have more than one uga in their bounds
-	* parameter cities - the array of city object we are about to place
-	* parameter dataArray - the array of data of regions we are about to place
-	* projection - the current map projection
-	* returns all uga inside specific city bounds
-	*****************************************************************************************/
-
-	checkUgasThatFallInCities:function(cities,dataArray,projection){
-		var that = this;
-		var citiesWithUgaGroups = {};
-		var returnArray = {
-			cities:{
-
-			},
-			flag:[],
-		};
-
-		$.each(cities,function(index,obj){
-			if (that.get("citiesWithGroupedUgas").indexOf(obj.name) !== -1) {
-				citiesWithUgaGroups[obj.name] = {x: [obj.x + 5, obj.x - 5], y: [obj.y + 5, obj.y - 5], name: obj.name};
-			}
-		})
-
-		$.each(dataArray,function(index,obj){
-			$.each(citiesWithUgaGroups,function(i,o) {
-				var px = projection([obj.lon, obj.lat])[0];
-				var py = projection([obj.lon, obj.lat])[1];
-				if ((px < o.x[0] && px > o.x[1]) && (py < o.y[0] && px > o.y[1])) {
-					if (returnArray.cities[o.name] === undefined) returnArray.cities[o.name] = [];
-					returnArray.cities[o.name].push(obj);
-					if (returnArray.flag.indexOf(obj.name) === -1) returnArray.flag.push(obj.name);
-				}
-			})
-		})
-		return returnArray;
-	},
 
 	/*************************************************************************************************************
 	/FUNCTION TO TEST BOUNDING BOXES OF CITIES AND CLASHES
