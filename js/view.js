@@ -603,6 +603,7 @@ var MapView = Backbone.View.extend({
 			[Math.max.apply(Math,dataArray.map(function(d){return d.lon})),Math.max.apply(Math,dataArray.map(function(d){return d.lat}))],
 			[Math.min.apply(Math,dataArray.map(function(d){return d.lon})),Math.min.apply(Math,dataArray.map(function(d){return d.lat}))]
 		]);
+		console.log(this.model.get("currentBoundingBox"));
 		this.model.set("currentMapBounds",[leftBottom,rightTop]);
 
 		// Caluclate the base bounds and modifiy the shoter axis to make a square.
