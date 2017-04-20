@@ -1,5 +1,11 @@
 <?php
 
+global $servername;
+global $username;
+global $password;
+global $dbname;
+global $tablename;
+
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -31,23 +37,17 @@ if ($connection_create_db->query($sqldb) === TRUE) {
 		)";
 
 		if ($conn->query($sqltable) === TRUE) {
-			create_gp_data();
-			create_sp_data();
+			create_gp_data($tablename,$conn);
+			create_sp_data($tablename,$conn);
 		} else {
-		    die ("Error with table creation");
+		    die ("Table creation error");
 		}
 
 } else {
     die(print_r("Database creation error"));
 }
 
-function create_gp_data(){
-	$servername = "localhost";
-	$username = "root";
-	$password = "";
-	$dbname = "repsview_map";
-	$tablename = "sectorisation";
-
+function create_gp_data($tablename,$conn){
 
 	$gpdata = file_get_contents('../npm_scripts/gpdata.json');
 	$gpjson = json_decode($gpdata, true);
@@ -90,25 +90,26 @@ function create_gp_data(){
 	$sqlgp_region = substr($sqlgp_region,0,-1);
 	$sqlgp_secteur = substr($sqlgp_secteur,0,-1);
 	$sqlgp_uga = substr($sqlgp_uga,0,-1);
-	$gp_query = $sqlgp_region . "; " . $sqlgp_secteur . "; " . $sqlgp_uga . ";";
-	$conn = new mysqli($servername, $username, $password, $dbname);
-		if ($conn->query($gp_query) === TRUE) {
-			echo "GP Data successful";
+
+
+	if ($conn->query($sqlgp_region) === TRUE) {
+		if ($conn->query($sqlgp_secteur) === TRUE) {
+			if ($conn->query($sqlgp_uga) === TRUE) {
+				// success
+			} else {
+				die(print_r("Failed on sql uga GP"));
+			}
 		} else {
-		    die (print_r($gp_query));
+			die(print_r("Failed on sql secteur GP"));
 		}
+	} else {
+	    die (print_r("Failed on sql region GP"));
+	}
 
 
 };
 
-function create_sp_data(){
-	$servername = "localhost";
-	$username = "root";
-	$password = "";
-	$dbname = "repsview_map";
-	$tablename = "sectorisation";
-
-
+function create_sp_data($tablename,$conn){
 
 	$spdata = file_get_contents('../npm_scripts/spdata.json');
 	$spjson = json_decode($spdata, true);
@@ -164,14 +165,25 @@ function create_sp_data(){
 	$sqlsp_secteur = substr($sqlsp_secteur,0,-1);
 	$sqlsp_ugagroup = substr($sqlsp_ugagroup,0,-1);
 	$sqlsp_uga = substr($sqlsp_uga,0,-1);
-	$sp_query = $sqlsp_region . "; " . $sqlsp_secteur . "; " . $sqlsp_ugagroup . "; " . $sqlsp_uga . ";";
-	$conn = new mysqli($servername, $username, $password, $dbname);
-	if ($conn->query($sp_query) === TRUE) {
-			echo "SP Data successful";
-		} else {
-		    die (print_r($sp_query));
-		}
 
+
+	if ($conn->query($sqlsp_region) === TRUE) {
+		if ($conn->query($sqlsp_secteur) === TRUE) {
+			if ($conn->query($sqlsp_ugagroup) === TRUE) {
+				if ($conn->query($sqlsp_uga) === TRUE) {
+					// success
+				} else {
+					die(print_r("Failed on sql uga SP"));
+				}
+			} else {
+				die(print_r("Failed on sql uga group SP"));
+			}
+		} else {
+			die(print_r("Failed on sql secteur SP"));
+		}
+	} else {
+	    die (print_r("Failed on sql region SP"));
+	}
 };
 
 ?>
