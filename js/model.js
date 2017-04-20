@@ -53,6 +53,7 @@ MapModel = Backbone.Model.extend({
 		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>",
 		"tooltipData" : null, // Problematic. This needs to be handled differently, but is the only way to get data back to the tooltip
 		"currentDragEventLatLon" : null, // Temporary storage of a drag event
+		"modificationModeOn" : false, // Are we in modification mode
 	},
 
 	data:function(){
@@ -327,7 +328,7 @@ MapModel = Backbone.Model.extend({
 				alert("Location Updated");
 			},
 			error:function(e){
-				console.log(e);
+				alert("There was an error updating the location");
 			},
 		});
 	},

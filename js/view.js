@@ -11,6 +11,7 @@ var MapView = Backbone.View.extend({
 		'click #changeNetwork' : "changeNetwork",
 		'click #returnLevel' : "moveUpALevel",
 		"click #controlCities" : "showHideCities",
+		"click #turnOnOffModificationMode" : "turnOnOffModificationMode",
 		"change #controlCitiesSize" : "showHideCitiesBySize",
 	},
 
@@ -181,6 +182,7 @@ var MapView = Backbone.View.extend({
 				.on("dragend", recordNewPosition);
 
 			function dragMove(d) {
+				if(!that.model.get("modificationModeOn")) return;
 				d[0] = d3.event.x, d[1] = d3.event.y;
 				d3.select(this).attr("transform", "translate(" + d[0] + "," + d[1] + ")");
 				var baseProj = projection.invert([0,0]);
@@ -190,6 +192,7 @@ var MapView = Backbone.View.extend({
 			}
 
 			function recordNewPosition(d) {
+				if(!that.model.get("modificationModeOn")) return;
 				that.model.setNewLatLonForPoint(d);
 			}
 
@@ -233,7 +236,7 @@ var MapView = Backbone.View.extend({
 				.call(drag)
 				.call(tip)
 				.on("click",function(d,i){
-					if (that.model.get("level") < that.model.get("deepestLevel") && !d.corsicaFlag) {
+					if (that.model.get("level") < that.model.get("deepestLevel") && !d.corsicaFlag && !that.model.get("modificationModeOn")) {
 						if (d3.event.defaultPrevented) return;
 						tip.hide();
 						that.model.increaseLevel(d);
@@ -243,6 +246,7 @@ var MapView = Backbone.View.extend({
 					};
 				})
 				.on('mouseenter', function(d){
+					if(that.model.get("modificationModeOn")) return;
 					$('#graphs').hide();
 					$('#informationPanel').html('');
 					that.appendBarChartInToolTip($('#informationPanel').width(),d);
@@ -834,7 +838,17 @@ var MapView = Backbone.View.extend({
 	},
 
 
-
+	turnOnOffModificationMode:function(e){
+		if ($(e.target).hasClass('btn-primary') === true) {
+			$(e.target).removeClass('btn-primary').addClass('btn-danger');
+			this.model.set("modificationModeOn",true);
+			if ($('.tooltip-canvas').length !== 0) d3.selectAll(".tooltip-canvas").remove();
+			if ($('.d3-tip').length !== 0) d3.selectAll(".d3-tip").remove();
+		} else {
+			$(e.target).removeClass('btn-danger').addClass('btn-primary');
+			this.model.set("modificationModeOn",false);
+		}
+	},
 
 
 });

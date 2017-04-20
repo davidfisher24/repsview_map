@@ -7,7 +7,6 @@ window.onload = function() {
 			dataType : "json",
 			success: function (data){
 
-			
 			},
 			error:function(e){
 				console.log(e);
