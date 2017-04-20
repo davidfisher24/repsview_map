@@ -8,13 +8,14 @@ MapModel = Backbone.Model.extend({
 		// Defined attribute
 		"width" : 800, // Width of the svg element
 		"height" : 600, // Height of the svg element
-		"reservedKeys" : ["loc","lat","lon"], // Reserved keys in the current data array
+		"reservedKeys" : ["lat","lon"], // Reserved keys in the current data array
 		"defaultCenter" : [4.8, 47.35], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
 		"deepestLevel" : 2,  // Maximum level that can be drilled to. Is set to 2 for gp and 3 for sp.
 		"pieColors" :  ['#55BF3B', '#DF5353'], // Colours to use in the segments of the pies
-		"barColors" : ["#7cb5ec","#434348","#90ed7d","#f7a35c","#8085e9","#f15c80"],
+		"barColors" : ["#7cb5ec","#434348","#90ed7d","#f7a35c","#8085e9","#f15c80"], // Colours used for the bar chart
 
+		// Segmentation data parameters for legend and graphic. Labels and colours
 		"pieLegendSegmentation" :  [
 			{measure: "vip", color: '#7cb5ec', label: "VIP"}, 
 			{measure: "priortitar", color: '#434348', label: "Prior."}, 
@@ -43,7 +44,6 @@ MapModel = Backbone.Model.extend({
 		"currentSector" : null, // Current secot select for setting data
 		"currentUgaGroup" : null, // Current uga group selected for setting data
 
-		
 		"currentCities" : null,
 		"currentRegions" : null,
 
@@ -52,8 +52,8 @@ MapModel = Backbone.Model.extend({
 
 		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>",
 		"tooltipData" : null, // Problematic. This needs to be handled differently, but is the only way to get data back to the tooltip
-		"currentDragEventLatLon" : null, // Temporary storage of a drag event
-		"modificationModeOn" : false, // Are we in modification mode
+		"currentDragEventLatLon" : null, // Temporary storage of a drag event for updating the database
+		"modificationModeOn" : false, // Are we in modification mode, where an admin can move elements
 	},
 
 	data:function(){
@@ -277,7 +277,7 @@ MapModel = Backbone.Model.extend({
 		return ugasArray;
 	},
 
-	getCities:function(){
+	getCities:function(currentScale){
 		var boundingBox = this.get("currentBoundingBox") ? this.get("currentBoundingBox") : this.get("defaultBoundingBox");
 		var levelMinPopulation;
 		switch (this.get("level")) {
@@ -296,16 +296,25 @@ MapModel = Backbone.Model.extend({
 			var lon = parseFloat(obj.lon) < Math.max(boundingBox[0][0],boundingBox[1][0]) && parseFloat(obj.lon) > Math.min(boundingBox[0][0],boundingBox[1][0]);
 			var lat = parseFloat(obj.lat) < Math.max(boundingBox[0][1],boundingBox[1][1]) && parseFloat(obj.lat) > Math.min(boundingBox[0][1],boundingBox[1][1]);
 			return pop > levelMinPopulation && lat && lon;
-			//return lat && lon;
 		});
 
+		// Temporary - used for deltecting collisions
+		selection.forEach(function(e,i){
+			for (var a=0; a<i; a++) {
+				if (Math.abs((e.x - selection[a].x) * currentScale) < 10 &&  Math.abs((e.y - selection[a].y) * currentScale) < 10)
+					console.log("overlap between " + selection[a].name + " and " + e.name);
+			}
+		});
+
+		
 		return selection;
 
 	},
 
-	/******************************************************
-	// AJAX CALL FOR UPDATING IN THE DATABASE LAT/LON MOVES
-	******************************************************/
+	//----------------------------------------------------------------------------------------------------
+	// AJAX CALLS
+	// setNewLatLonForPoint() updates the database with a new lat lon
+	//-----------------------------------------------------------------------------------------------------
 
 	setNewLatLonForPoint:function(element){
 		var location = element.name;
@@ -406,7 +415,6 @@ MapModel = Backbone.Model.extend({
 	testAreaBoundingBoxesForCollisions:function(testElement,projection){
 		var boxes = [];
 		var clashes = [];
-		//var recommendedMovements = [];
 		d3.selectAll(testElement).each(function(d,i){
 			var proj = projection([d.lon, d.lat]);
 			var box = d3.select(this).node().getBBox();

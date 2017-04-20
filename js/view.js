@@ -87,7 +87,7 @@ var MapView = Backbone.View.extend({
 
 	addCities:function(currentScale){
 		var that = this;
-		var cities = this.model.getCities();
+		var cities = this.model.getCities(currentScale);
 
 		var svg = d3.select($("#zoomgroup")[0]);
 		var projection = d3.geo.mercator()
