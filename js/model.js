@@ -52,6 +52,7 @@ MapModel = Backbone.Model.extend({
 
 		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>",
 		"tooltipData" : null, // Problematic. This needs to be handled differently, but is the only way to get data back to the tooltip
+		"currentDragEventLatLon" : null, // Temporary storage of a drag event
 	},
 
 	data:function(){
@@ -298,6 +299,37 @@ MapModel = Backbone.Model.extend({
 		});
 		return selection;
 
+	},
+
+	/******************************************************
+	// AJAX CALL FOR UPDATING IN THE DATABASE LAT/LON MOVES
+	******************************************************/
+
+	setNewLatLonForPoint:function(element){
+		var location = element.name;
+		var level = element.level;
+		var network = this.get("network");
+		var newPosition = this.get("currentDragEventLatLon");
+
+		var data = {
+			location: location,
+			level: level,
+			network: network.toUpperCase(),
+			lon: newPosition[0],
+			lat: newPosition[1],
+		}
+
+		var url = "./php/update_lat_lon.php";
+		$.ajax(url,{
+			method: "POST",
+			data: data,
+			success: function (data){
+				alert("Location Updated");
+			},
+			error:function(e){
+				console.log(e);
+			},
+		});
 	},
 
 	/*******************************************************************************************

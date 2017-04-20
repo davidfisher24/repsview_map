@@ -186,16 +186,11 @@ var MapView = Backbone.View.extend({
 				var baseProj = projection.invert([0,0]);
 				var pointProj = projection.invert([d[0],d[1]]);
 				var movement = [pointProj[0] - baseProj[0], pointProj[1] - baseProj[1]];
-				//console.log(movement);
-				console.log((d.lon + movement[0]) + " " + (d.lat + movement[1]));
+				var newLatLon = that.model.set("currentDragEventLatLon",[d.lon + movement[0], (d.lat + movement[1])]);
 			}
 
 			function recordNewPosition(d) {
-				d3.event.sourceEvent.stopPropagation()
-				var newPoint = d3.select(this).node().getBoundingClientRect();
-				var newX = ((newPoint.right - newPoint.left) /2) + newPoint.left;
-				var newY = ((newPoint.bottom - newPoint.top) /2) + newPoint.top;
-				var newLatLon = projection.invert([newX,newY]);
+				that.model.setNewLatLonForPoint(d);
 			}
 
 
