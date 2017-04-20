@@ -298,6 +298,7 @@ MapModel = Backbone.Model.extend({
 			return pop > levelMinPopulation && lat && lon;
 			//return lat && lon;
 		});
+
 		return selection;
 
 	},

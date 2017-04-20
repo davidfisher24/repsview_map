@@ -4,6 +4,7 @@ node_modules/
 # Data scripts
 npm_scripts/
 
-# Public folders and compilation folders
+# Public folders, documentation, and compilation folders
 public/
 fonts/
+docs/

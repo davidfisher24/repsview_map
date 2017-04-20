@@ -222,9 +222,7 @@ var MapView = Backbone.View.extend({
 				.attr("transform", function(d) {
 					return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")";
 				})
-				.on('mouseleave', function(d){
-					//tip.hide();
-				}) 
+				
 
 			var pies = svg.selectAll('g.area-element')
 				.append('g')
@@ -245,6 +243,12 @@ var MapView = Backbone.View.extend({
 						$('#segmentationLegend').hide();
 					};
 				})
+				.on('mouseout', function(d){
+					var elementSpace = d3.select(this).node().getBoundingClientRect();
+					var centreAxis = elementSpace.top + ((elementSpace.bottom - elementSpace.top)/2);
+					if (d3.event.y > centreAxis) tip.hide(d);
+					
+				}) 
 				.on('mouseenter', function(d){
 					if(that.model.get("modificationModeOn")) return;
 					$('#graphs').hide();
@@ -261,6 +265,7 @@ var MapView = Backbone.View.extend({
 		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].visits + " %");
 		            });
 				})
+
 			
 
 			var colors = that.model.get("pieColors");
