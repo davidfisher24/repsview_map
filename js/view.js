@@ -186,6 +186,7 @@ var MapView = Backbone.View.extend({
 				var baseProj = projection.invert([0,0]);
 				var pointProj = projection.invert([d[0],d[1]]);
 				var movement = [pointProj[0] - baseProj[0], pointProj[1] - baseProj[1]];
+				//console.log(movement);
 				console.log((d.lon + movement[0]) + " " + (d.lat + movement[1]));
 			}
 
