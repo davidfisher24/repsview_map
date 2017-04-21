@@ -68,9 +68,15 @@
   font-weight:700;
 }
 
+/* Fonts on the region labels */
 .region-text {
   font-family: "helvetica_neue";
   stroke:#3E4551;
+}
+
+/* Fonts on the bar char text */
+.bar-chart-text {
+   font-family: "lucinda_grande";
 }
 
 /* TREEVIEW */

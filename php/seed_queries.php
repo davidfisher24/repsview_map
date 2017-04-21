@@ -1,55 +1,12 @@
 <?php
 
-global $servername;
-global $username;
-global $password;
-global $dbname;
 global $tablename;
 
-
-// Local 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "repsview_map";
-$tablename = "sectorisation";
+$tablename = "map_sectorisation";
+create_sp_data($tablename);
 
 
-$connection_create_db = new mysqli($servername, $username, $password);
-
-if ($connection_create_db->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-} 
-
-
-$sqldb = "CREATE DATABASE $dbname";
-if ($connection_create_db->query($sqldb) === TRUE) {
-    
-	$conn = new mysqli($servername, $username, $password, $dbname);
-
-	$sqltable = "CREATE TABLE sectorisation (
-		id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY, 
-		reseau VARCHAR(30) NOT NULL,
-		region VARCHAR(30),
-		secteur VARCHAR(30),
-		ugagroup VARCHAR(30),
-		uga VARCHAR(30),
-		lon FLOAT(53) NOT NULL,
-		lat FLOAT(53) NOT NULL
-		)";
-
-		if ($conn->query($sqltable) === TRUE) {
-			create_gp_data($tablename,$conn);
-			create_sp_data($tablename,$conn);
-		} else {
-		    die ("Table creation error");
-		}
-
-} else {
-    die(print_r("Database creation error"));
-}
-
-function create_gp_data($tablename,$conn){
+function create_gp_data($tablename){
 
 	$gpdata = file_get_contents('../npm_scripts/gpdata.json');
 	$gpjson = json_decode($gpdata, true);
@@ -93,25 +50,9 @@ function create_gp_data($tablename,$conn){
 	$sqlgp_secteur = substr($sqlgp_secteur,0,-1);
 	$sqlgp_uga = substr($sqlgp_uga,0,-1);
 
-
-	if ($conn->query($sqlgp_region) === TRUE) {
-		if ($conn->query($sqlgp_secteur) === TRUE) {
-			if ($conn->query($sqlgp_uga) === TRUE) {
-				// success
-			} else {
-				die(print_r("Failed on sql uga GP"));
-			}
-		} else {
-			die(print_r("Failed on sql secteur GP"));
-		}
-	} else {
-	    die (print_r("Failed on sql region GP"));
-	}
-
-
 };
 
-function create_sp_data($tablename,$conn){
+function create_sp_data($tablename){
 
 	$spdata = file_get_contents('../npm_scripts/spdata.json');
 	$spjson = json_decode($spdata, true);
@@ -168,24 +109,7 @@ function create_sp_data($tablename,$conn){
 	$sqlsp_ugagroup = substr($sqlsp_ugagroup,0,-1);
 	$sqlsp_uga = substr($sqlsp_uga,0,-1);
 
-
-	if ($conn->query($sqlsp_region) === TRUE) {
-		if ($conn->query($sqlsp_secteur) === TRUE) {
-			if ($conn->query($sqlsp_ugagroup) === TRUE) {
-				if ($conn->query($sqlsp_uga) === TRUE) {
-					// success
-				} else {
-					die(print_r("Failed on sql uga SP"));
-				}
-			} else {
-				die(print_r("Failed on sql uga group SP"));
-			}
-		} else {
-			die(print_r("Failed on sql secteur SP"));
-		}
-	} else {
-	    die (print_r("Failed on sql region SP"));
-	}
+	die(print_r($sqlsp_uga));
 };
 
 ?>

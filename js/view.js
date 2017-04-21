@@ -368,6 +368,8 @@ var MapView = Backbone.View.extend({
 		    .selectAll("text")
 		      .style("text-anchor", "middle")
 		      .attr("dx","-0.5em")
+		      .attr("class",'bar-chart-text')
+
 
 		 // y axis and labels
 		  svg.append("g")
@@ -379,6 +381,7 @@ var MapView = Backbone.View.extend({
 		      .attr("dx","1em")
 		      .attr("dy", ".71em")
 		      .style("text-anchor", "middle")
+		      .attr("class",'bar-chart-text')
 
 
 		  // LINE POINTS
