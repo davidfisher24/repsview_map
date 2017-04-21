@@ -25,6 +25,7 @@ window.onload = function() {
 	$.when(getData()).then(function(data){
 		var options = {
 			mapWidth: $('#map').width(),
+			//mapHeight: $('#map').width(),
 			mapHeight: Math.ceil($('#map').width() * 0.715),
 			gpdata: data.gpData,
 			spdata: data.spData,

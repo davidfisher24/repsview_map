@@ -8,6 +8,7 @@ var MapView = Backbone.View.extend({
 	},
 
 	events: {
+		'click #open-tree-control' : "openTreeControl", 
 		'click #changeNetwork' : "changeNetwork",
 		'click #returnLevel' : "moveUpALevel",
 		"click #controlCities" : "showHideCities",
@@ -67,12 +68,10 @@ var MapView = Backbone.View.extend({
 				.attr("class","stroke-path")
 				.style("fill",function(d,i){
 					//return " #5bc0de";
-					console.log(that.model.get("mapFill"));
 					return d.properties.flagCity ? "white" : that.model.get("mapFill");
 				})
 				.style("stroke", function(d,i){
 					//return "#f9f9f9";
-					console.log(that.model.get("mapStroke"));
 					return d.properties.flagCity ? "#cccccc" : that.model.get("mapStroke");
 				})
 
@@ -244,7 +243,6 @@ var MapView = Backbone.View.extend({
 						tip.hide();
 						that.model.increaseLevel(d);
 						that.drawRegions()
-						$('#graphs').show();
 						$('#segmentationLegend').hide();
 					};
 				})
@@ -256,7 +254,7 @@ var MapView = Backbone.View.extend({
 				}) 
 				.on('mouseenter', function(d){
 					if(that.model.get("modificationModeOn")) return;
-					$('#graphs').hide();
+					that.hideTreeControl();
 					$('#informationPanel').html('');
 					that.appendBarChartInToolTip($('#informationPanel').width(),d);
 					tip.show(d);
@@ -556,8 +554,9 @@ var MapView = Backbone.View.extend({
 			.text(region)
 			.attr("class","tip-pie-hover-label")
 			.style("fill", "none")
-			.style("stroke", "#AAAAAA")
-			.style("text-anchor","middle");
+			.style("stroke", "#DDDDDD")
+			.style("text-anchor","middle")
+			.style("font-size",14)
 
 		var centreValue = d3.select(".tooltip-canvas")
 			.append("text")
@@ -566,8 +565,9 @@ var MapView = Backbone.View.extend({
 			.text(visits + " %")
 			.attr("class","tip-pie-hover-value")
 			.style("fill", "none")
-			.style("stroke", "#AAAAAA")
-			.style("text-anchor","middle");
+			.style("stroke", "#DDDDDD")
+			.style("text-anchor","middle")
+			.style("font-size",12);
 
 		var arcs = tooltipElement.selectAll("g.slice")
 			.data(function(d){
@@ -688,19 +688,18 @@ var MapView = Backbone.View.extend({
 			[Math.max.apply(Math,dataArray.map(function(d){return d.lon})),Math.max.apply(Math,dataArray.map(function(d){return d.lat}))],
 			[Math.min.apply(Math,dataArray.map(function(d){return d.lon})),Math.min.apply(Math,dataArray.map(function(d){return d.lat}))]
 		]);
-		console.log(this.model.get("currentBoundingBox"));
 		this.model.set("currentMapBounds",[leftBottom,rightTop]);
 
 		// Caluclate the base bounds and modifiy the shoter axis to make a square.
 		// Add a buffer to each side of the square to prevent overflow
-		var bounds = [[leftBottom[0],leftBottom[1]],[rightTop[0],rightTop[1]]];
-		//if (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1])
-		if (dataArray.length < 3)
+
+		var bounds = [[leftBottom[0] * 0.9,leftBottom[1] * 0.9],[rightTop[0] * 1.1,rightTop[1] * 1.1]];
+		if (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1])
 			bounds = [[bounds[0][0] * 0.8, bounds[0][1] * 0.8],[bounds[1][0] * 1.2,bounds[1][1] * 1.2]];
 
 		var xAxisLength = bounds[1][0] - bounds[0][0];
-		var yAxisLength = bounds[0][1] - bounds[1][1];
-		var xAndYAxis = [bounds[1][0] - bounds[0][0], bounds[0][1] - bounds[1][1]]
+		var yAxisLength = bounds[0][1] - bounds[1][1]; 
+		var xAndYAxis = [bounds[1][0] - bounds[0][0], bounds[0][1] - bounds[1][1]] 
 		var longerAxisSize = Math.max.apply(Math,xAndYAxis.map(function(d){return d}));
 		var longerAxisDiff = Math.max.apply(Math,xAndYAxis.map(function(d){return d})) - Math.min.apply(Math,xAndYAxis.map(function(d){return d}));
 		var shorterAxisId = longerAxisSize === xAndYAxis[0] ? "Y" : "X";
@@ -755,8 +754,8 @@ var MapView = Backbone.View.extend({
 	},
 
 	moveUpALevel:function(){
+		this.hideTreeControl();
 		$('#selection').html('');
-		$('#graphs').show();
 		$('#segmentationLegend').hide();
 		if (this.model.get("level") > 0) {
 			this.model.decreaseLevel();
@@ -821,6 +820,20 @@ var MapView = Backbone.View.extend({
 			})
 	},
 
+	openTreeControl:function(){
+		if ($('#graphs').css('display') === "none") this.showTreeControl();
+		else this.hideTreeControl();
+	},
+
+	hideTreeControl:function(){
+		$('#graphs').slideUp()
+		$('#open-tree-control .caret').css('transform','none')
+	},
+	showTreeControl:function(){
+		$('#graphs').slideDown().css('display','inline-block')
+		$('#open-tree-control .caret').css('transform','rotate(180deg)');
+	},
+
 
 	createview:function () {
 		that =this;
@@ -863,12 +876,11 @@ var MapView = Backbone.View.extend({
 				that.showHideElement(data.id,data.state.checked);
 			},
 			onNodeSelected: function(event, data) {
-				$('#informationPanel').html('');
-				var dataForRegion;
+				/*var dataForRegion;
 				dataArray.filter(function(obj){
 					if (obj.name === data.id) {dataForRegion = obj; return false;}
 					return obj.name === data.id;
-				});
+				});*/
 				//that.appendBarChartInToolTip($('#informationPanel').width(),dataForRegion);
 			},
 			onNodeUnselected: function(){

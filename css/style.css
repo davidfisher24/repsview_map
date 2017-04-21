@@ -52,6 +52,7 @@
 .tip-pie-hover-label, .tip-pie-hover-value {
   font-family: "helvetica_neue";
   font-weight:700;
+  letter-spacing:1px;
 }
 
 
@@ -129,3 +130,8 @@ input.checkbox_input {
   box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0,0,0,0.5);
 }
 
+/* TREE CONTROL */
+
+#graphs li {
+  padding-right:25px;
+}
