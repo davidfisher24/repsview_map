@@ -317,6 +317,7 @@ MapModel = Backbone.Model.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	setNewLatLonForPoint:function(element){
+		var that = this;
 		var location = element.name;
 		var level = element.level;
 		var network = this.get("network");
@@ -335,7 +336,63 @@ MapModel = Backbone.Model.extend({
 			method: "POST",
 			data: data,
 			success: function (data){
-				alert("Location Updated");
+
+			var data = network ==="gp" ? that.get("gpdata") : that.get("spdata");
+
+			if (network === "gp") {
+				for (var key in data) {
+					if (level === 0 && key === location) {
+						console.log("updating a GP region");
+						data[key].lat = newPosition[1]; data[key].lon = newPosition[0];
+					} else {
+						for (var key2 in data[key]) {
+							if (level === 1 && key2 === location) {
+								console.log("Updating a GP Secteur");
+								data[key][key2].lat = newPosition[1]; data[key][key2].lon = newPosition[0];
+							} else {
+								for (var key3 in data[key][key2]) {
+									if (level === 2 && key3 === location) {
+										console.log("Updating a GP uga");
+										data[key][key2][key3].lat = newPosition[1]; data[key][key2][key3].lon = newPosition[0];
+									}
+								}
+							}
+						}
+					}
+				}
+				that.set("gpdata",data);	
+			} else if (network === "sp") {
+				for (var key in data) {
+					if (level === 0 && key === location) {
+						console.log("updating a SP region");
+						data[key].lat = newPosition[1]; data[key].lon = newPosition[0];
+					} else {
+						for (var key2 in data[key]) {
+							if (level === 1 && key2 === location) {
+								console.log("Updating a SP Secteur");
+								data[key][key2].lat = newPosition[1]; data[key][key2].lon = newPosition[0];
+							} else {
+								for (var key3 in data[key][key2]) {
+									if (level === 2 && key3 === location) {
+										console.log("Updating a SP ugagroup");
+										data[key][key2][key3].lat = newPosition[1]; data[key][key2][key3].lon = newPosition[0];
+									} else {
+										for (var key4 in data[key][key2][key3]) {
+											if (level === 3 && key4 === location) {
+												console.log("Updating a SP uga");
+												data[key][key2][key3][key4].lat = newPosition[1]; data[key][key2][key3][key4].lon = newPosition[0];
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				that.set("spdata",data);
+			}
+
+
 			},
 			error:function(e){
 				alert("There was an error updating the location");
