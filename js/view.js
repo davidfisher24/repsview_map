@@ -67,11 +67,13 @@ var MapView = Backbone.View.extend({
 				.attr("class","stroke-path")
 				.style("fill",function(d,i){
 					//return " #5bc0de";
-					return d.properties.flagCity ? "white" : "#bbdefb";
+					console.log(that.model.get("mapFill"));
+					return d.properties.flagCity ? "white" : that.model.get("mapFill");
 				})
 				.style("stroke", function(d,i){
 					//return "#f9f9f9";
-					return d.properties.flagCity ? "#cccccc" : "#f9f9f9";
+					console.log(that.model.get("mapStroke"));
+					return d.properties.flagCity ? "#cccccc" : that.model.get("mapStroke");
 				})
 
 			that.drawRegions(true);
@@ -108,11 +110,11 @@ var MapView = Backbone.View.extend({
 				d.y = y;
 				return y;
 			})
-			.attr("height",8/currentScale)
-			.attr("width", 8/currentScale)
-			.attr("fill", "white")
+			.attr("height",6/currentScale)
+			.attr("width", 6/currentScale)
+			.attr("fill", "#2E2E2E")
 			.attr("class", "city-label")
-			.attr("stroke", "#3E4551")
+			/*.attr("stroke", "#3E4551")*/
 			.attr("stroke-width",function(){ return 2/currentScale })
 			.attr("opacity",function(d){
 				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
@@ -131,14 +133,16 @@ var MapView = Backbone.View.extend({
 			.attr("class", "city-text")
 			.attr("font-size",12/currentScale)
 			.attr("transform", function(d,i) {				var target = projection([d.lon,d.lat]);
-				return "translate(" + (target[0] + (12/currentScale)) + "," + (target[1] + (8/currentScale)) + ")"; // Square pixels. Width add 1.5
+				return "translate(" + (target[0] + (8/currentScale)) + "," + (target[1] + (8/currentScale)) + ")"; // Square pixels. Width add 1.5
 			})
 			.attr("opacity",function(d){
 				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
 				var textO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
 				return textO;
 			})
-			.text(function(d,i) {return d.name});
+			.text(function(d,i) {
+				return d.name.slice(0,1) + d.name.slice(1).toLowerCase();
+			});
 
 		this.model.set("currentCities",cities);
 	},
@@ -160,6 +164,7 @@ var MapView = Backbone.View.extend({
 		var path = d3.geo.path().projection(projection);
 
 		var dataArray = that.model.getData();
+		console.log(dataArray);
 
 		
 		if (!initialLoad) {
@@ -293,7 +298,7 @@ var MapView = Backbone.View.extend({
 		        .attr("y", 25/currentScale)
 		        .attr("text-anchor", "middle")
 		        .style("font-size", function(d,i){
-		        	return 16/currentScale + "px";
+		        	return 13/currentScale + "px";
 		        })
 		        .text(function(d,i){
 		        	return d.name;
@@ -364,6 +369,7 @@ var MapView = Backbone.View.extend({
 			(dataMax <= 100) ? 110 : dataMax * 1.1,
 		  ]);
 
+
 		  // x axis and labels
 		  svg.append("g")
 		      .attr("class", "x axis")
@@ -373,6 +379,11 @@ var MapView = Backbone.View.extend({
 		      .style("text-anchor", "middle")
 		      .attr("dx","-0.5em")
 		      .attr("class",'bar-chart-text')
+		      .style("font-size",function(d){
+		      	if (data.length === 5) return 12;
+		      	if (data.length === 4) return 14;
+		      	if (data.length === 3) return 16;
+		      })
 		      .text(function(d){
 		      	var string = d.toLowerCase();
 		      	return string.charAt(0).toUpperCase() + string.slice(1);
@@ -390,6 +401,7 @@ var MapView = Backbone.View.extend({
 		      .attr("dy", ".71em")
 		      .style("text-anchor", "middle")
 		      .attr("class",'bar-chart-text')
+		      .style("font-size",12)
 
 
 		  // LINE POINTS
@@ -448,11 +460,16 @@ var MapView = Backbone.View.extend({
 		      	return d.value <= dataMin ? "#333333" : "#f9f9f9";
 		      })
 		      .attr("font-size",function(d){
-		      	return 50 / data.length;
+		      	if (data.length === 5) return 12;
+		      	if (data.length === 4) return 14;
+		      	if (data.length === 3) return 16;
 		      })
 		      .attr("y", function(d) { 
 		      	// Looks at the font-size above. Outide the bar: Line + 4px of margin. Inside the bar: reduce the height of the font and 2px margin
-		      	var fontSize = 50/data.length;
+		      	var fontSize;
+		      	if (data.length === 5) fontSize = 12;
+		      	if (data.length === 4) fontSize = 14;
+		      	if (data.length === 3) fontSize = 16;
 		      	return d.value  <= dataMin ? y(d.value) - 4 : y(d.value) + fontSize + 2;
 		      })
 		      .transition()
@@ -588,7 +605,7 @@ var MapView = Backbone.View.extend({
 
 		var svg = d3.select("#segmentationLegend").append("svg")
 		    .attr("width", width)
-		    .attr("height", halfPoint * 15) // Height depends on elements
+		    .attr("height", halfPoint * 20) // Height depends on elements
 		  	.append("g")
 
 		var legends = svg.selectAll("leg")
@@ -598,12 +615,12 @@ var MapView = Backbone.View.extend({
 		      	return d.color;
 		      })
 		      .attr("x", function(d,i){
-		      	return (i+1 <= halfPoint) ? 0 : width/2;
+		      	return (i+1 <= halfPoint) ? 25 : width/2 + 25;
 		      })
 		      .attr("width", 25)
 		      .attr("height",14)
 		      .attr("y",function(d,i){
-		      	return (i+1 <= halfPoint) ? 3 + i * 15 : (3 + i * 15) - halfPoint * 15;
+		      	return (i+1 <= halfPoint) ? 3 + i * 20 : (3 + i * 20) - halfPoint * 20;
 		      })
 
 		 var labels = svg.selectAll("label")
@@ -613,10 +630,10 @@ var MapView = Backbone.View.extend({
 		      	return d.legendLabel;
 		      })
 		      .attr("x", function(d,i){
-		      	return (i+1 <= halfPoint) ? 30 : width/2 + 30;
+		      	return (i+1 <= halfPoint) ? 55 : width/2 + 55;
 		      })
 		      .attr("y", function(d,i){
-		      	return (i+1 <= halfPoint) ? 14 + i * 15 : (14 + i * 15) - halfPoint * 15;
+		      	return (i+1 <= halfPoint) ? 14 + i * 20 : (14 + i * 20) - halfPoint * 20;
 		      })
 		      .attr("fill", "black")
 		      .attr("font-size",14)
@@ -677,8 +694,9 @@ var MapView = Backbone.View.extend({
 		// Caluclate the base bounds and modifiy the shoter axis to make a square.
 		// Add a buffer to each side of the square to prevent overflow
 		var bounds = [[leftBottom[0],leftBottom[1]],[rightTop[0],rightTop[1]]];
-		if (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1])
-			bounds = [[bounds[0][0] * 0.9, bounds[0][1] * 0.9],[bounds[1][0] * 1.1,bounds[1][1] * 1.1]];
+		//if (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1])
+		if (dataArray.length < 3)
+			bounds = [[bounds[0][0] * 0.8, bounds[0][1] * 0.8],[bounds[1][0] * 1.2,bounds[1][1] * 1.2]];
 
 		var xAxisLength = bounds[1][0] - bounds[0][0];
 		var yAxisLength = bounds[0][1] - bounds[1][1];

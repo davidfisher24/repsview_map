@@ -14,6 +14,8 @@ MapModel = Backbone.Model.extend({
 		"defaultCenter" : [4.8, 47.35], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
 		"deepestLevel" : 2,  // Maximum level that can be drilled to. Is set to 2 for gp and 3 for sp.
+		"mapFill" : '#bbdefb',
+		"mapStroke" : '#f9f9f9',
 		"pieColors" :  ['#CC0000', '#007E33'], // Colours to use in the segments of the pies
 		// bar colour experiments
 		//"barColors" : ["#7cb5ec","#434348","#90ed7d","#f7a35c","#8085e9","#f15c80"], // Stolen from highcharts

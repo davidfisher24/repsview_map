@@ -57,9 +57,7 @@
 
 /* Fonts on the region labels */
 .region-text {
-  font-family: "helvetica_neue";
-  stroke:#3E4551;
-  font-weight:bold;
+  font-family: "lucinda_grande";
 }
 
 /* Fonts on the bar char text */
@@ -69,8 +67,7 @@
 
 /* Fonts on the city labels */
 .city-text {
-  font-family : "helvetica_neue";
-  font-weight:bold;
+  font-family : "lucinda_grande";
 }
 
 .segmentation_legend_text {
@@ -84,7 +81,7 @@
 
 /* INFORMATION PANEL AND SEGMENTATION LEGEND PANEL */
 #informationPanel, #segmentationLegend {
-  border: 1px solid #428bca;
+  /*border: 1px solid #428bca;*/
   border-radius: 3px;
   margin-top:5px;
   padding:5px;
@@ -92,6 +89,7 @@
 
 #segmentationLegend {
   display:none;
+  margin-top:20px;
 }
 
 
