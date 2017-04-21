@@ -264,6 +264,10 @@ var MapView = Backbone.View.extend({
 		            	d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region);
 		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].visits + " %");
 		            });
+
+		            d3.selectAll('#controls').on('mouseenter',function(){
+		            	tip.hide();
+		            })
 				})
 
 			

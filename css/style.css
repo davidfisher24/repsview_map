@@ -111,7 +111,7 @@
 }
 
 
-
+/* INPUTS */
 
 input.number_range {
     padding: 5px 0 5px 10px;
@@ -119,5 +119,15 @@ input.number_range {
     font-weight:900;
     border-radius:5px;
     box-shadow: 1px 1px 0px #3E4551;
+}
+
+input.checkbox_input {
+  width: 18px;
+  height: 18px;
+  position: relative;
+  margin:auto;
+  background: #fcfff4;
+  background: linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
+  box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0,0,0,0.5);
 }
 
