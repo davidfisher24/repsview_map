@@ -8,7 +8,7 @@ MapModel = Backbone.Model.extend({
 		// Defined attribute
 		"width" : 800, // Width of the svg element
 		"height" : 600, // Height of the svg element
-		"reservedKeys" : ["lat","lon"], // Reserved keys in the current data array
+		"reservedKeys" : ["lat","lon","segmentation"], // Reserved keys in the current data array
 		"defaultCenter" : [4.8, 47.35], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
 		"deepestLevel" : 2,  // Maximum level that can be drilled to. Is set to 2 for gp and 3 for sp.
@@ -17,13 +17,12 @@ MapModel = Backbone.Model.extend({
 
 		// Segmentation data parameters for legend and graphic. Labels and colours
 		"pieLegendSegmentation" :  [
-			{measure: "vip", color: '#7cb5ec', label: "VIP"}, 
-			{measure: "priortitar", color: '#434348', label: "Prior."}, 
+			{measure: "VIP", color: '#7cb5ec', label: "VIP"}, 
 			{measure: "fideliserG", color: '#90ed7d', label: "Fid. G"}, 
 			{measure: "fideliserM", color: '#f7a35c', label: "Fid. M"}, 
 			{measure: "conquerir", color: '#8085e9', label: "Conq"}, 
 			{measure: "rhumato", color: '#f15c80', label: "Rhumato"}, 
-			{measure: "pharmHosp", color: '#e4d354', label: "Ph Hosp"}, 
+			{measure: "pharm_hosp", color: '#e4d354', label: "Ph Hosp"}, // Changed name
 			{measure: "geriatrie", color: '#2b908f', label: "Geriatrie"}, 
 			{measure: "chirugerie", color: '#f45b5b', label: "Chir"}, 
 			{measure: "douleur", color: '#91e8e1', label: "Douleur"}, 
@@ -32,6 +31,11 @@ MapModel = Backbone.Model.extend({
 			{measure: "gastro", color: '#E0F000', label: "Gastro"},
 			{measure: "muco", color: '#AA4643', label: "Muco"},
 			{measure: "arv", color: '#89A54E', label: "ARC"},
+			///
+			{measure: "ajout_vm", color: '#d84315', label: "Ajout VM"},
+			{measure: "urg_anest", color: '#9e9d24', label: "Urg Anest"},
+			{measure: "VIP", color: '#4db6ac', label: "VIP"},
+			///
 			{measure: "autres", color: '#80699B', label: "Autres"}
 		],
 
@@ -122,7 +126,25 @@ MapModel = Backbone.Model.extend({
 				level: 0,
 				visits: visits,
 				nonVisits : 100 - visits, 
-				vip: Math.floor((Math.random() * 1000) + 1),
+
+				ajout_vm : data[key].segmentation.ajout_vm,
+	            geriatrie :  data[key].segmentation.geriatrie, 
+	            chirugerie : data[key].segmentation.chirugerie,
+	            cardio : data[key].segmentation.cardio,
+	            uro : data[key].segmentation.uro,
+	            rhumato : data[key].segmentation.rhumato,
+	            douleur :  data[key].segmentation.douleur,
+	            urg_anest :  data[key].segmentation.urg_anest, 
+	            conquerir : data[key].segmentation.conquerir,
+	            fideliserG : data[key].segmentation.fideliserG,
+	            fideliserM : data[key].segmentation.fideliserM,
+	            VIP : data[key].segmentation.VIP, 
+	            pharm_hosp : data[key].segmentation.pharm_hosp,
+	            arv : data[key].segmentation.arv,
+	            muco : data[key].segmentation.muco,
+	            gastro : data[key].segmentation.gastro,
+
+				/*vip: Math.floor((Math.random() * 1000) + 1),
 				priortitar: Math.floor((Math.random() * 1000) + 1),
 				fideliserG: Math.floor((Math.random() * 1000) + 1),
 				fideliserM: Math.floor((Math.random() * 1000) + 1),
@@ -136,7 +158,7 @@ MapModel = Backbone.Model.extend({
 				uro: Math.floor((Math.random() * 1000) + 1),
 				gastro: Math.floor((Math.random() * 1000) + 1),
 				muco: Math.floor((Math.random() * 1000) + 1),
-				arv: Math.floor((Math.random() * 1000) + 1),
+				arv: Math.floor((Math.random() * 1000) + 1),*/
 				creon: Math.floor((Math.random() * 100) + 51),
 				tarka: Math.floor((Math.random() * 100) + 51),
 				lamaline: Math.floor((Math.random() * 100) + 51),
@@ -144,6 +166,7 @@ MapModel = Backbone.Model.extend({
 				ceris: Math.floor((Math.random() * 100) + 51),
 			});
 		}
+		console.log(regionsArray);
 		return regionsArray;
 	},
 

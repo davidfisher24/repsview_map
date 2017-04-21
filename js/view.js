@@ -475,7 +475,6 @@ var MapView = Backbone.View.extend({
 				})
 			}
 		});
-
 		/* Adding orders and sorting data */
 		var total = 0;
 		var autres = {label:"Autres",value:0,legendLabel:"Autres"};

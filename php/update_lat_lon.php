@@ -7,7 +7,7 @@
 	$lon = $_POST["lon"];
 	$lat = $_POST["lat"];
 
-	$version = "local";
+	$version = "mylan";
 	
 	if ($version === "local") {
 		$servername = "localhost";
