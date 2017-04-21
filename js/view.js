@@ -67,11 +67,11 @@ var MapView = Backbone.View.extend({
 				.attr("class","stroke-path")
 				.style("fill",function(d,i){
 					//return " #5bc0de";
-					return d.properties.flagCity ? "white" : " #5bc0de";
+					return d.properties.flagCity ? "white" : "#bbdefb";
 				})
 				.style("stroke", function(d,i){
 					//return "#f9f9f9";
-					return d.properties.flagCity ? "#cccccc" : " #f9f9f9";
+					return d.properties.flagCity ? "#cccccc" : "#f9f9f9";
 				})
 
 			that.drawRegions(true);
@@ -112,7 +112,7 @@ var MapView = Backbone.View.extend({
 			.attr("width", 8/currentScale)
 			.attr("fill", "white")
 			.attr("class", "city-label")
-			.attr("stroke", "black")
+			.attr("stroke", "#3E4551")
 			.attr("stroke-width",function(){ return 2/currentScale })
 			.attr("opacity",function(d){
 				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
@@ -369,6 +369,10 @@ var MapView = Backbone.View.extend({
 		      .style("text-anchor", "middle")
 		      .attr("dx","-0.5em")
 		      .attr("class",'bar-chart-text')
+		      .text(function(d){
+		      	var string = d.toLowerCase();
+		      	return string.charAt(0).toUpperCase() + string.slice(1);
+		      });
 
 
 		 // y axis and labels
@@ -430,11 +434,10 @@ var MapView = Backbone.View.extend({
 		      	return d.value + "%";
 		      })
 		      .attr("class","bar-label")
+		      .style("text-anchor", "middle")
 		      .attr("x", function(d) { 
-		      	return d.value > 99 ? x(d.label) : x(d.label) + 5; 
-		      })
-		      .attr("y", function(d) { 
-		      	return d.value  <= dataMin ? y(d.value) - 5 : y(d.value) + 14;
+		      	// Starting point + (range band width less the margin divided by the data length and divided by two to find the central point)
+		      	return (x(d.label) + ((x.rangeBand() - margin/data.length)/2));
 		      })
 		      .attr("opacity",0)
 		      .attr("fill", function(d,i){
@@ -443,10 +446,16 @@ var MapView = Backbone.View.extend({
 		      .attr("font-size",function(d){
 		      	return 50 / data.length;
 		      })
+		      .attr("y", function(d) { 
+		      	// Looks at the font-size above. Outide the bar: Line + 4px of margin. Inside the bar: reduce the height of the font and 2px margin
+		      	var fontSize = 50/data.length;
+		      	return d.value  <= dataMin ? y(d.value) - 4 : y(d.value) + fontSize + 2;
+		      })
 		      .transition()
 			  .duration(400)
 			  .delay(400)
 			  .attr("opacity",1)
+			  .attr("class","bar-chart-text")
 
 			// CSS MODS - hide the tick marks, and change the 100 marker for a bold red marker
 			$('.tick line').hide();
@@ -471,7 +480,7 @@ var MapView = Backbone.View.extend({
 				data.push({
 					label: seg.label,
 					value: d[seg.measure],
-					legendLabel: seg.measure,
+					legendLabel: seg.legendLabel,
 				})
 			}
 		});
@@ -565,7 +574,10 @@ var MapView = Backbone.View.extend({
 
 	appendSegmentationLegend:function(data){
 		$('#segmentationLegend').show();
-		data = data.slice(0,data.length-2);
+		data = data.slice(0,data.length-1); // The is the object element storage so we need to slice the final element (the region) off
+		data = data.filter(function(d){
+			return d.value > 0;
+		});
 		var width = $("#segmentationLegend").width();
 		var numElements = data.length;
 		var halfPoint = Math.ceil(numElements/2);
@@ -596,7 +608,6 @@ var MapView = Backbone.View.extend({
 		      .text(function(d,i){
 		      	return d.legendLabel;
 		      })
-		      .attr("class","bar-label")
 		      .attr("x", function(d,i){
 		      	return (i+1 <= halfPoint) ? 30 : width/2 + 30;
 		      })
@@ -605,7 +616,7 @@ var MapView = Backbone.View.extend({
 		      })
 		      .attr("fill", "black")
 		      .attr("font-size",14)
-		      .attr("class","test")
+		      .attr("class","segmentation_legend_text")
 		 
 	},
 

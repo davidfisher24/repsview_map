@@ -15,27 +15,29 @@ MapModel = Backbone.Model.extend({
 		"defaultScale" : 2400, // Default scale (France)
 		"deepestLevel" : 2,  // Maximum level that can be drilled to. Is set to 2 for gp and 3 for sp.
 		"pieColors" :  ['#CC0000', '#007E33'], // Colours to use in the segments of the pies
-		"barColors" : ["#7cb5ec","#434348","#90ed7d","#f7a35c","#8085e9","#f15c80"], // Colours used for the bar chart
+		// bar colour experiments
+		//"barColors" : ["#7cb5ec","#434348","#90ed7d","#f7a35c","#8085e9","#f15c80"], // Stolen from highcharts
+		"barColors" : ['#aa66cc','#4285F4','#00C851','#ffbb33','#ff4444'],  // Lilettes design
 
 		// Segmentation data parameters for legend and graphic. Labels and colours
 		"pieLegendSegmentation" :  [
-			{measure: "VIP", color: '#7cb5ec', label: "VIP"}, 
-			{measure: "fideliserG", color: '#90ed7d', label: "Fid. G"}, 
-			{measure: "fideliserM", color: '#f7a35c', label: "Fid. M"}, 
-			{measure: "conquerir", color: '#8085e9', label: "Conq"}, 
-			{measure: "rhumato", color: '#f15c80', label: "Rhumato"}, 
-			{measure: "pharm_hosp", color: '#e4d354', label: "Ph Hosp"}, 
-			{measure: "geriatrie", color: '#2b908f', label: "Geriatrie"}, 
-			{measure: "chirugerie", color: '#f45b5b', label: "Chir"}, 
-			{measure: "douleur", color: '#91e8e1', label: "Douleur"}, 
-			{measure: "cardio", color: '#DA70D6', label: "Cardio"}, 
-			{measure: "uro", color: '#1E90FF', label: "Uro"}, 
-			{measure: "gastro", color: '#E0F000', label: "Gastro"},
-			{measure: "muco", color: '#AA4643', label: "Muco"},
-			{measure: "arv", color: '#89A54E', label: "ARC"},
-			{measure: "ajout_vm", color: '#d84315', label: "Ajout VM"},
-			{measure: "urg_anest", color: '#9e9d24', label: "Urg Anest"},
-			{measure: "autres", color: '#80699B', label: "Autres"}
+			{measure: "VIP", color: '#7cb5ec', label: "VIP", legendLabel: "VIP"}, 
+			{measure: "fideliserG", color: '#90ed7d', label: "Fid. G", legendLabel: "FidéliserG"}, 
+			{measure: "fideliserM", color: '#f7a35c', label: "Fid. M", legendLabel: "FidéliserM"}, 
+			{measure: "conquerir", color: '#8085e9', label: "Conq", legendLabel: "Conquérir"}, 
+			{measure: "rhumato", color: '#f15c80', label: "Rhumato", legendLabel: "Rhumato"}, 
+			{measure: "pharm_hosp", color: '#e4d354', label: "Ph Hosp", legendLabel: "Pharm Hosp"}, 
+			{measure: "geriatrie", color: '#2b908f', label: "Geriatrie", legendLabel: "Gériatrie"}, 
+			{measure: "chirugerie", color: '#f45b5b', label: "Chir", legendLabel: "Chirurgie"}, 
+			{measure: "douleur", color: '#91e8e1', label: "Douleur", legendLabel: "Douleur"}, 
+			{measure: "cardio", color: '#DA70D6', label: "Cardio", legendLabel: "Cardio"}, 
+			{measure: "uro", color: '#1E90FF', label: "Uro", legendLabel: "Uro"}, 
+			{measure: "gastro", color: '#E0F000', label: "Gastro", legendLabel: "Gastro"},
+			{measure: "muco", color: '#AA4643', label: "Muco", legendLabel: "Muco"},
+			{measure: "arv", color: '#89A54E', label: "ARV", legendLabel: "ARV"},
+			{measure: "ajout_vm", color: '#d84315', label: "Ajout VM", legendLabel: "Ajout VM"},
+			{measure: "urg_anest", color: '#9e9d24', label: "Urg Anest", legendLabel: "Urg Anest"},
+			{measure: "autres", color: '#80699B', label: "Autres", legendLabel: "Autres"}
 		],
 
 		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
