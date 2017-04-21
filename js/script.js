@@ -1,10 +1,17 @@
 window.onload = function() {
 
+	// VERSION OPTIONS => "local" or "mylan"
+	var version = "local"; 
+	var server = version === "mylan" ? true : false;
+
 	function getData(){
 		var url = "./php/get_geo_data.php";
 		return $.ajax(url,{
-			method: "GET",
+			method: "POST",
 			dataType : "json",
+			data: {
+				version: version,
+			},
 			success: function (data){
 
 			},
@@ -21,6 +28,7 @@ window.onload = function() {
 			mapHeight: $('#map').width(),
 			gpdata: data.gpData,
 			spdata: data.spData,
+			server: server,
 		}
 
 		var mapModel = new MapModel(options);

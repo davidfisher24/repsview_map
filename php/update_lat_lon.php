@@ -1,13 +1,13 @@
 <?php
 
-
+	$version = $_POST["version"];
 	$location = $_POST["location"];
 	$level = intval($_POST["level"]);
 	$network = $_POST["network"];
 	$lon = $_POST["lon"];
 	$lat = $_POST["lat"];
 
-	$version = "mylan";
+	
 	
 	if ($version === "local") {
 		$servername = "localhost";
