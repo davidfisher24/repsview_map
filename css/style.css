@@ -1,3 +1,13 @@
+@font-face {
+  font-family: "lucinda_grande";
+  src: url(../fonts/lucinda_grande.ttf) format("truetype");
+}
+
+@font-face {
+  font-family: "helvetica_neue";
+  src: url(../fonts/helvetica_neue.ttf) format("truetype");
+}
+
 /* Bolded areas */
 
 .region-label {
@@ -35,12 +45,32 @@
 /* D3 TOOLTIPS */
 
 .d3-tip {
-  line-height: 1;
+  line-height: 0;
   /*font-weight: bold;*/
-  padding: 2px;
-  background: rgba(0, 0, 0, 0.8);
+  /*padding: 2px;*/
+  padding:0px;
+  /*background: rgba(0, 0, 0, 0.8);*/
+  background: #3E4551;
   /*color: #fff;*/
-  border-radius: 2px;
+  /*border-radius: 2px;*/
+  border-radius: 80px;
+}
+
+/* remove border lines from arc slices  on tooltips and small pies*/
+.slice {
+  stroke: none;
+  box-shadow:none;
+}
+
+/* Font on the arc centre on tooltips */
+.tip-pie-hover-label, .tip-pie-hover-value {
+  font-family: "helvetica_neue";
+  font-weight:700;
+}
+
+.region-text {
+  font-family: "helvetica_neue";
+  stroke:#3E4551;
 }
 
 /* TREEVIEW */

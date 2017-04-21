@@ -277,7 +277,7 @@ var MapView = Backbone.View.extend({
 				.enter()
 				.append('path')
 				.attr('d',  arc)
-				.attr("class", function(d,i) {return d.name})
+				.attr("class", function(d,i) {return d.name + " slice"})
 				.style('fill', function(d,i){
 					return colors[i];
 				})
@@ -500,7 +500,8 @@ var MapView = Backbone.View.extend({
 		});
 
 		var radius = size/2;
-		var arc = d3.svg.arc().innerRadius(radius * 0.45).outerRadius(radius * 0.9); 
+		//var arc = d3.svg.arc().innerRadius(radius * 0.45).outerRadius(radius * 0.9); 
+		var arc = d3.svg.arc().innerRadius(radius * 0.5).outerRadius(radius * 1); 
 		var pie = d3.layout.pie().value(function(d) { return d.value; }).sort(null);
 
 
