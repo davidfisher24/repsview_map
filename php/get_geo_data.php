@@ -1,19 +1,27 @@
 <?php
 
+	$version = "local";
 	
-	$servername = "localhost";
-	$username = "root";
-	$password = "";
-	$dbname = "repsview_map";
-	$tablename = "sectorisation";
+	if ($version === "local") {
+		$servername = "localhost";
+		$username = "root";
+		$password = "";
+		$dbname = "repsview_map";
+		$tablename = "sectorisation";
+	} else if ($version === "mylan") {
+		$servername = "online4.h2mc.fr";
+		$username = "h2mc";
+		$password = "h2mc2012";
+		$dbname = "testmylanrepsview";
+		$tablename = "map_sectorisation";	
+	}
 
 
 	$conn = new mysqli($servername, $username, $password, $dbname);
-
 	// GP DATA
 	$gpData = array();
 
-	$sql = "SELECT * FROM sectorisation WHERE reseau = 'GP' order by region,secteur,uga";
+	$sql = "SELECT * FROM $tablename WHERE reseau = 'GP' order by region,secteur,uga";
 	$result = $conn->query($sql);
 	while($row = $result->fetch_assoc()) {
 		if ($row['secteur'] === null && $row['uga'] === null) {
@@ -39,7 +47,7 @@
 	// SPDATA
 	$spData = array();
 
-	$sql = "SELECT * FROM sectorisation WHERE reseau = 'SP' order by region,secteur,ugagroup,uga";
+	$sql = "SELECT * FROM $tablename WHERE reseau = 'SP' order by region,secteur,ugagroup,uga";
 	$result = $conn->query($sql);
 	while($row = $result->fetch_assoc()) {
 		if ($row['secteur'] === null && $row['ugagroup'] === null && $row['uga'] === null) {
