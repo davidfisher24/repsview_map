@@ -1,6 +1,6 @@
 var MapView = Backbone.View.extend({
 
-	el: '#map-panel-container',
+	el: '#map_module',
 
 	initialize: function(options) {
 		this.renderMap();

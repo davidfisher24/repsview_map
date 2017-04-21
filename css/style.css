@@ -8,15 +8,6 @@
   src: url(../fonts/helvetica_neue.ttf) format("truetype");
 }
 
-/* Bolded areas */
-
-.region-label {
-  font-weight:bold;
-}
-
-.city-text {
-  font-weight:bold;
-}
 
 /* Map layer - map, zoom group, buttons and hidden tooltip generator */
 
@@ -30,16 +21,7 @@
   overflow:hidden;
 }
 
-/* Buttons on the map */
 
-#mapButtons {
-  position:absolute;
-  top: 1%;
-  left: 1%;
-}
-
-
-/* Hidden tooltip generator element */
 #tooltipGenerator {
 	display:none;
 }
@@ -72,10 +54,12 @@
   font-weight:700;
 }
 
+
 /* Fonts on the region labels */
 .region-text {
   font-family: "helvetica_neue";
   stroke:#3E4551;
+  font-weight:bold;
 }
 
 /* Fonts on the bar char text */
@@ -86,6 +70,7 @@
 /* Fonts on the city labels */
 .city-text {
   font-family : "helvetica_neue";
+  font-weight:bold;
 }
 
 .segmentation_legend_text {
@@ -123,5 +108,16 @@
   font-size: 11px;
   color: #606060;
   fill: #606060;
+}
+
+
+
+
+input.number_range {
+    padding: 5px 0 5px 10px;
+    font-family: "lucinda_grande";
+    font-weight:900;
+    border-radius:5px;
+    box-shadow: 1px 1px 0px #3E4551;
 }
 
