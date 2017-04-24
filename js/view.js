@@ -889,9 +889,33 @@ var MapView = Backbone.View.extend({
 			},
 			onNodeChecked: function(event, data) {
 				that.showHideElement(data.id,data.state.checked);
+				// Rezoom
+				var moddedArray = [];
+				dataArray.filter(function(d){
+					$('#graphs').treeview('getChecked').forEach(function(t){
+						if (d.name === t.id) moddedArray.push(d);
+					});
+				});
+				var svg = d3.select($("#zoomgroup")[0]);
+				var projection = d3.geo.mercator()
+					.center(that.model.get("defaultCenter"))
+					.scale(that.model.get("defaultScale"));
+				that.zoomToBoundingBox(svg,projection,moddedArray);
 			},
 			onNodeUnchecked: function(event, data) {
 				that.showHideElement(data.id,data.state.checked);
+				// Rezoom
+				var moddedArray = [];
+				dataArray.filter(function(d){
+					$('#graphs').treeview('getChecked').forEach(function(t){
+						if (d.name === t.id) moddedArray.push(d);
+					});
+				});
+				var svg = d3.select($("#zoomgroup")[0]);
+				var projection = d3.geo.mercator()
+					.center(that.model.get("defaultCenter"))
+					.scale(that.model.get("defaultScale"));
+				if (moddedArray.length > 0) that.zoomToBoundingBox(svg,projection,moddedArray);
 			},
 			onNodeSelected: function(event, data) {
 				/*var dataForRegion;
