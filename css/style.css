@@ -51,14 +51,22 @@
 /* Font on the arc centre on tooltips */
 .tip-pie-hover-label, .tip-pie-hover-value {
   font-family: "helvetica_neue";
-  font-weight:700;
-  letter-spacing:1px;
+  font-weight:400;
+  stroke: none;
+  letter-spacing:1.5px;
 }
 
+/* Individually bolded fonts */
+.bolded {
+  font-weight:700;
+  letter-spacing:2px;
+}
 
 /* Fonts on the region labels */
 .region-text {
   font-family: "lucinda_grande";
+  stroke: none;
+  font-weight:700;
 }
 
 /* Fonts on the bar char text */

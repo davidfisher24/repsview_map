@@ -251,9 +251,6 @@ var MapView = Backbone.View.extend({
 					var centreAxisVertical = elementSpace.top + ((elementSpace.bottom - elementSpace.top)/2);
 					var centreAxisHorizontal = elementSpace.left + ((elementSpace.right - elementSpace.left)/2);
 					var tooltipOffset = that.model.get("tooltipOffsetPosition");
-					console.log(tooltipOffset);
-					console.log(d3.event.y);
-					console.log(centreAxisVertical);
 					if (tooltipOffset === 'top' && d3.event.y > centreAxisVertical) tip.hide(d);
 					if (tooltipOffset === 'bottom' && d3.event.y < centreAxisVertical) tip.hide(d);
 					if (tooltipOffset === 'left' && d3.event.x > centreAxisHorizontal) tip.hide(d);
@@ -267,12 +264,14 @@ var MapView = Backbone.View.extend({
 					tip.show(d);
 					// Tooltip specific events
 					d3.selectAll("g.slice").on('mouseover', function(d,i) {
-		                d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label);
+		                d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label).style("font-size",14);
+		                $('.tip-pie-hover-label').removeClass('bolded');
 		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
 		            })
 		            .on('mouseleave', function(){
-		            	d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region);
-		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].visits + " %");
+		            	d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region).style("font-size",16);
+		            	$('.tip-pie-hover-label').addClass('bolded');
+		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].visits + "%");
 		            });
 
 		            d3.selectAll('#controls').on('mouseenter',function(){
@@ -557,19 +556,19 @@ var MapView = Backbone.View.extend({
 		var centreLabel = d3.select(".tooltip-canvas")
 			.append("text")
 			.attr("x", radius)
-			.attr("y", radius * 0.9)
+			.attr("y", radius * 0.975)
 			.text(region)
-			.attr("class","tip-pie-hover-label")
+			.attr("class","tip-pie-hover-label bolded")
 			.style("fill", "none")
 			.style("stroke", "#DDDDDD")
 			.style("text-anchor","middle")
-			.style("font-size",14)
+			.style("font-size",16)
 
 		var centreValue = d3.select(".tooltip-canvas")
 			.append("text")
 			.attr("x", radius)
-			.attr("y", radius * 1.1)
-			.text(visits + " %")
+			.attr("y", radius * 1.2)
+			.text(visits + "%")
 			.attr("class","tip-pie-hover-value")
 			.style("fill", "none")
 			.style("stroke", "#DDDDDD")
@@ -742,8 +741,10 @@ var MapView = Backbone.View.extend({
 		var x = (bounds[0][0] + bounds[1][0]) / 2;
 		var y = (bounds[0][1] + bounds[1][1]) / 2;
 
-
+		var currentScale = (svg.attr('transform') && that.model.get("level") !== 0) ? svg.attr('transform').split(",")[3].replace(")","") : 1;
 		var scale = 1 / Math.max(dx / this.model.get("width"), dy / this.model.get("height"));
+		console.log(1 / (scale - currentScale));
+
 		var translate = [this.model.get("width") / 2 - scale * x, this.model.get("height") / 2 - scale * y];
 		svg.transition()
 			.duration(that.model.get("zoomPeriod"))
