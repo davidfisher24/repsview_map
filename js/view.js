@@ -163,8 +163,7 @@ var MapView = Backbone.View.extend({
 		var path = d3.geo.path().projection(projection);
 
 		var dataArray = that.model.getData();
-		console.log(dataArray);
-
+		
 		
 		if (!initialLoad) {
 			this.removeElementsOnChange(svg);
@@ -717,21 +716,28 @@ var MapView = Backbone.View.extend({
 		var axisRatio = yAxisLength/xAxisLength;
 
 		var difference;
-		var buffer;
+		var bufferX;
+		var bufferY;
 		if (axisRatio < 0.8) {  // Axis ratio is less than 0.75. Increase the Y.
+			console.log("Increasing Y");
+			console.log(xAxisLength);
 			difference = ((xAxisLength * 0.8) - yAxisLength) / 2;
-			buffer = 10;
-			bounds[0][0] = bounds[0][0] - buffer;
-			bounds[0][1] = bounds[0][1] + difference + buffer;
-			bounds[1][0] = bounds[1][0] + buffer;
-			bounds[1][1] = bounds[1][1] - difference - buffer;
+			bufferX = xAxisLength * 0.1;
+			bufferY = bufferX/0.8;
+			bounds[0][0] = bounds[0][0] - bufferX;
+			bounds[0][1] = bounds[0][1] + difference + bufferY;
+			bounds[1][0] = bounds[1][0] + bufferX;
+			bounds[1][1] = bounds[1][1] - difference - bufferY;
 		} else if (axisRatio > 0.8) { // Axis ratio is greater than 0.75. Increase the X.
-			difference = (yAxisLength - (xAxisLength * 0.75)) / 2;
-			buffer = 10;
-			bounds[0][0] = bounds[0][0] - difference - buffer;
-			bounds[0][1] = bounds[0][1] + buffer;
-			bounds[1][0] = bounds[1][0] + difference + buffer;
-			bounds[1][1] = bounds[1][1] - buffer;
+			console.log("Increasing X");
+			console.log(yAxisLength);
+			difference = (yAxisLength - (xAxisLength * 0.8)) / 2;
+			bufferY = yAxisLength * 0.1;
+			bufferX = bufferY * (1 / 0.8);
+			bounds[0][0] = bounds[0][0] - difference - bufferX;
+			bounds[0][1] = bounds[0][1] + bufferY;
+			bounds[1][0] = bounds[1][0] + difference + bufferX;
+			bounds[1][1] = bounds[1][1] - bufferY;
 		}
 		
 		/////////////
