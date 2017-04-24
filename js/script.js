@@ -26,7 +26,7 @@ window.onload = function() {
 		var options = {
 			mapWidth: $('#map').width(),
 			//mapHeight: $('#map').width(),
-			mapHeight: Math.ceil($('#map').width() * 0.8),
+			//mapHeight: Math.ceil($('#map').width() * 0.8),
 			gpdata: data.gpData,
 			spdata: data.spData,
 			server: server,

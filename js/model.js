@@ -10,6 +10,7 @@ MapModel = Backbone.Model.extend({
 		// Defined attribute
 		"width" : 800, // Width of the svg element
 		"height" : 600, // Height of the svg element
+		"mapRatio" : "10:8", // Defines the x to y ratio of the map
 		"reservedKeys" : ["lat","lon","segmentation"], // Reserved keys in the current data array
 		"defaultCenter" : [4.8, 47.35], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
@@ -69,9 +70,10 @@ MapModel = Backbone.Model.extend({
 	},
 
 	initialize:function(options){
-		console.log(options);
+		var mapRatio = parseInt(this.get("mapRatio").split(":")[1]) / 10;
+
 		this.set("width",options.mapWidth);
-		this.set("height",options.mapHeight);
+		this.set("height",options.mapWidth * mapRatio);
 		this.set("gpdata",options.gpdata);
 		this.set("spdata",options.spdata);
 		this.set("server",options.server);

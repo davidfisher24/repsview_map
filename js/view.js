@@ -692,7 +692,7 @@ var MapView = Backbone.View.extend({
 		// Caluclate the base bounds and modifiy the shoter axis to make a square.
 		// Add a buffer to each side of the square to prevent overflow
 
-		console.log("Number of elements : " + dataArray.length);
+
 		var bounds = [[leftBottom[0],leftBottom[1]],[rightTop[0],rightTop[1]]];
 		if (dataArray.length < 3)
 			bounds = [[bounds[0][0] * 0.8, bounds[0][1] * 0.8],[bounds[1][0] * 1.2,bounds[1][1] * 1.2]];
@@ -701,47 +701,31 @@ var MapView = Backbone.View.extend({
 		var yAxisLength = bounds[0][1] - bounds[1][1]; 
 
 
-		/*var xAndYAxis = [bounds[1][0] - bounds[0][0], bounds[0][1] - bounds[1][1]] 
-		var longerAxisSize = Math.max.apply(Math,xAndYAxis.map(function(d){return d}));
-		var longerAxisDiff = Math.max.apply(Math,xAndYAxis.map(function(d){return d})) - Math.min.apply(Math,xAndYAxis.map(function(d){return d}));
-		var shorterAxisId = longerAxisSize === xAndYAxis[0] ? "Y" : "X";
-		var amountToAddToShorterAxis = longerAxisDiff/2;
-		var buffer = Math.max(xAxisLength,yAxisLength) / 8;
-		bounds[0][0] = shorterAxisId === "X" ? bounds[0][0] - amountToAddToShorterAxis - buffer : bounds[0][0] - buffer;
-		bounds[0][1] = shorterAxisId === "Y" ? bounds[0][1] + amountToAddToShorterAxis + buffer : bounds[0][1] + buffer;
-		bounds[1][0] = shorterAxisId === "X" ? bounds[1][0] + amountToAddToShorterAxis + buffer : bounds[1][0] + buffer;
-		bounds[1][1] = shorterAxisId === "Y" ? bounds[1][1] - amountToAddToShorterAxis - buffer : bounds[1][1] - buffer;*/
-
-
+		var mapRatio = parseInt(this.model.get("mapRatio").split(":")[1]) / 10;
 		var axisRatio = yAxisLength/xAxisLength;
 
 		var difference;
 		var bufferX;
 		var bufferY;
-		if (axisRatio < 0.8) {  // Axis ratio is less than 0.75. Increase the Y.
-			console.log("Increasing Y");
-			console.log(xAxisLength);
-			difference = ((xAxisLength * 0.8) - yAxisLength) / 2;
+		if (axisRatio < mapRatio) { 
+			difference = ((xAxisLength * mapRatio) - yAxisLength) / 2;
 			bufferX = xAxisLength * 0.1;
-			bufferY = bufferX/0.8;
+			bufferY = bufferX/mapRatio;
 			bounds[0][0] = bounds[0][0] - bufferX;
 			bounds[0][1] = bounds[0][1] + difference + bufferY;
 			bounds[1][0] = bounds[1][0] + bufferX;
 			bounds[1][1] = bounds[1][1] - difference - bufferY;
-		} else if (axisRatio > 0.8) { // Axis ratio is greater than 0.75. Increase the X.
-			console.log("Increasing X");
-			console.log(yAxisLength);
-			difference = (yAxisLength - (xAxisLength * 0.8)) / 2;
+		} else if (axisRatio > mapRatio) { 
+
+			difference = (yAxisLength - (xAxisLength * mapRatio)) / 2;
 			bufferY = yAxisLength * 0.1;
-			bufferX = bufferY * (1 / 0.8);
+			bufferX = bufferY * (1 / mapRatio);
 			bounds[0][0] = bounds[0][0] - difference - bufferX;
 			bounds[0][1] = bounds[0][1] + bufferY;
 			bounds[1][0] = bounds[1][0] + difference + bufferX;
 			bounds[1][1] = bounds[1][1] - bufferY;
 		}
 		
-		/////////////
-
 
  		this.model.set("currentMapBounds",bounds);
 
