@@ -660,10 +660,10 @@ var MapView = Backbone.View.extend({
 
 
 
-	zoomToBoundingBox:function(svg,projection,dataArray) {
+	zoomToBoundingBox:function(svg,projection,dataArray,flagRezoom) {
 		var that = this;
 
-		if (this.model.get("level") === 0) {
+		if (this.model.get("level") === 0 && !flagRezoom) {
 			svg.transition()
 				.duration(750)
 				.attr("transform", "translate(0,0)scale(1)")
@@ -718,7 +718,7 @@ var MapView = Backbone.View.extend({
 		} else if (axisRatio > mapRatio) { 
 
 			difference = (yAxisLength - (xAxisLength * mapRatio)) / 2;
-			bufferY = yAxisLength * 0.1;
+			bufferY = yAxisLength * 0.125;
 			bufferX = bufferY * (1 / mapRatio);
 			bounds[0][0] = bounds[0][0] - difference - bufferX;
 			bounds[0][1] = bounds[0][1] + bufferY;
@@ -889,33 +889,12 @@ var MapView = Backbone.View.extend({
 			},
 			onNodeChecked: function(event, data) {
 				that.showHideElement(data.id,data.state.checked);
-				// Rezoom
-				var moddedArray = [];
-				dataArray.filter(function(d){
-					$('#graphs').treeview('getChecked').forEach(function(t){
-						if (d.name === t.id) moddedArray.push(d);
-					});
-				});
-				var svg = d3.select($("#zoomgroup")[0]);
-				var projection = d3.geo.mercator()
-					.center(that.model.get("defaultCenter"))
-					.scale(that.model.get("defaultScale"));
-				that.zoomToBoundingBox(svg,projection,moddedArray);
+				that.rezoomFromTree(dataArray);
 			},
 			onNodeUnchecked: function(event, data) {
 				that.showHideElement(data.id,data.state.checked);
-				// Rezoom
-				var moddedArray = [];
-				dataArray.filter(function(d){
-					$('#graphs').treeview('getChecked').forEach(function(t){
-						if (d.name === t.id) moddedArray.push(d);
-					});
-				});
-				var svg = d3.select($("#zoomgroup")[0]);
-				var projection = d3.geo.mercator()
-					.center(that.model.get("defaultCenter"))
-					.scale(that.model.get("defaultScale"));
-				if (moddedArray.length > 0) that.zoomToBoundingBox(svg,projection,moddedArray);
+				that.rezoomFromTree(dataArray);
+				
 			},
 			onNodeSelected: function(event, data) {
 				/*var dataForRegion;
@@ -930,6 +909,22 @@ var MapView = Backbone.View.extend({
 			},
 		});
 		$('#graphs').treeview("checkAll",{silent:true});
+	},
+
+	rezoomFromTree:function(dataArray){
+		var svg = d3.select($("#zoomgroup")[0]);
+		var projection = d3.geo.mercator()
+			.center(this.model.get("defaultCenter"))
+			.scale(this.model.get("defaultScale"));
+
+		var moddedArray = [];
+		dataArray.filter(function(d){
+			$('#graphs').treeview('getChecked').forEach(function(t){
+				if (d.name === t.id) moddedArray.push(d);
+			});
+		});
+		
+		if (moddedArray.length > 0) this.zoomToBoundingBox(svg,projection,moddedArray,true);
 	},
 
 
