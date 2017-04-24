@@ -170,7 +170,7 @@ var MapView = Backbone.View.extend({
 			this.zoomToBoundingBox(svg,projection,dataArray)
 		};
 
-		var delay = 750;
+		var delay = this.model.get("zoomPeriod");
 		if (initialLoad) delay = 0;
 
 		window.setTimeout(function(){
@@ -205,7 +205,8 @@ var MapView = Backbone.View.extend({
 			  .offset(function(d){
 			  	var elementRef = d.name;
 			  	var elementObject = d3.selectAll('.area-element').filter(function(d){return d.name === elementRef});
-			  	return that.model.calculateTooltipPosition(projection,elementObject.node().getBBox(),d,150);
+			  	var offset = that.model.calculateTooltipPosition(projection,elementObject.node().getBBox(),d,150);
+			  	return offset;
 			  })
 			  .html(function(d) {
 			  	that.appendPieChartInToolTip(150,d);
@@ -247,9 +248,16 @@ var MapView = Backbone.View.extend({
 				})
 				.on('mouseout', function(d){
 					var elementSpace = d3.select(this).node().getBoundingClientRect();
-					var centreAxis = elementSpace.top + ((elementSpace.bottom - elementSpace.top)/2);
-					if (d3.event.y > centreAxis) tip.hide(d);
-					
+					var centreAxisVertical = elementSpace.top + ((elementSpace.bottom - elementSpace.top)/2);
+					var centreAxisHorizontal = elementSpace.left + ((elementSpace.right - elementSpace.left)/2);
+					var tooltipOffset = that.model.get("tooltipOffsetPosition");
+					console.log(tooltipOffset);
+					console.log(d3.event.y);
+					console.log(centreAxisVertical);
+					if (tooltipOffset === 'top' && d3.event.y > centreAxisVertical) tip.hide(d);
+					if (tooltipOffset === 'bottom' && d3.event.y < centreAxisVertical) tip.hide(d);
+					if (tooltipOffset === 'left' && d3.event.x > centreAxisHorizontal) tip.hide(d);
+					if (tooltipOffset === 'right' && d3.event.x < centreAxisHorizontal) tip.hide(d);
 				}) 
 				.on('mouseenter', function(d){
 					if(that.model.get("modificationModeOn")) return;
@@ -665,7 +673,7 @@ var MapView = Backbone.View.extend({
 
 		if (this.model.get("level") === 0 && !flagRezoom) {
 			svg.transition()
-				.duration(750)
+				.duration(that.model.get("zoomPeriod"))
 				.attr("transform", "translate(0,0)scale(1)")
 			this.model.set("currentBoundingBox",null);
 			this.model.set("currentMapBounds",null);
@@ -738,12 +746,12 @@ var MapView = Backbone.View.extend({
 		var scale = 1 / Math.max(dx / this.model.get("width"), dy / this.model.get("height"));
 		var translate = [this.model.get("width") / 2 - scale * x, this.model.get("height") / 2 - scale * y];
 		svg.transition()
-			.duration(750)
+			.duration(that.model.get("zoomPeriod"))
 			.attr("transform", "translate(" + translate + ")scale(" + scale + ")")
 
 
 		svg.selectAll('path')
-			.transition()
+			.transition(that.model.get("zoomPeriod"))
 			.duration(750)
 			.style("stroke-width", 1.5 / scale + "px");
 
@@ -771,7 +779,14 @@ var MapView = Backbone.View.extend({
 		this.renderMap();
 	},
 
-	moveUpALevel:function(){
+	moveUpALevel:function(e){
+		if (this.model.get("level") === 0) return;
+
+		$(e.target).addClass('disabled');
+		window.setTimeout(function(){
+			$(e.target).removeClass('disabled');
+		},this.model.get("zoomPeriod"));
+
 		this.hideTreeControl();
 		$('#selection').html('');
 		$('#segmentationLegend').hide();
@@ -895,17 +910,6 @@ var MapView = Backbone.View.extend({
 				that.showHideElement(data.id,data.state.checked);
 				that.rezoomFromTree(dataArray);
 				
-			},
-			onNodeSelected: function(event, data) {
-				/*var dataForRegion;
-				dataArray.filter(function(obj){
-					if (obj.name === data.id) {dataForRegion = obj; return false;}
-					return obj.name === data.id;
-				});*/
-				//that.appendBarChartInToolTip($('#informationPanel').width(),dataForRegion);
-			},
-			onNodeUnselected: function(){
-				$('#informationPanel').html(that.model.get("infoPanelDefault"));
 			},
 		});
 		$('#treeControl').treeview("checkAll",{silent:true});

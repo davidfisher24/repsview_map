@@ -11,6 +11,8 @@ MapModel = Backbone.Model.extend({
 		"width" : 800, // Width of the svg element
 		"height" : 600, // Height of the svg element
 		"mapRatio" : "10:8", // Defines the x to y ratio of the map
+		"zoomPeriod" : 750, // time between zoom in/out periods (needed for timeout functions)
+
 		"reservedKeys" : ["lat","lon","segmentation"], // Reserved keys in the current data array
 		"defaultCenter" : [4.8, 47.35], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
@@ -59,7 +61,10 @@ MapModel = Backbone.Model.extend({
 		"citiesVisibleLimit" : 250000,
 
 		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>",
+
 		"tooltipData" : null, // Problematic. This needs to be handled differently, but is the only way to get data back to the tooltip
+		"tooltipOffsetPosition" : null,// Again problematic. Stors the position offset of the tooltip for mouseout events
+
 		"currentDragEventLatLon" : null, // Temporary storage of a drag event for updating the database
 		"modificationModeOn" : false, // Are we in modification mode, where an admin can move elements
 	},
@@ -462,8 +467,19 @@ MapModel = Backbone.Model.extend({
 			if (elementY + (elementSize/scale/2) > bottom)  offsetY = -10;
 			else offsetY = 100;
 		}
+		this.storeTooltipOffsetAlignment(offsetY,offsetX);
 		return [offsetY,offsetX];
 		
+	},
+
+	storeTooltipOffsetAlignment:function(y,x){
+		var direction;
+		if (x === 0) {
+			direction = y < 0 ? "top" : "bottom";
+		} else {
+			direction = x < 0 ? "left" : "right";
+		}
+		this.set("tooltipOffsetPosition",direction)
 	},
 
 	/*****************************************************************************************
