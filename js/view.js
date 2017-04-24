@@ -839,16 +839,16 @@ var MapView = Backbone.View.extend({
 	},
 
 	openTreeControl:function(){
-		if ($('#graphs').css('display') === "none") this.showTreeControl();
+		if ($('#treeControl').css('display') === "none") this.showTreeControl();
 		else this.hideTreeControl();
 	},
 
 	hideTreeControl:function(){
-		$('#graphs').slideUp()
+		$('#treeControl').slideUp()
 		$('#open-tree-control .caret').css('transform','none')
 	},
 	showTreeControl:function(){
-		$('#graphs').slideDown().css('display','inline-block')
+		$('#treeControl').slideDown().css('display','inline-block')
 		$('#open-tree-control .caret').css('transform','rotate(180deg)');
 	},
 
@@ -874,7 +874,7 @@ var MapView = Backbone.View.extend({
 			})
 		});
 
-		var tree = $('#graphs').treeview({
+		var tree = $('#treeControl').treeview({
 			data: arr,
 			levels: 1,
 			showTags:true,
@@ -908,7 +908,7 @@ var MapView = Backbone.View.extend({
 				$('#informationPanel').html(that.model.get("infoPanelDefault"));
 			},
 		});
-		$('#graphs').treeview("checkAll",{silent:true});
+		$('#treeControl').treeview("checkAll",{silent:true});
 	},
 
 	rezoomFromTree:function(dataArray){
@@ -919,7 +919,7 @@ var MapView = Backbone.View.extend({
 
 		var moddedArray = [];
 		dataArray.filter(function(d){
-			$('#graphs').treeview('getChecked').forEach(function(t){
+			$('#treeControl').treeview('getChecked').forEach(function(t){
 				if (d.name === t.id) moddedArray.push(d);
 			});
 		});
