@@ -69,6 +69,7 @@ MapModel = Backbone.Model.extend({
 	},
 
 	initialize:function(options){
+		console.log(options);
 		this.set("width",options.mapWidth);
 		this.set("height",options.mapHeight);
 		this.set("gpdata",options.gpdata);
@@ -317,12 +318,12 @@ MapModel = Backbone.Model.extend({
 		});
 
 		// Temporary - used for deltecting collisions
-		selection.forEach(function(e,i){
+		/*selection.forEach(function(e,i){
 			for (var a=0; a<i; a++) {
 				if (Math.abs((e.x - selection[a].x) * currentScale) < 10 &&  Math.abs((e.y - selection[a].y) * currentScale) < 10)
 					console.log("overlap between " + selection[a].name + " and " + e.name);
 			}
-		});
+		});*/
 
 		
 		return selection;

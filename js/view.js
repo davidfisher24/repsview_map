@@ -673,33 +673,36 @@ var MapView = Backbone.View.extend({
 			return;
 		}
 
+
 		// Calculate the projection points of the corners from the longitudes and latitudes to make
 		// an appropriate geographical bounding box
 		var leftBottom = projection([
-			Math.min.apply(Math,dataArray.map(function(d){return d.lon})),
-			Math.min.apply(Math,dataArray.map(function(d){return d.lat}))
+			Math.min.apply(Math,dataArray.map(function(d){return d.lon})), // Projection of west longitude (left)
+			Math.min.apply(Math,dataArray.map(function(d){return d.lat})) // Projection southern latitude (bottom)
 		]);
 		var rightTop = projection([
-			Math.max.apply(Math,dataArray.map(function(d){return d.lon})),
-			Math.max.apply(Math,dataArray.map(function(d){return d.lat}))
+			Math.max.apply(Math,dataArray.map(function(d){return d.lon})), // Projection of east longtude (right)
+			Math.max.apply(Math,dataArray.map(function(d){return d.lat}))  // Projection of north latitude (top)
 		]);
 		// set the bounding box of lat/lon coords and the mapbound of projection pixels
 		this.model.set("currentBoundingBox",[
 			[Math.max.apply(Math,dataArray.map(function(d){return d.lon})),Math.max.apply(Math,dataArray.map(function(d){return d.lat}))],
 			[Math.min.apply(Math,dataArray.map(function(d){return d.lon})),Math.min.apply(Math,dataArray.map(function(d){return d.lat}))]
 		]);
-		this.model.set("currentMapBounds",[leftBottom,rightTop]);
 
 		// Caluclate the base bounds and modifiy the shoter axis to make a square.
 		// Add a buffer to each side of the square to prevent overflow
 
-		var bounds = [[leftBottom[0] * 0.9,leftBottom[1] * 0.9],[rightTop[0] * 1.1,rightTop[1] * 1.1]];
-		if (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1])
+		console.log("Number of elements : " + dataArray.length);
+		var bounds = [[leftBottom[0],leftBottom[1]],[rightTop[0],rightTop[1]]];
+		if (dataArray.length < 3)
 			bounds = [[bounds[0][0] * 0.8, bounds[0][1] * 0.8],[bounds[1][0] * 1.2,bounds[1][1] * 1.2]];
 
 		var xAxisLength = bounds[1][0] - bounds[0][0];
 		var yAxisLength = bounds[0][1] - bounds[1][1]; 
-		var xAndYAxis = [bounds[1][0] - bounds[0][0], bounds[0][1] - bounds[1][1]] 
+
+
+		/*var xAndYAxis = [bounds[1][0] - bounds[0][0], bounds[0][1] - bounds[1][1]] 
 		var longerAxisSize = Math.max.apply(Math,xAndYAxis.map(function(d){return d}));
 		var longerAxisDiff = Math.max.apply(Math,xAndYAxis.map(function(d){return d})) - Math.min.apply(Math,xAndYAxis.map(function(d){return d}));
 		var shorterAxisId = longerAxisSize === xAndYAxis[0] ? "Y" : "X";
@@ -708,7 +711,32 @@ var MapView = Backbone.View.extend({
 		bounds[0][0] = shorterAxisId === "X" ? bounds[0][0] - amountToAddToShorterAxis - buffer : bounds[0][0] - buffer;
 		bounds[0][1] = shorterAxisId === "Y" ? bounds[0][1] + amountToAddToShorterAxis + buffer : bounds[0][1] + buffer;
 		bounds[1][0] = shorterAxisId === "X" ? bounds[1][0] + amountToAddToShorterAxis + buffer : bounds[1][0] + buffer;
-		bounds[1][1] = shorterAxisId === "Y" ? bounds[1][1] - amountToAddToShorterAxis - buffer : bounds[1][1] - buffer;
+		bounds[1][1] = shorterAxisId === "Y" ? bounds[1][1] - amountToAddToShorterAxis - buffer : bounds[1][1] - buffer;*/
+
+
+		var axisRatio = yAxisLength/xAxisLength;
+
+		var difference;
+		var buffer;
+		if (axisRatio < 0.8) {  // Axis ratio is less than 0.75. Increase the Y.
+			difference = ((xAxisLength * 0.8) - yAxisLength) / 2;
+			buffer = 10;
+			bounds[0][0] = bounds[0][0] - buffer;
+			bounds[0][1] = bounds[0][1] + difference + buffer;
+			bounds[1][0] = bounds[1][0] + buffer;
+			bounds[1][1] = bounds[1][1] - difference - buffer;
+		} else if (axisRatio > 0.8) { // Axis ratio is greater than 0.75. Increase the X.
+			difference = (yAxisLength - (xAxisLength * 0.75)) / 2;
+			buffer = 10;
+			bounds[0][0] = bounds[0][0] - difference - buffer;
+			bounds[0][1] = bounds[0][1] + buffer;
+			bounds[1][0] = bounds[1][0] + difference + buffer;
+			bounds[1][1] = bounds[1][1] - buffer;
+		}
+		
+		/////////////
+
+
  		this.model.set("currentMapBounds",bounds);
 
 		var dx = bounds[1][0] - bounds[0][0];
