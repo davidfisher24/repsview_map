@@ -246,7 +246,7 @@ var MapView = Backbone.View.extend({
 						$('#segmentationLegend').hide();
 					};
 				})
-				.on('mouseout', function(d){
+				.on('mouseleave', function(d){
 					var elementSpace = d3.select(this).node().getBoundingClientRect();
 					var centreAxisVertical = elementSpace.top + ((elementSpace.bottom - elementSpace.top)/2);
 					var centreAxisHorizontal = elementSpace.left + ((elementSpace.right - elementSpace.left)/2);
@@ -301,6 +301,7 @@ var MapView = Backbone.View.extend({
 		        .attr("x", 0)
 		        .attr("y", 25/currentScale)
 		        .attr("text-anchor", "middle")
+		        .attr("pointer-events", "none")
 		        .style("font-size", function(d,i){
 		        	return 13/currentScale + "px";
 		        })
