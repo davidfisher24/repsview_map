@@ -742,9 +742,9 @@ var MapView = Backbone.View.extend({
 		var x = (bounds[0][0] + bounds[1][0]) / 2;
 		var y = (bounds[0][1] + bounds[1][1]) / 2;
 
-		var currentScale = (svg.attr('transform') && that.model.get("level") !== 0) ? svg.attr('transform').split(",")[3].replace(")","") : 1;
+		var currentScale = (svg.attr('transform')) ? svg.attr('transform').split(",")[3].replace(")","") : 1;
 		var scale = 1 / Math.max(dx / this.model.get("width"), dy / this.model.get("height"));
-		console.log(1 / (scale - currentScale));
+		var moddedScale = currentScale / scale;
 
 		var translate = [this.model.get("width") / 2 - scale * x, this.model.get("height") / 2 - scale * y];
 		svg.transition()
@@ -753,10 +753,25 @@ var MapView = Backbone.View.extend({
 
 
 		svg.selectAll('path')
-			.transition(that.model.get("zoomPeriod"))
-			.duration(750)
+			.transition()
+			.duration(that.model.get("zoomPeriod"))
 			.style("stroke-width", 1.5 / scale + "px");
 
+		if (!flagRezoom) return; 
+
+		svg.selectAll('.area-element')
+			.transition()
+			.duration(that.model.get("zoomPeriod"))
+			.attr("transform",function(d){
+				return d3.select(this).attr("transform") + "scale("+moddedScale+")";
+			});
+
+		svg.selectAll('.city-text')
+			.transition()
+			.duration(that.model.get("zoomPeriod"))
+			.attr("transform",function(d){
+				return d3.select(this).attr("transform") + "scale("+moddedScale+")";
+			});
 
 	},
 
