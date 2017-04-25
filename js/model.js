@@ -13,7 +13,7 @@ MapModel = Backbone.Model.extend({
 		"mapRatio" : "10:8", // Defines the x to y ratio of the map
 		"zoomPeriod" : 750, // time between zoom in/out periods (needed for timeout functions)
 
-		"reservedKeys" : ["lat","lon","segmentation"], // Reserved keys in the current data array
+		"reservedKeys" : ["lat","lon","segmentation","contacts"], // Reserved keys in the current data array
 		"defaultCenter" : [4.8, 47.35], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
 		"deepestLevel" : 2,  // Maximum level that can be drilled to. Is set to 2 for gp and 3 for sp.
@@ -130,36 +130,40 @@ MapModel = Backbone.Model.extend({
 		var data = this.data();
 		var regionsArray = [];
 		for (var key in data) {
-			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
-			if (_this.get("reservedKeys").indexOf(key) === -1) regionsArray.push({
-				lat: data[key].lat,
-				lon: data[key].lon,
-				name: key,
-				level: 0,
-				visits: visits,
-				nonVisits : 100 - visits, 
-				ajout_vm : _this.get("server") ? data[key].segmentation.ajout_vm : Math.floor((Math.random() * 1000) + 1),
-	            geriatrie : _this.get("server") ? data[key].segmentation.geriatrie : Math.floor((Math.random() * 1000) + 1), 
-	            chirugerie : _this.get("server") ?  data[key].segmentation.chirugerie : Math.floor((Math.random() * 1000) + 1),
-	            cardio : _this.get("server") ?  data[key].segmentation.cardio : Math.floor((Math.random() * 1000) + 1),
-	            uro : _this.get("server") ? data[key].segmentation.uro : Math.floor((Math.random() * 1000) + 1),
-	            rhumato : _this.get("server") ? data[key].segmentation.rhumato : Math.floor((Math.random() * 1000) + 1),
-	            douleur : _this.get("server") ?  data[key].segmentation.douleur : Math.floor((Math.random() * 1000) + 1),
-	            urg_anest : _this.get("server") ?  data[key].segmentation.urg_anest : Math.floor((Math.random() * 1000) + 1), 
-	            conquerir : _this.get("server") ?  data[key].segmentation.conquerir : Math.floor((Math.random() * 1000) + 1),
-	            fideliserG : _this.get("server") ? data[key].segmentation.fideliserG : Math.floor((Math.random() * 1000) + 1),
-	            fideliserM : _this.get("server") ?  data[key].segmentation.fideliserM : Math.floor((Math.random() * 1000) + 1),
-	            VIP : _this.get("server") ? data[key].segmentation.VIP : Math.floor((Math.random() * 1000) + 1), 
-	            pharm_hosp : _this.get("server") ? data[key].segmentation.pharm_hosp : Math.floor((Math.random() * 1000) + 1),
-	            arv : _this.get("server") ? data[key].segmentation.arv : Math.floor((Math.random() * 1000) + 1),
-	            muco : _this.get("server") ? data[key].segmentation.muco : Math.floor((Math.random() * 1000) + 1),
-	            gastro : _this.get("server") ? data[key].segmentation.gastro : Math.floor((Math.random() * 1000) + 1),
-				creon: Math.floor((Math.random() * 100) + 51),
-				tarka: Math.floor((Math.random() * 100) + 51),
-				lamaline: Math.floor((Math.random() * 100) + 51),
-				dymista: Math.floor((Math.random() * 100) + 51),
-				ceris: Math.floor((Math.random() * 100) + 51),
-			});
+			if (_this.get("reservedKeys").indexOf(key) === -1) {
+				var visits = _this.get("server") && key !== "SPCorse" ? ((data[key].contacts.visited / data[key].contacts.total) * 100).toFixed(2) : parseFloat((Math.random() * 100 +1).toFixed(2));
+				regionsArray.push({
+					lat: data[key].lat,
+					lon: data[key].lon,
+					name: key,
+					level: 0,
+
+
+					visits: visits,
+					nonVisits : 100 - visits, 
+					ajout_vm : _this.get("server") ? data[key].segmentation.ajout_vm : Math.floor((Math.random() * 1000) + 1),
+		            geriatrie : _this.get("server") ? data[key].segmentation.geriatrie : Math.floor((Math.random() * 1000) + 1), 
+		            chirugerie : _this.get("server") ?  data[key].segmentation.chirugerie : Math.floor((Math.random() * 1000) + 1),
+		            cardio : _this.get("server") ?  data[key].segmentation.cardio : Math.floor((Math.random() * 1000) + 1),
+		            uro : _this.get("server") ? data[key].segmentation.uro : Math.floor((Math.random() * 1000) + 1),
+		            rhumato : _this.get("server") ? data[key].segmentation.rhumato : Math.floor((Math.random() * 1000) + 1),
+		            douleur : _this.get("server") ?  data[key].segmentation.douleur : Math.floor((Math.random() * 1000) + 1),
+		            urg_anest : _this.get("server") ?  data[key].segmentation.urg_anest : Math.floor((Math.random() * 1000) + 1), 
+		            conquerir : _this.get("server") ?  data[key].segmentation.conquerir : Math.floor((Math.random() * 1000) + 1),
+		            fideliserG : _this.get("server") ? data[key].segmentation.fideliserG : Math.floor((Math.random() * 1000) + 1),
+		            fideliserM : _this.get("server") ?  data[key].segmentation.fideliserM : Math.floor((Math.random() * 1000) + 1),
+		            VIP : _this.get("server") ? data[key].segmentation.VIP : Math.floor((Math.random() * 1000) + 1), 
+		            pharm_hosp : _this.get("server") ? data[key].segmentation.pharm_hosp : Math.floor((Math.random() * 1000) + 1),
+		            arv : _this.get("server") ? data[key].segmentation.arv : Math.floor((Math.random() * 1000) + 1),
+		            muco : _this.get("server") ? data[key].segmentation.muco : Math.floor((Math.random() * 1000) + 1),
+		            gastro : _this.get("server") ? data[key].segmentation.gastro : Math.floor((Math.random() * 1000) + 1),
+					creon: Math.floor((Math.random() * 100) + 51),
+					tarka: Math.floor((Math.random() * 100) + 51),
+					lamaline: Math.floor((Math.random() * 100) + 51),
+					dymista: Math.floor((Math.random() * 100) + 51),
+					ceris: Math.floor((Math.random() * 100) + 51),
+				});
+		 	}
 		}
 		return regionsArray;
 	},
@@ -168,45 +172,46 @@ MapModel = Backbone.Model.extend({
 	getSectors:function(){
 		var corsicaFlagRegion = "SPCorse";
 		var corsicaFlagSectors = ["20AJA","20BAS","20CAL","20SAR"];
-
+		var sectorsArray = [];
 		var _this = this;
 		var data = this.data();
 		var region = this.get("currentRegion");
-		var sectorsArray = [];
 		for (var key in data[region]) {
-			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
-			if (_this.get("reservedKeys").indexOf(key) === -1) sectorsArray.push({
-				lat: data[region][key].lat,
-				lon: data[region][key].lon,
-				name: key,
-				level: 1,
-				visits: visits,
-				nonVisits : 100 - visits, 
+			if (_this.get("reservedKeys").indexOf(key) === -1) {
+				var visits = _this.get("server") ? ((data[region][key].contacts.visited / data[region][key].contacts.total) * 100).toFixed(2) : parseFloat((Math.random() * 100 +1).toFixed(2));
+				sectorsArray.push({
+					lat: data[region][key].lat,
+					lon: data[region][key].lon,
+					name: key,
+					level: 1,
+					visits: visits,
+					nonVisits : 100 - visits, 
 
-				ajout_vm : _this.get("server") ? data[region][key].segmentation.ajout_vm : Math.floor((Math.random() * 1000) + 1),
-	            geriatrie : _this.get("server") ? data[region][key].segmentation.geriatrie : Math.floor((Math.random() * 1000) + 1), 
-	            chirugerie : _this.get("server") ?  data[region][key].segmentation.chirugerie : Math.floor((Math.random() * 1000) + 1),
-	            cardio : _this.get("server") ?  data[region][key].segmentation.cardio : Math.floor((Math.random() * 1000) + 1),
-	            uro : _this.get("server") ? data[region][key].segmentation.uro : Math.floor((Math.random() * 1000) + 1),
-	            rhumato : _this.get("server") ? data[region][key].segmentation.rhumato : Math.floor((Math.random() * 1000) + 1),
-	            douleur : _this.get("server") ?  data[region][key].segmentation.douleur : Math.floor((Math.random() * 1000) + 1),
-	            urg_anest : _this.get("server") ?  data[region][key].segmentation.urg_anest : Math.floor((Math.random() * 1000) + 1), 
-	            conquerir : _this.get("server") ?  data[region][key].segmentation.conquerir : Math.floor((Math.random() * 1000) + 1),
-	            fideliserG : _this.get("server") ? data[region][key].segmentation.fideliserG : Math.floor((Math.random() * 1000) + 1),
-	            fideliserM : _this.get("server") ?  data[region][key].segmentation.fideliserM : Math.floor((Math.random() * 1000) + 1),
-	            VIP : _this.get("server") ? data[region][key].segmentation.VIP : Math.floor((Math.random() * 1000) + 1), 
-	            pharm_hosp : _this.get("server") ? data[region][key].segmentation.pharm_hosp : Math.floor((Math.random() * 1000) + 1),
-	            arv : _this.get("server") ? data[region][key].segmentation.arv : Math.floor((Math.random() * 1000) + 1),
-	            muco : _this.get("server") ? data[region][key].segmentation.muco : Math.floor((Math.random() * 1000) + 1),
-	            gastro : _this.get("server") ? data[region][key].segmentation.gastro : Math.floor((Math.random() * 1000) + 1),
+					ajout_vm : _this.get("server") ? data[region][key].segmentation.ajout_vm : Math.floor((Math.random() * 1000) + 1),
+		            geriatrie : _this.get("server") ? data[region][key].segmentation.geriatrie : Math.floor((Math.random() * 1000) + 1), 
+		            chirugerie : _this.get("server") ?  data[region][key].segmentation.chirugerie : Math.floor((Math.random() * 1000) + 1),
+		            cardio : _this.get("server") ?  data[region][key].segmentation.cardio : Math.floor((Math.random() * 1000) + 1),
+		            uro : _this.get("server") ? data[region][key].segmentation.uro : Math.floor((Math.random() * 1000) + 1),
+		            rhumato : _this.get("server") ? data[region][key].segmentation.rhumato : Math.floor((Math.random() * 1000) + 1),
+		            douleur : _this.get("server") ?  data[region][key].segmentation.douleur : Math.floor((Math.random() * 1000) + 1),
+		            urg_anest : _this.get("server") ?  data[region][key].segmentation.urg_anest : Math.floor((Math.random() * 1000) + 1), 
+		            conquerir : _this.get("server") ?  data[region][key].segmentation.conquerir : Math.floor((Math.random() * 1000) + 1),
+		            fideliserG : _this.get("server") ? data[region][key].segmentation.fideliserG : Math.floor((Math.random() * 1000) + 1),
+		            fideliserM : _this.get("server") ?  data[region][key].segmentation.fideliserM : Math.floor((Math.random() * 1000) + 1),
+		            VIP : _this.get("server") ? data[region][key].segmentation.VIP : Math.floor((Math.random() * 1000) + 1), 
+		            pharm_hosp : _this.get("server") ? data[region][key].segmentation.pharm_hosp : Math.floor((Math.random() * 1000) + 1),
+		            arv : _this.get("server") ? data[region][key].segmentation.arv : Math.floor((Math.random() * 1000) + 1),
+		            muco : _this.get("server") ? data[region][key].segmentation.muco : Math.floor((Math.random() * 1000) + 1),
+		            gastro : _this.get("server") ? data[region][key].segmentation.gastro : Math.floor((Math.random() * 1000) + 1),
 
-				creon: Math.floor((Math.random() * 100) + 51),
-				tarka: Math.floor((Math.random() * 100) + 51),
-				lamaline: Math.floor((Math.random() * 100) + 51),
-				dymista: Math.floor((Math.random() * 100) + 51),
-				ceris: Math.floor((Math.random() * 100) + 51),
-				corsicaFlag: (region === corsicaFlagRegion && (corsicaFlagSectors.indexOf(key) !== -1)) ? true : false,
-			});
+					creon: Math.floor((Math.random() * 100) + 51),
+					tarka: Math.floor((Math.random() * 100) + 51),
+					lamaline: Math.floor((Math.random() * 100) + 51),
+					dymista: Math.floor((Math.random() * 100) + 51),
+					ceris: Math.floor((Math.random() * 100) + 51),
+					corsicaFlag: (region === corsicaFlagRegion && (corsicaFlagSectors.indexOf(key) !== -1)) ? true : false,
+				});
+			}
 		}
 		return sectorsArray;
 	},

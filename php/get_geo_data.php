@@ -28,7 +28,7 @@
 	$conn = new mysqli($servername, $username, $password, $dbname);
 
 	// Get the contacts data
-	$records_contacts = sql_contacts_data($dbname, $conn);
+	if ($server) $records_contacts = sql_contacts_data($dbname, $conn);
 
 	// Get segmentation data if we are on the sever
 	if ($server) {

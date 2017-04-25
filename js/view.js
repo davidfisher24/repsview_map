@@ -221,7 +221,6 @@ var MapView = Backbone.View.extend({
 
 			var arc = d3.svg.arc().innerRadius(0).outerRadius(10/currentScale);
 	      	var pie = d3.layout.pie().value(function(d){ return d });
-
 	      	var areas = svg.selectAll('g')
 	      		.data(dataArray)
 				.enter()
