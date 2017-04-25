@@ -27,6 +27,9 @@
 
 	$conn = new mysqli($servername, $username, $password, $dbname);
 
+	// Get the contacts data
+	$records_contacts = sql_contacts_data($dbname, $conn);
+
 	// Get segmentation data if we are on the sever
 	if ($server) {
 		$sql_seg_counts = "count(case when segmentation_terrain = 'Ajout VM' then 1 else null end) as ajout_vm,
@@ -92,15 +95,20 @@
 			if (!array_key_exists($row['region'],$gpData)) $gpData[$row['region']] = array();
 			$gpData[$row['region']]['lat'] = floatval($row['lat']);
 			$gpData[$row['region']]['lon'] = floatval($row['lon']);
-			if ($server) $gpData[$row['region']]['segmentation'] = prepare_segmentation_data($records_seg["GP"]["regions"][$row["region"]]);
+			if ($server) {
+				$gpData[$row['region']]['segmentation'] = prepare_segmentation_data($records_seg["GP"]["regions"][$row["region"]]);
+				$gpData[$row['region']]['contacts'] = $records_contacts["GP"]["regions"][$row["region"]];
+			}
 
 		} else if ($row['uga'] === null) {
 
 			if(!array_key_exists($row['secteur'],$gpData[$row['region']])) $gpData[$row['region']][$row['secteur']] = array();
 			$gpData[$row['region']][$row['secteur']]['lat'] = floatval($row['lat']);
 			$gpData[$row['region']][$row['secteur']]['lon'] = floatval($row['lon']);
-			if ($server) $gpData[$row['region']][$row['secteur']]['segmentation'] = prepare_segmentation_data($records_seg["GP"]["secteurs"][$row["secteur"]]);
-
+			if ($server) {
+				$gpData[$row['region']][$row['secteur']]['segmentation'] = prepare_segmentation_data($records_seg["GP"]["secteurs"][$row["secteur"]]);
+				$gpData[$row['region']][$row['secteur']]['contacts'] = $records_contacts["GP"]["secteurs"][$row["secteur"]];
+			}
 		} else {
 			$gpData[$row['region']][$row['secteur']][$row['uga']] = array(
 				"lat" => floatval($row['lat']),
@@ -120,7 +128,10 @@
 			if (!array_key_exists($row['region'],$spData)) $spData[$row['region']] = array();
 			$spData[$row['region']]['lat'] = floatval($row['lat']);
 			$spData[$row['region']]['lon'] = floatval($row['lon']);
-			if ($server && $row["region"] !== "SPCorse") $spData[$row['region']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["regions"][$row["region"]]);
+			if ($server && $row["region"] !== "SPCorse") {
+				$spData[$row['region']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["regions"][$row["region"]]);
+				$spData[$row['region']]['contacts'] = $records_contacts["SP"]["regions"][$row["region"]];
+			}
 			else if ($server) $spData[$row['region']]['segmentation'] = prepare_fake_corsica_segmentation();
 
 		} else if ($row['ugagroup'] === null && $row['uga'] === null) {
@@ -128,7 +139,10 @@
 			if(!array_key_exists($row['secteur'],$spData[$row['region']])) $spData[$row['region']][$row['secteur']] = array();
 			$spData[$row['region']][$row['secteur']]['lat'] = floatval($row['lat']);
 			$spData[$row['region']][$row['secteur']]['lon'] = floatval($row['lon']);
-			if ($server && $row["region"] !== "SPCorse")  $spData[$row['region']][$row['secteur']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["secteurs"][$row["secteur"]]);
+			if ($server && $row["region"] !== "SPCorse")  {
+				$spData[$row['region']][$row['secteur']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["secteurs"][$row["secteur"]]);
+				$spData[$row['region']][$row['secteur']]['contacts'] = $records_contacts["SP"]["secteurs"][$row["secteur"]];
+			}
 			else if ($server) $spData[$row['region']][$row['secteur']]['segmentation'] = prepare_fake_corsica_segmentation();
 
 		} else if ($row['uga'] === null) {
@@ -152,6 +166,88 @@
 
 	echo json_encode($return_array);
 	die;
+
+
+
+	function sql_contacts_data($dbname, $conn){
+		$gp_contacts = array(
+			"regions" => array(),
+			"secteurs" => array()
+		);
+		$sp_contacts = array(
+			"regions" => array(),
+			"secteurs" => array()
+		);
+
+
+		$query1 = "SELECT cible, region, secteur, count(distinct onekey) as count FROM $dbname.ciblage WHERE freq_terrain > 0 group by secteur";
+		$result1 = $conn->query($query1);
+		while($row = $result1->fetch_assoc()) {
+			if ($row['cible'] && $row['region'] && $row['secteur']) {
+
+				if ($row['cible'] === "MG") {
+					if (!array_key_exists($row["region"], $gp_contacts["regions"])) $gp_contacts["regions"][$row["region"]] = array(
+						"visited" => $row["count"],
+						"total" => 0,
+					);
+					else $gp_contacts["regions"][$row["region"]]["visited"] += intval($row["count"]);
+
+					$gp_contacts["secteurs"][$row['secteur']] = array (
+						"visited" => intval($row['count']),
+					);
+				} else if ($row['cible'] === "SP") {
+					if (!array_key_exists($row["region"], $sp_contacts["regions"])) $sp_contacts["regions"][$row["region"]] = array(
+						"visited" => $row["count"],
+						"total" => 0,
+					);
+					else $sp_contacts["regions"][$row["region"]]["visited"] += intval($row["count"]);
+
+					$sp_contacts["secteurs"][$row['secteur']] = array (
+						"visited" => intval($row['count']),
+					);
+				}
+			}
+		}
+
+		$query2 = "SELECT reseau, region, secteur, count(*) as count FROM $dbname.onekey as main INNER JOIN $dbname.sectorisation as sectors ON main.uga=sectors.uga WHERE main.active = 'Active' and main.s1 = 'SP.WFR.MG' AND main.uga IN (select distinct uga from sectorisation) group by sectors.secteur";
+		$result2 = $conn->query($query2);
+
+		while($row = $result2->fetch_assoc()) {
+			if ($row['reseau'] && $row['region'] && $row['secteur']) {
+				if ($row['reseau'] === "GP") {
+					if (array_key_exists($row["region"], $gp_contacts["regions"])) 
+						$gp_contacts["regions"][$row["region"]]["total"] += $row["count"];
+
+					if (array_key_exists($row["secteur"], $gp_contacts["secteurs"])) 
+						$gp_contacts["secteurs"][$row["secteur"]]["total"] = intval($row["count"]);
+					else $gp_contacts["secteurs"][$row["secteur"]] = array(
+							"visited" => 0,
+							"total" => intval($row["count"])
+						);
+
+				} else if ($row['reseau'] === "SP") {
+					if (array_key_exists($row["region"], $sp_contacts["regions"])) 
+						$sp_contacts["regions"][$row["region"]]["total"] += $row["count"];
+
+					if (array_key_exists($row["secteur"], $sp_contacts["secteurs"])) 
+						$sp_contacts["secteurs"][$row["secteur"]]["total"] = intval($row["count"]);
+					else $sp_contacts["secteurs"][$row["secteur"]] = array(
+							"visited" => 0,
+							"total" => intval($row["count"])
+						);
+				}
+			/* NOTE  SOME SECTORS HAVE NO CONTACTS AND NO ARRAY ADDED AT THAT POINT. SO HERE WE ADD AN EMPTY ARRAY WITH 0 CONTACTS */
+			}
+		}
+
+		return array(
+			"GP" => $gp_contacts,
+			"SP" => $sp_contacts,
+		);
+	}
+
+
+
 
 
 	function prepare_segmentation_data($row){
