@@ -131,7 +131,8 @@ var MapView = Backbone.View.extend({
 			.append("text")
 			.attr("class", "city-text")
 			.attr("font-size",12/currentScale)
-			.attr("transform", function(d,i) {				var target = projection([d.lon,d.lat]);
+			.attr("transform", function(d,i) {				
+				var target = projection([d.lon,d.lat]);
 				return "translate(" + (target[0] + (8/currentScale)) + "," + (target[1] + (8/currentScale)) + ")"; // Square pixels. Width add 1.5
 			})
 			.attr("opacity",function(d){
@@ -744,7 +745,7 @@ var MapView = Backbone.View.extend({
 
 		var currentScale = (svg.attr('transform')) ? svg.attr('transform').split(",")[3].replace(")","") : 1;
 		var scale = 1 / Math.max(dx / this.model.get("width"), dy / this.model.get("height"));
-		var moddedScale = currentScale / scale;
+		
 
 		var translate = [this.model.get("width") / 2 - scale * x, this.model.get("height") / 2 - scale * y];
 		svg.transition()
@@ -758,6 +759,7 @@ var MapView = Backbone.View.extend({
 			.style("stroke-width", 1.5 / scale + "px");
 
 		if (!flagRezoom) return; 
+		var moddedScale = currentScale / scale;
 
 		svg.selectAll('.area-element')
 			.transition()
@@ -770,7 +772,27 @@ var MapView = Backbone.View.extend({
 			.transition()
 			.duration(that.model.get("zoomPeriod"))
 			.attr("transform",function(d){
-				return d3.select(this).attr("transform") + "scale("+moddedScale+")";
+				var originalTranslate = d3.select(this).attr("transform");
+				var translate = originalTranslate.split(",");
+				var xTranslate = parseFloat(translate[0].split("(")[1]);
+				var yTranslate = parseFloat(translate[1].replace(")","") - 8 / moddedScale);
+
+				//var target = projection([d.lon,d.lat]);
+
+				return d3.select(this).attr("transform") + "scale("+moddedScale+")";  // Working with original
+				//return "translate("+xTranslate+","+yTranslate+")scale("+moddedScale+")";  // Problematic
+			});
+
+		svg.selectAll('.city-label')
+			.transition()
+			.duration(that.model.get("zoomPeriod"))
+			.attr("height",function(d){
+				var original = d3.select(this).attr("height");
+				return original * moddedScale;
+			})
+			.attr("width",function(d){
+				var original = d3.select(this).attr("width");
+				return original * moddedScale;
 			});
 
 	},
