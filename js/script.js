@@ -1,7 +1,7 @@
 window.onload = function() {
 
 	// VERSION OPTIONS => "local" or "mylan"
-	var version = "mylan"; 
+	var version = "local"; 
 	var server = version === "mylan" ? true : false;
 
 	function getData(){

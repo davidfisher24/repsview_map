@@ -705,8 +705,10 @@ var MapView = Backbone.View.extend({
 
 
 		var bounds = [[leftBottom[0],leftBottom[1]],[rightTop[0],rightTop[1]]];
-		if (dataArray.length < 3)
+		if (dataArray.length < 3 && !flagRezoom) {
 			bounds = [[bounds[0][0] * 0.8, bounds[0][1] * 0.8],[bounds[1][0] * 1.2,bounds[1][1] * 1.2]];
+		}
+
 
 		var xAxisLength = bounds[1][0] - bounds[0][0];
 		var yAxisLength = bounds[0][1] - bounds[1][1]; 
@@ -745,9 +747,9 @@ var MapView = Backbone.View.extend({
 		var x = (bounds[0][0] + bounds[1][0]) / 2;
 		var y = (bounds[0][1] + bounds[1][1]) / 2;
 
-		var currentScale = (svg.attr('transform')) ? svg.attr('transform').split(",")[3].replace(")","") : 1;
+		var currentScale = (svg.attr('transform')) ? svg.attr('transform').split(",")[3].replace(")","") : 1;		
 		var scale = 1 / Math.max(dx / this.model.get("width"), dy / this.model.get("height"));
-		
+
 
 		var translate = [this.model.get("width") / 2 - scale * x, this.model.get("height") / 2 - scale * y];
 		svg.transition()
