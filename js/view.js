@@ -96,6 +96,7 @@ var MapView = Backbone.View.extend({
 			.scale(this.model.get("defaultScale"));
 		var path = d3.geo.path().projection(projection);
 
+
 		svg.selectAll(".city-label")
 			.data(cities).enter()
 			.append("rect")
@@ -113,7 +114,6 @@ var MapView = Backbone.View.extend({
 			.attr("width", 6/currentScale)
 			.attr("fill", "#2E2E2E")
 			.attr("class", "city-label")
-			/*.attr("stroke", "#3E4551")*/
 			.attr("stroke-width",function(){ return 2/currentScale })
 			.attr("opacity",function(d){
 				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
@@ -126,6 +126,7 @@ var MapView = Backbone.View.extend({
 				}
 			})
 
+
 		svg.selectAll(".city-text")
 			.data(cities).enter()
 			.append("text")
@@ -133,8 +134,10 @@ var MapView = Backbone.View.extend({
 			.attr("font-size",12/currentScale)
 			.attr("transform", function(d,i) {				
 				var target = projection([d.lon,d.lat]);
-				return "translate(" + (target[0] + (8/currentScale)) + "," + (target[1] + (8/currentScale)) + ")"; // Square pixels. Width add 1.5
+				return "translate(" + target[0] + "," + target[1] + ")"; 
 			})
+			.attr("dy", ".7em")
+			.attr("dx", ".7em")
 			.attr("opacity",function(d){
 				var popLimit = parseInt(d.pop) > that.model.get("citiesVisibleLimit");
 				var textO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
@@ -771,17 +774,16 @@ var MapView = Backbone.View.extend({
 		svg.selectAll('.city-text')
 			.transition()
 			.duration(that.model.get("zoomPeriod"))
-			.attr("transform",function(d){
-				var originalTranslate = d3.select(this).attr("transform");
-				var translate = originalTranslate.split(",");
-				var xTranslate = parseFloat(translate[0].split("(")[1]);
-				var yTranslate = parseFloat(translate[1].replace(")","") - 8 / moddedScale);
-
-				//var target = projection([d.lon,d.lat]);
-
-				return d3.select(this).attr("transform") + "scale("+moddedScale+")";  // Working with original
-				//return "translate("+xTranslate+","+yTranslate+")scale("+moddedScale+")";  // Problematic
-			});
+			.attr("font-size",function(d){
+				var original = d3.select(this).attr("font-size");
+				return original * moddedScale;
+			})
+			.attr("dx",function(d){
+				return (0.7 * moddedScale) + "em";
+			})
+			.attr("dy",function(d){
+				return (0.7 * moddedScale) + "em";
+			})
 
 		svg.selectAll('.city-label')
 			.transition()
