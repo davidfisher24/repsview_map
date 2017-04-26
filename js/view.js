@@ -258,16 +258,9 @@ var MapView = Backbone.View.extend({
 					tip.show(d);
 					// Tooltip specific events
 					d3.selectAll("g.slice").on('mouseover', function(d,i) {
-						var label = d3.select(this).attr("class").replace("slice ","");
-						console.log(label);
-						var savedData = that.model.get("tooltipData").filter(function(e){return e.label == label});
-						console.log(savedData);
-						var value = savedData[0].value;
-		                //d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label).style("font-size",14);
-		                d3.select('.tip-pie-hover-label').text(label).style("font-size",14);
+		                d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label).style("font-size",14);
 		                $('.tip-pie-hover-label').removeClass('bolded');
-		                //d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
-		                d3.select('.tip-pie-hover-value').text(value);
+		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
 		            })
 		            .on('mouseleave', function(){
 		            	d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region).style("font-size",function(){
@@ -516,7 +509,7 @@ var MapView = Backbone.View.extend({
 
 
 
-		appendPieChartInToolTip:function(size,d){
+	appendPieChartInToolTip:function(size,d){
 		var region = d.name;
 		var visits = d.visits;
 		var data = [];
@@ -605,7 +598,7 @@ var MapView = Backbone.View.extend({
 			.enter()
 			.append("g")
 			.attr("class", function(d){
-				return "slice " + d.data.label;
+				return "slice";
 			})
 			.append("path")
 			.attr("fill", function(d, i) {
@@ -844,6 +837,8 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	changeNetwork:function(e){
+		var svg = d3.select($("#zoomgroup")[0]);
+		this.removeElementsOnChange(svg);
 		var changeTo = $(e.target).val() === "gp" ? "sp" : "gp";
 		$(e.target).html(changeTo.toUpperCase());
 		$(e.target).val(changeTo);
