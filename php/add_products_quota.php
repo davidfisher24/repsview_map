@@ -5,14 +5,14 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/"."inside/abbott/utils/activitedata.php
 require($_SERVER["DOCUMENT_ROOT"]."/"."inside/abbott/utils/dbconnect.php");
 
 // PRODUCTS
-// CREON // LAMALINE GELULE + IZALGI  // TARKA //TADENAN + EQ THERAPEUTIQUES
+// CREON // LAMALINE GELULE + IZALGI  // TARKA //TADENAN + EQ THERAPEUTIQUES // CERIS // DYMISTA
 
 /* Instructions
 Change $prodget to the name of the product we want to input, and $database_field to it's appropriate column 
 $geo get is taken by the select query, with all the regions we need
 Don't forget to update the time we need before doing this */
-$prodget = "LAMALINE GELULE + IZALGI"; 
-$database_field = "qt_lamaline";
+$prodget = "DYMISTA"; 
+$database_field = "qt_dymista";
 
 $source = "Xponent";
 $timeget = "cm";

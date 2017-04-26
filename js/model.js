@@ -13,7 +13,7 @@ MapModel = Backbone.Model.extend({
 		"mapRatio" : "10:8", // Defines the x to y ratio of the map
 		"zoomPeriod" : 750, // time between zoom in/out periods (needed for timeout functions)
 
-		"reservedKeys" : ["lat","lon","segmentation","contacts"], // Reserved keys in the current data array
+		"reservedKeys" : ["lat","lon","segmentation","contacts","quotas"], // Reserved keys in the current data array
 		"defaultCenter" : [4.8, 47.35], // Default centre (France)
 		"defaultScale" : 2400, // Default scale (France)
 		"deepestLevel" : 2,  // Maximum level that can be drilled to. Is set to 2 for gp and 3 for sp.
@@ -22,7 +22,7 @@ MapModel = Backbone.Model.extend({
 		"pieColors" :  ['#007E33','#CC0000'], // Colours to use in the segments of the pies
 		// bar colour experiments
 		//"barColors" : ["#7cb5ec","#434348","#90ed7d","#f7a35c","#8085e9","#f15c80"], // Stolen from highcharts
-		"barColors" : ['#aa66cc','#4285F4','#00C851','#ffbb33','#ff4444'],  // Lilettes design
+		"barColors" : ['#aa66cc','#4285F4','#00C851','#ffbb33','#ff4444','#90a4ae'],  // Lilettes design
 
 		// Segmentation data parameters for legend and graphic. Labels and colours
 		"pieLegendSegmentation" :  [
@@ -157,11 +157,12 @@ MapModel = Backbone.Model.extend({
 		            arv : _this.get("server") ? data[key].segmentation.arv : Math.floor((Math.random() * 1000) + 1),
 		            muco : _this.get("server") ? data[key].segmentation.muco : Math.floor((Math.random() * 1000) + 1),
 		            gastro : _this.get("server") ? data[key].segmentation.gastro : Math.floor((Math.random() * 1000) + 1),
-					creon: Math.floor((Math.random() * 100) + 51),
-					tarka: Math.floor((Math.random() * 100) + 51),
-					lamaline: Math.floor((Math.random() * 100) + 51),
-					dymista: Math.floor((Math.random() * 100) + 51),
-					ceris: Math.floor((Math.random() * 100) + 51),
+					creon: _this.get("server") ? Math.round(data[key].quotas.creon) : Math.floor((Math.random() * 100) + 51),
+					tarka: _this.get("server") ? Math.round(data[key].quotas.tarka) : Math.floor((Math.random() * 100) + 51),
+					tadenan: _this.get("server") ? Math.round(data[key].quotas.tadenan) : Math.floor((Math.random() * 100) + 51),
+					lamaline: _this.get("server") ? Math.round(data[key].quotas.lamaline) : Math.floor((Math.random() * 100) + 51),
+					dymista: _this.get("server") ? Math.round(data[key].quotas.dymista) : Math.floor((Math.random() * 100) + 51),
+					ceris: _this.get("server") ? Math.round(data[key].quotas.ceris) : Math.floor((Math.random() * 100) + 51),
 				});
 		 	}
 		}
@@ -204,11 +205,13 @@ MapModel = Backbone.Model.extend({
 		            muco : _this.get("server") ? data[region][key].segmentation.muco : Math.floor((Math.random() * 1000) + 1),
 		            gastro : _this.get("server") ? data[region][key].segmentation.gastro : Math.floor((Math.random() * 1000) + 1),
 
-					creon: Math.floor((Math.random() * 100) + 51),
-					tarka: Math.floor((Math.random() * 100) + 51),
-					lamaline: Math.floor((Math.random() * 100) + 51),
-					dymista: Math.floor((Math.random() * 100) + 51),
-					ceris: Math.floor((Math.random() * 100) + 51),
+		            creon: _this.get("server") ? Math.round(data[region][key].quotas.creon) : Math.floor((Math.random() * 100) + 51),
+					tarka: _this.get("server") ? Math.round(data[region][key].quotas.tarka) : Math.floor((Math.random() * 100) + 51),
+					tadenan: _this.get("server") ? Math.round(data[region][key].quotas.tadenan) : Math.floor((Math.random() * 100) + 51),
+					lamaline: _this.get("server") ? Math.round(data[region][key].quotas.lamaline) : Math.floor((Math.random() * 100) + 51),
+					dymista: _this.get("server") ? Math.round(data[region][key].quotas.dymista) : Math.floor((Math.random() * 100) + 51),
+					ceris: _this.get("server") ? Math.round(data[region][key].quotas.ceris) : Math.floor((Math.random() * 100) + 51),
+
 					corsicaFlag: (region === corsicaFlagRegion && (corsicaFlagSectors.indexOf(key) !== -1)) ? true : false,
 				});
 			}
@@ -249,11 +252,12 @@ MapModel = Backbone.Model.extend({
 	            muco : Math.floor((Math.random() * 1000) + 1),
 	            gastro : Math.floor((Math.random() * 1000) + 1),
 
-				creon: Math.floor((Math.random() * 100) + 51),
-				tarka: Math.floor((Math.random() * 100) + 51),
-				lamaline: Math.floor((Math.random() * 100) + 51),
-				dymista: Math.floor((Math.random() * 100) + 51),
-				ceris: Math.floor((Math.random() * 100) + 51),
+	            creon: _this.get("server") ? Math.round(data[region][sector][key].quotas.creon) : Math.floor((Math.random() * 100) + 51),
+				tarka: _this.get("server") ? Math.round(data[region][sector][key].quotas.tarka) : Math.floor((Math.random() * 100) + 51),
+				tadenan: _this.get("server") ? Math.round(data[region][sector][key].quotas.tadenan) : Math.floor((Math.random() * 100) + 51),
+				lamaline: _this.get("server") ? Math.round(data[region][sector][key].quotas.lamaline) : Math.floor((Math.random() * 100) + 51),
+				dymista: _this.get("server") ? Math.round(data[region][sector][key].quotas.dymista) : Math.floor((Math.random() * 100) + 51),
+				ceris: _this.get("server") ? Math.round(data[region][sector][key].quotas.ceris) : Math.floor((Math.random() * 100) + 51),
 			});
 		}
 		return ugaGroupsArray;
@@ -272,6 +276,8 @@ MapModel = Backbone.Model.extend({
 		var level = this.get("network") === "gp" ? 2 : 3;
 
 		for (var key in selectedData) {
+			console.log(key);
+			console.log(selectedData[key].quotas);
 			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
 			if (_this.get("reservedKeys").indexOf(key) === -1) ugasArray.push({
 				lat: selectedData[key].lat,
@@ -298,11 +304,13 @@ MapModel = Backbone.Model.extend({
 	            muco : Math.floor((Math.random() * 1000) + 1),
 	            gastro : Math.floor((Math.random() * 1000) + 1),
 
-				creon: Math.floor((Math.random() * 100) + 51),
-				tarka: Math.floor((Math.random() * 100) + 51),
-				lamaline: Math.floor((Math.random() * 100) + 51),
-				dymista: Math.floor((Math.random() * 100) + 51),
-				ceris: Math.floor((Math.random() * 100) + 51),
+	            creon: _this.get("server") ? Math.round(selectedData[key].quotas.creon) : Math.floor((Math.random() * 100) + 51),
+				tarka: _this.get("server") ? Math.round(selectedData[key].quotas.tarka) : Math.floor((Math.random() * 100) + 51),
+				tadenan: _this.get("server") ? Math.round(selectedData[key].quotas.tadenan) : Math.floor((Math.random() * 100) + 51),
+				lamaline: _this.get("server") ? Math.round(selectedData[key].quotas.lamaline) : Math.floor((Math.random() * 100) + 51),
+				dymista: _this.get("server") ? Math.round(selectedData[key].quotas.dymista) : Math.floor((Math.random() * 100) + 51),
+				ceris: _this.get("server") ? Math.round(selectedData[key].quotas.ceris) : Math.floor((Math.random() * 100) + 51),
+
 			});
 		}
 		return ugasArray;

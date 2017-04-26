@@ -31,6 +31,7 @@
 	if ($server) {
 		$records_contacts = sql_contacts_data($dbname, $conn);
 		$records_seg = sql_segmentation_data($dbname, $conn);
+		$records_quota = sql_quota_data($dbname, $conn);
 	}
 	
 	// GP DATA
@@ -47,6 +48,7 @@
 			if ($server) {
 				$gpData[$row['region']]['segmentation'] = prepare_segmentation_data($records_seg["GP"]["regions"][$row["region"]]);
 				$gpData[$row['region']]['contacts'] = $records_contacts["GP"]["regions"][$row["region"]];
+				$gpData[$row['region']]['quotas'] = $records_quota["region"][$row["region"]];
 			}
 
 		} else if ($row['uga'] === null) {
@@ -57,12 +59,14 @@
 			if ($server) {
 				$gpData[$row['region']][$row['secteur']]['segmentation'] = prepare_segmentation_data($records_seg["GP"]["secteurs"][$row["secteur"]]);
 				$gpData[$row['region']][$row['secteur']]['contacts'] = $records_contacts["GP"]["secteurs"][$row["secteur"]];
+				$gpData[$row['region']][$row['secteur']]['quotas'] = $records_quota["secteur"][$row["secteur"]];
 			}
 		} else {
 			$gpData[$row['region']][$row['secteur']][$row['uga']] = array(
 				"lat" => floatval($row['lat']),
 				"lon" => floatval($row['lon'])
 			);
+			$gpData[$row['region']][$row['secteur']][$row['uga']]["quotas"] = $records_quota["uga"][$row["uga"]];
 		}
 	}
 
@@ -80,8 +84,12 @@
 			if ($server && $row["region"] !== "SPCorse") {
 				$spData[$row['region']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["regions"][$row["region"]]);
 				$spData[$row['region']]['contacts'] = $records_contacts["SP"]["regions"][$row["region"]];
+				$spData[$row['region']]['quotas'] = $records_quota["region"][$row["region"]];
 			}
-			else if ($server) $spData[$row['region']]['segmentation'] = prepare_fake_corsica_segmentation();
+			else if ($server) {
+				$spData[$row['region']]['segmentation'] = prepare_fake_corsica_segmentation();
+				$spData[$row['region']]['quotas'] = $records_quota["secteur"][$row["region"]];
+			}
 
 		} else if ($row['ugagroup'] === null && $row['uga'] === null) {
 
@@ -91,20 +99,26 @@
 			if ($server && $row["region"] !== "SPCorse")  {
 				$spData[$row['region']][$row['secteur']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["secteurs"][$row["secteur"]]);
 				$spData[$row['region']][$row['secteur']]['contacts'] = $records_contacts["SP"]["secteurs"][$row["secteur"]];
+				$spData[$row['region']][$row['secteur']]['quotas'] = $records_quota["secteur"][$row["secteur"]];
 			}
-			else if ($server) $spData[$row['region']][$row['secteur']]['segmentation'] = prepare_fake_corsica_segmentation();
+			else if ($server) {
+				$spData[$row['region']][$row['secteur']]['segmentation'] = prepare_fake_corsica_segmentation();
+				$spData[$row['region']][$row['secteur']]['quotas'] = $records_quota["uga"][$row["secteur"]];
+			}
 
 		} else if ($row['uga'] === null) {
 
 			if(!array_key_exists($row['ugagroup'],$spData[$row['region']][$row['secteur']])) $spData[$row['region']][$row['secteur']][$row['ugagroup']] = array();
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']]['lat'] = floatval($row['lat']);
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']]['lon'] = floatval($row['lon']);
+			$spData[$row['region']][$row['secteur']][$row['ugagroup']]["quotas"] = $records_quota["ugagroupe"][$row["ugagroup"]];
 
 		} else {
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']] = array(
 				"lat" => floatval($row['lat']),
 				"lon" => floatval($row['lon'])
 			);
+			$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']]["quotas"] = $records_quota["uga"][$row["uga"]];
 		}
 	}
 
@@ -250,7 +264,35 @@
 	}
 
 
+	function sql_quota_data($dbname, $conn){
+		$quota_averages = array();
+		$sql_quota_avg = "SELECT geolevel, COUNT(*) as count FROM $dbname.ciblage_external_data group by geolevel";
+		$result_quota_avg = $conn->query($sql_quota_avg);
+		while($row_quota_avg = $result_quota_avg->fetch_assoc()) {
+			$quota_averages[$row_quota_avg["geolevel"]] = 100/$row_quota_avg["count"];
+		}
 
+		$quota_data = array(
+			"region" => array(),
+			"secteur" => array(),
+		);
+
+		$sql_quota = "SELECT * FROM $dbname.ciblage_external_data";
+		$result_quota = $conn->query($sql_quota);
+
+		while($row_quota = $result_quota->fetch_assoc()) {
+			$quota_data[$row_quota['geolevel']][$row_quota["geocode"]] = array(
+				"creon" => (floatVal($row_quota["qt_creon"]) / $quota_averages[$row_quota["geolevel"]]) * 100,
+			    "lamaline" => (floatVal($row_quota["qt_lamaline"]) / $quota_averages[$row_quota["geolevel"]]) * 100,
+			    "tarka" => (floatVal($row_quota["qt_tarka"]) / $quota_averages[$row_quota["geolevel"]]) * 100,
+			    "tadenan" => (floatVal($row_quota["qt_tadenan"]) / $quota_averages[$row_quota["geolevel"]]) * 100,
+			    "ceris" => (floatVal($row_quota["qt_ceris"]) / $quota_averages[$row_quota["geolevel"]]) * 100,
+			    "dymista" => (floatVal($row_quota["qt_dymista"]) / $quota_averages[$row_quota["geolevel"]]) * 100
+			);
+		}
+
+		return $quota_data;
+	}
 
 
 	function prepare_segmentation_data($row){

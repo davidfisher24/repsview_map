@@ -258,9 +258,16 @@ var MapView = Backbone.View.extend({
 					tip.show(d);
 					// Tooltip specific events
 					d3.selectAll("g.slice").on('mouseover', function(d,i) {
-		                d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label).style("font-size",14);
+						var label = d3.select(this).attr("class").replace("slice ","");
+						console.log(label);
+						var savedData = that.model.get("tooltipData").filter(function(e){return e.label == label});
+						console.log(savedData);
+						var value = savedData[0].value;
+		                //d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label).style("font-size",14);
+		                d3.select('.tip-pie-hover-label').text(label).style("font-size",14);
 		                $('.tip-pie-hover-label').removeClass('bolded');
-		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
+		                //d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
+		                d3.select('.tip-pie-hover-value').text(value);
 		            })
 		            .on('mouseleave', function(){
 		            	d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region).style("font-size",function(){
@@ -328,12 +335,17 @@ var MapView = Backbone.View.extend({
 		// RANDOM DATA PARSING
 		// NEEDS TO COME OUT IN THE CORRECT FORMAT {name, label,value}
 		var data = [];
-		var products = ["creon","tarka","lamaline","dymista","ceris"];
-		products.sort(function() {
+		var products = ["creon","tarka","lamaline","dymista","ceris","tadenan"];
+		// LOCAL
+		/*products.sort(function() {
 		  return .5 - Math.random();
 		});
 		var dynamicNumber = Math.floor(Math.random() * 3) + 3;
 		for (var i=0; i < dynamicNumber; i++) {
+			data.push({name:products[i], value:dataForRegion[products[i]], label: products[i].toUpperCase().substr(0,5)});
+		}*/
+		// SERVER
+		for (var i=0; i < products.length; i++) {
 			data.push({name:products[i], value:dataForRegion[products[i]], label: products[i].toUpperCase().substr(0,5)});
 		}
 
@@ -381,6 +393,7 @@ var MapView = Backbone.View.extend({
 		      .attr("dx","-0.5em")
 		      .attr("class",'bar-chart-text')
 		      .style("font-size",function(d){
+		      	if (data.length === 6) return 10;
 		      	if (data.length === 5) return 12;
 		      	if (data.length === 4) return 14;
 		      	if (data.length === 3) return 16;
@@ -462,6 +475,7 @@ var MapView = Backbone.View.extend({
 		      	return d.value <= dataMin ? "#333333" : "#f9f9f9";
 		      })
 		      .attr("font-size",function(d){
+		      	if (data.length === 6) return 10;
 		      	if (data.length === 5) return 12;
 		      	if (data.length === 4) return 14;
 		      	if (data.length === 3) return 16;
@@ -469,6 +483,7 @@ var MapView = Backbone.View.extend({
 		      .attr("y", function(d) { 
 		      	// Looks at the font-size above. Outide the bar: Line + 4px of margin. Inside the bar: reduce the height of the font and 2px margin
 		      	var fontSize;
+		      	if (data.length === 6) fontSize = 10;
 		      	if (data.length === 5) fontSize = 12;
 		      	if (data.length === 4) fontSize = 14;
 		      	if (data.length === 3) fontSize = 16;
@@ -589,7 +604,9 @@ var MapView = Backbone.View.extend({
 			})
 			.enter()
 			.append("g")
-			.attr("class", "slice")
+			.attr("class", function(d){
+				return "slice " + d.data.label;
+			})
 			.append("path")
 			.attr("fill", function(d, i) {
 				var color = legend.filter(function(l){ 
