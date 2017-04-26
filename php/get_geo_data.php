@@ -217,7 +217,6 @@
 
 		$sql_seg_1 = "SELECT cible, region, " . $sql_seg_counts . " FROM $dbname.ciblage GROUP BY cible, region";
 		$sql_seg_2 = "SELECT cible, region, secteur, " . $sql_seg_counts . " FROM $dbname.ciblage GROUP BY cible, region, secteur";
-
 		
 		$records_seg = array(
 			"GP" => array(

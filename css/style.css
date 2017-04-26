@@ -69,6 +69,15 @@
   font-weight:700;
 }
 
+/* Title at the top of the information bar chart*/
+#informationPanelTitle {
+  font-family: "lucinda_grande";
+  font-weight: 700;
+  font-size: 0.9em;
+  text-align:center;
+}
+
+
 /* Fonts on the bar char text */
 .bar-chart-text {
    font-family: "lucinda_grande";

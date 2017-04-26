@@ -28,20 +28,8 @@ var MapView = Backbone.View.extend({
 		
 
 		var svg = d3.json("./geoJson/FRA_adm2.json", function(json) {
-		//d3.csv("./geoJson/FRA_adm4.csv", function(data) {
-	  	//d3.json("./geoJson/FRA_adm4.json", function(json2){
 
 			var regions = topojson.feature(json, json.objects.FRA_adm2);
-			/*var cities = topojson.feature(json2, json2.objects.FRA_adm4);
-			cities.features = cities.features.filter(function(e,i){
-				e.properties.flagCity = true;
-				e.properties.name = data[i].NAME_3;
-	  			return testCities.indexOf(data[i].NAME_3) !== -1 && data[i].NAME_4.search(data[i].NAME_3) !== -1;
-	  		})
-	  		console.log(cities)
-			cities.features.forEach(function(el){
-				regions.features.push(el);
-			})*/
 
 			svg = d3.select("#map")
 				.append("svg")
@@ -67,17 +55,13 @@ var MapView = Backbone.View.extend({
 				.style("stroke-width", "0.5px")
 				.attr("class","stroke-path")
 				.style("fill",function(d,i){
-					//return " #5bc0de";
-					return d.properties.flagCity ? "white" : that.model.get("mapFill");
+					return that.model.get("mapFill");
 				})
 				.style("stroke", function(d,i){
-					//return "#f9f9f9";
-					return d.properties.flagCity ? "#cccccc" : that.model.get("mapStroke");
+					return that.model.get("mapStroke");
 				})
 
 			that.drawRegions(true);
-		//});
-		//});
 		});
 	},
 
@@ -254,10 +238,17 @@ var MapView = Backbone.View.extend({
 					var centreAxisVertical = elementSpace.top + ((elementSpace.bottom - elementSpace.top)/2);
 					var centreAxisHorizontal = elementSpace.left + ((elementSpace.right - elementSpace.left)/2);
 					var tooltipOffset = that.model.get("tooltipOffsetPosition");
-					if (tooltipOffset === 'top' && d3.event.y > centreAxisVertical) tip.hide(d);
-					if (tooltipOffset === 'bottom' && d3.event.y < centreAxisVertical) tip.hide(d);
-					if (tooltipOffset === 'left' && d3.event.x > centreAxisHorizontal) tip.hide(d);
-					if (tooltipOffset === 'right' && d3.event.x < centreAxisHorizontal) tip.hide(d);
+
+					var flagOut = null;
+					if (tooltipOffset === 'top' && d3.event.y > centreAxisVertical) flagOut = true;
+					if (tooltipOffset === 'bottom' && d3.event.y < centreAxisVertical) flagOut = true;
+					if (tooltipOffset === 'left' && d3.event.x > centreAxisHorizontal) flagOut = true;
+					if (tooltipOffset === 'right' && d3.event.x < centreAxisHorizontal) flagOut = true;
+					if (flagOut) {
+						tip.hide(d);
+						that.resetElementsOnHoverOut(svg);
+					}
+					
 				}) 
 				.on('mouseenter', function(d){
 					if(that.model.get("modificationModeOn")) return;
@@ -272,7 +263,10 @@ var MapView = Backbone.View.extend({
 		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[i].value);
 		            })
 		            .on('mouseleave', function(){
-		            	d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region).style("font-size",16);
+		            	d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region).style("font-size",function(){
+		            		var name = that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].region;
+		            		return name.length > 6 ? 14 : 16;
+		            	});
 		            	$('.tip-pie-hover-label').addClass('bolded');
 		                d3.select('.tip-pie-hover-value').text(that.model.get("tooltipData")[that.model.get("tooltipData").length - 1].visits + "%");
 		            });
@@ -331,7 +325,6 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	appendBarChartInToolTip:function(size,dataForRegion){
-
 		// RANDOM DATA PARSING
 		// NEEDS TO COME OUT IN THE CORRECT FORMAT {name, label,value}
 		var data = [];
@@ -423,6 +416,7 @@ var MapView = Backbone.View.extend({
 		            .attr("y1", y(line))
 		            .attr("x2", size)
 		            .attr("y2", y(line))
+		            .attr("class", "bar-line-point")
 		            .attr("stroke-width", function(d,i){
 		            	return line === 100 ? 2 : 2;
 		            })
@@ -487,13 +481,21 @@ var MapView = Backbone.View.extend({
 			  .attr("class","bar-chart-text")
 
 			// CSS MODS - hide the tick marks, and change the 100 marker for a bold red marker
-			$('.tick line').hide();
+			$('.tick line').hide(); // Hide the tick lines we don't need
 			$('.y text').filter(function(i,e){
 				return e.innerHTML === "100"
 			}).css({
 				"fill": "#d9534f", "color": "#d9534f", "font-weight" : "700"
-			})
+			}) // Change the 100 marker for red
 
+			if ($('.y .tick').last().offset().top - $('#informationPanel').offset().top < 4) {
+				$('.y .tick').last().hide();
+				$('.bar-line-point').last().hide();
+			} // hide the top line if it is too close to the top
+
+			// Add a title to the extra div above the bar chart
+			var regionName = dataForRegion.name.length === 2 ? "Region " + dataForRegion.name : dataForRegion.name;
+			$('#informationPanelTitle').html('Quota Data - ' + regionName);
 
 	},
 
@@ -566,7 +568,9 @@ var MapView = Backbone.View.extend({
 			.style("fill", "none")
 			.style("stroke", "#DDDDDD")
 			.style("text-anchor","middle")
-			.style("font-size",16)
+			.style("font-size",function(d){
+				return region.length > 6 ? 14 : 16;
+			})
 
 		var centreValue = d3.select(".tooltip-canvas")
 			.append("text")
@@ -667,6 +671,13 @@ var MapView = Backbone.View.extend({
 		if ($('.tooltip-canvas').length !== 0) d3.selectAll(".tooltip-canvas").remove();
 		if ($('.d3-tip').length !== 0) d3.selectAll(".d3-tip").remove();
 		$('#informationPanel').html(this.model.get("infoPanelDefault"));
+		$('#informationPanelTitle').html('');
+	},
+
+	resetElementsOnHoverOut:function(svg){
+		$('#informationPanel').html(this.model.get("infoPanelDefault"));
+		$('#informationPanelTitle').html('')
+		$('#segmentationLegend').html('')
 	},
 
 
@@ -705,9 +716,10 @@ var MapView = Backbone.View.extend({
 
 
 		var bounds = [[leftBottom[0],leftBottom[1]],[rightTop[0],rightTop[1]]];
-		if (dataArray.length < 3 && !flagRezoom) {
+		if (dataArray.length < 3 && !flagRezoom) 
 			bounds = [[bounds[0][0] * 0.8, bounds[0][1] * 0.8],[bounds[1][0] * 1.2,bounds[1][1] * 1.2]];
-		}
+		if (dataArray.length === 1 && flagRezoom) 
+			bounds = [[bounds[0][0] * 0.95, bounds[0][1] * 0.95],[bounds[1][0] * 1.05,bounds[1][1] * 1.05]];
 
 
 		var xAxisLength = bounds[1][0] - bounds[0][0];
@@ -749,6 +761,8 @@ var MapView = Backbone.View.extend({
 
 		var currentScale = (svg.attr('transform')) ? svg.attr('transform').split(",")[3].replace(")","") : 1;		
 		var scale = 1 / Math.max(dx / this.model.get("width"), dy / this.model.get("height"));
+		console.log(currentScale);
+		console.log(scale);
 
 
 		var translate = [this.model.get("width") / 2 - scale * x, this.model.get("height") / 2 - scale * y];
