@@ -66,6 +66,7 @@
 				"lat" => floatval($row['lat']),
 				"lon" => floatval($row['lon'])
 			);
+			$gpData[$row['region']][$row['secteur']][$row['uga']]['segmentation'] = prepare_segmentation_data($records_seg["GP"]["ugas"][$row["uga"]]);
 			$gpData[$row['region']][$row['secteur']][$row['uga']]["quotas"] = $records_quota["uga"][$row["uga"]];
 		}
 	}
@@ -111,6 +112,12 @@
 			if(!array_key_exists($row['ugagroup'],$spData[$row['region']][$row['secteur']])) $spData[$row['region']][$row['secteur']][$row['ugagroup']] = array();
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']]['lat'] = floatval($row['lat']);
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']]['lon'] = floatval($row['lon']);
+			/// EXCEPTION
+			if (array_key_exists($row["ugagroup"],$records_seg["SP"]["ugagroups"]))
+				$spData[$row['region']][$row['secteur']][$row['ugagroup']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["ugagroups"][$row["ugagroup"]]);
+			else
+				$spData[$row['region']][$row['secteur']][$row['ugagroup']]['segmentation'] = prepare_fake_corsica_segmentation();
+
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']]["quotas"] = $records_quota["ugagroupe"][$row["ugagroup"]];
 
 		} else {
@@ -118,6 +125,12 @@
 				"lat" => floatval($row['lat']),
 				"lon" => floatval($row['lon'])
 			);
+			/// EXCEPTION
+			if (array_key_exists($row["uga"],$records_seg["SP"]["ugas"]))
+				$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["ugas"][$row["uga"]]);
+			else
+				$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']]['segmentation'] = prepare_fake_corsica_segmentation();
+				
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']]["quotas"] = $records_quota["uga"][$row["uga"]];
 		}
 	}
@@ -231,15 +244,20 @@
 
 		$sql_seg_1 = "SELECT cible, region, " . $sql_seg_counts . " FROM $dbname.ciblage GROUP BY cible, region";
 		$sql_seg_2 = "SELECT cible, region, secteur, " . $sql_seg_counts . " FROM $dbname.ciblage GROUP BY cible, region, secteur";
+		$sql_seg_3 = "SELECT cible, region, secteur, ugagroupe, " . $sql_seg_counts . " FROM $dbname.ciblage GROUP BY cible, region, secteur, ugagroupe";
+		$sql_seg_4 = "SELECT cible, region, secteur, ugagroupe, uga, " . $sql_seg_counts . " FROM $dbname.ciblage GROUP BY cible, region, secteur, ugagroupe, uga";
 		
 		$records_seg = array(
 			"GP" => array(
 				"regions" => array(),
 				"secteurs" => array(),
+				"ugas" => array(),
 			),
 			"SP" => array(
 				"regions" => array(),
 				"secteurs" => array(),
+				"ugagroups" => array(),
+				"ugas" => array(),
 			)
 			
 		);
@@ -257,6 +275,21 @@
 			if ($row_seg_2["cible"] && $row_seg_2["region"] && $row_seg_2["secteur"]) {
 				if ($row_seg_2["cible"] === "MG") $records_seg["GP"]["secteurs"][$row_seg_2["secteur"]] = $row_seg_2;
 				if ($row_seg_2["cible"] === "SP") $records_seg["SP"]["secteurs"][$row_seg_2["secteur"]] = $row_seg_2;
+			}
+		}
+
+		$result_seg_3 = $conn->query($sql_seg_3);
+		while($row_seg_3 = $result_seg_3->fetch_assoc()) {
+			if ($row_seg_3["cible"] && $row_seg_3["region"] && $row_seg_3["secteur"] && $row_seg_3["ugagroupe"]) {
+				if ($row_seg_3["cible"] === "SP") $records_seg["SP"]["ugagroups"][$row_seg_3["ugagroupe"]] = $row_seg_3;
+			}
+		}
+
+		$result_seg_4 = $conn->query($sql_seg_4);
+		while($row_seg_4 = $result_seg_4->fetch_assoc()) {
+			if ($row_seg_4["cible"] && $row_seg_4["region"] && $row_seg_4["secteur"] && $row_seg_4["uga"]) {
+				if ($row_seg_4["cible"] === "MG") $records_seg["GP"]["ugas"][$row_seg_4["uga"]] = $row_seg_4;
+				if ($row_seg_4["cible"] === "SP") $records_seg["SP"]["ugas"][$row_seg_4["uga"]] = $row_seg_4;
 			}
 		}
 
