@@ -27,61 +27,10 @@
 
 	$conn = new mysqli($servername, $username, $password, $dbname);
 
-	// Get the contacts data
-	if ($server) $records_contacts = sql_contacts_data($dbname, $conn);
-
-	// Get segmentation data if we are on the sever
+	// Get sq data if we are on the server
 	if ($server) {
-		$sql_seg_counts = "count(case when segmentation_terrain = 'Ajout VM' then 1 else null end) as ajout_vm,
-		count(case when segmentation_terrain = 'Gériatrie' then 1 else null end) as geriatrie,
-		count(case when segmentation_terrain = 'Chirurgie' then 1 else null end) as chirugerie,
-		count(case when segmentation_terrain = 'Cardio' then 1 else null end) as cardio,
-		count(case when segmentation_terrain = 'Uro' then 1 else null end) as uro,
-		count(case when segmentation_terrain = 'Rhumato' then 1 else null end) as rhumato,
-		count(case when segmentation_terrain = 'Douleur' then 1 else null end) as douleur,
-		count(case when segmentation_terrain = 'Urg Anest' then 1 else null end) as urg_anest,
-		count(case when segmentation_terrain = 'Conquérir' then 1 else null end) as conquerir,
-		count(case when segmentation_terrain = 'FidéliserG' then 1 else null end) as fideliserG,
-		count(case when segmentation_terrain = 'FidéliserM' then 1 else null end) as fideliserM,
-		count(case when segmentation_terrain = 'VIP' then 1 else null end) as VIP,
-		count(case when segmentation_terrain = 'Pharm Hosp' then 1 else null end) as pharm_hosp,
-		count(case when segmentation_terrain = 'ARV' then 1 else null end) as arv,
-		count(case when segmentation_terrain = 'Muco' then 1 else null end) as muco,
-		count(case when segmentation_terrain = 'Gastro' then 1 else null end) as gastro";
-
-		$sql_seg_1 = "SELECT cible, region, " . $sql_seg_counts . " FROM $dbname.ciblage GROUP BY cible, region";
-		$sql_seg_2 = "SELECT cible, region, secteur, " . $sql_seg_counts . " FROM $dbname.ciblage GROUP BY cible, region, secteur";
-
-		
-		$records_seg = array(
-			"GP" => array(
-				"regions" => array(),
-				"secteurs" => array(),
-			),
-			"SP" => array(
-				"regions" => array(),
-				"secteurs" => array(),
-			)
-			
-		);
-
-		$result_seg_1 = $conn->query($sql_seg_1);
-		while($row_seg_1 = $result_seg_1->fetch_assoc()) {
-			if ($row_seg_1["cible"] && $row_seg_1["region"]) {
-				if ($row_seg_1["cible"] === "MG") $records_seg["GP"]["regions"][$row_seg_1["region"]] = $row_seg_1;
-				if ($row_seg_1["cible"] === "SP") $records_seg["SP"]["regions"][$row_seg_1["region"]] = $row_seg_1;
-			}
-		}
-
-		$result_seg_2 = $conn->query($sql_seg_2);
-		while($row_seg_2 = $result_seg_2->fetch_assoc()) {
-			if ($row_seg_2["cible"] && $row_seg_2["region"] && $row_seg_2["secteur"]) {
-				if ($row_seg_2["cible"] === "MG") $records_seg["GP"]["secteurs"][$row_seg_2["secteur"]] = $row_seg_2;
-				if ($row_seg_2["cible"] === "SP") $records_seg["SP"]["secteurs"][$row_seg_2["secteur"]] = $row_seg_2;
-			}
-		}
-
-
+		$records_contacts = sql_contacts_data($dbname, $conn);
+		$records_seg = sql_segmentation_data($dbname, $conn);
 	}
 	
 	// GP DATA
@@ -244,6 +193,61 @@
 			"GP" => $gp_contacts,
 			"SP" => $sp_contacts,
 		);
+	}
+
+
+
+	function sql_segmentation_data($dbname, $conn){
+		$sql_seg_counts = "count(case when segmentation_terrain = 'Ajout VM' then 1 else null end) as ajout_vm,
+		count(case when segmentation_terrain = 'Gériatrie' then 1 else null end) as geriatrie,
+		count(case when segmentation_terrain = 'Chirurgie' then 1 else null end) as chirugerie,
+		count(case when segmentation_terrain = 'Cardio' then 1 else null end) as cardio,
+		count(case when segmentation_terrain = 'Uro' then 1 else null end) as uro,
+		count(case when segmentation_terrain = 'Rhumato' then 1 else null end) as rhumato,
+		count(case when segmentation_terrain = 'Douleur' then 1 else null end) as douleur,
+		count(case when segmentation_terrain = 'Urg Anest' then 1 else null end) as urg_anest,
+		count(case when segmentation_terrain = 'Conquérir' then 1 else null end) as conquerir,
+		count(case when segmentation_terrain = 'FidéliserG' then 1 else null end) as fideliserG,
+		count(case when segmentation_terrain = 'FidéliserM' then 1 else null end) as fideliserM,
+		count(case when segmentation_terrain = 'VIP' then 1 else null end) as VIP,
+		count(case when segmentation_terrain = 'Pharm Hosp' then 1 else null end) as pharm_hosp,
+		count(case when segmentation_terrain = 'ARV' then 1 else null end) as arv,
+		count(case when segmentation_terrain = 'Muco' then 1 else null end) as muco,
+		count(case when segmentation_terrain = 'Gastro' then 1 else null end) as gastro";
+
+		$sql_seg_1 = "SELECT cible, region, " . $sql_seg_counts . " FROM $dbname.ciblage GROUP BY cible, region";
+		$sql_seg_2 = "SELECT cible, region, secteur, " . $sql_seg_counts . " FROM $dbname.ciblage GROUP BY cible, region, secteur";
+
+		
+		$records_seg = array(
+			"GP" => array(
+				"regions" => array(),
+				"secteurs" => array(),
+			),
+			"SP" => array(
+				"regions" => array(),
+				"secteurs" => array(),
+			)
+			
+		);
+
+		$result_seg_1 = $conn->query($sql_seg_1);
+		while($row_seg_1 = $result_seg_1->fetch_assoc()) {
+			if ($row_seg_1["cible"] && $row_seg_1["region"]) {
+				if ($row_seg_1["cible"] === "MG") $records_seg["GP"]["regions"][$row_seg_1["region"]] = $row_seg_1;
+				if ($row_seg_1["cible"] === "SP") $records_seg["SP"]["regions"][$row_seg_1["region"]] = $row_seg_1;
+			}
+		}
+
+		$result_seg_2 = $conn->query($sql_seg_2);
+		while($row_seg_2 = $result_seg_2->fetch_assoc()) {
+			if ($row_seg_2["cible"] && $row_seg_2["region"] && $row_seg_2["secteur"]) {
+				if ($row_seg_2["cible"] === "MG") $records_seg["GP"]["secteurs"][$row_seg_2["secteur"]] = $row_seg_2;
+				if ($row_seg_2["cible"] === "SP") $records_seg["SP"]["secteurs"][$row_seg_2["secteur"]] = $row_seg_2;
+			}
+		}
+
+		return $records_seg;
 	}
 
 
