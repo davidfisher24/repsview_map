@@ -325,22 +325,22 @@ var MapView = Backbone.View.extend({
 	//-----------------------------------------------------------------------------------------------------
 
 	appendBarChartInToolTip:function(size,dataForRegion){
-		// RANDOM DATA PARSING
-		// NEEDS TO COME OUT IN THE CORRECT FORMAT {name, label,value}
 		var data = [];
 		var products = ["creon","tarka","lamaline","dymista","ceris","tadenan"];
-		// LOCAL
-		/*products.sort(function() {
-		  return .5 - Math.random();
-		});
-		var dynamicNumber = Math.floor(Math.random() * 3) + 3;
-		for (var i=0; i < dynamicNumber; i++) {
-			data.push({name:products[i], value:dataForRegion[products[i]], label: products[i].toUpperCase().substr(0,5)});
-		}*/
-		// SERVER
-		for (var i=0; i < products.length; i++) {
-			data.push({name:products[i], value:dataForRegion[products[i]], label: products[i].toUpperCase().substr(0,5)});
+		if (this.model.get("server")) {
+			for (var i=0; i < products.length; i++) {
+				data.push({name:products[i], value:dataForRegion.quotas[products[i]], label: products[i].toUpperCase().substr(0,5)});
+			}
+		} else {
+			products.sort(function() {
+			  return .5 - Math.random();
+			});
+			var dynamicNumber = Math.floor(Math.random() * 3) + 3;
+			for (var i=0; i < dynamicNumber; i++) {
+				data.push({name:products[i], value:dataForRegion.quotas[products[i]], label: products[i].toUpperCase().substr(0,5)});
+			}
 		}
+		
 
 		// Define colours and margin and minimum and maximum values
 		var colors = this.model.get("barColors");
@@ -514,11 +514,16 @@ var MapView = Backbone.View.extend({
 		var visits = d.visits;
 		var data = [];
 
+		// TO BE MODDED. WHAT DO WE DO WITH NO DATA
+		if (d.segmentation === null) {
+			return;
+		}
+
 		this.model.get("pieLegendSegmentation").forEach(function(seg){
 			if (seg.measure !== "autres") {
 				data.push({
 					label: seg.label,
-					value: d[seg.measure],
+					value: d.segmentation[seg.measure],
 					legendLabel: seg.legendLabel,
 				})
 			}

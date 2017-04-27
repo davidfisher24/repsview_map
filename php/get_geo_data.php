@@ -116,7 +116,7 @@
 			if (array_key_exists($row["ugagroup"],$records_seg["SP"]["ugagroups"]))
 				$spData[$row['region']][$row['secteur']][$row['ugagroup']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["ugagroups"][$row["ugagroup"]]);
 			else
-				$spData[$row['region']][$row['secteur']][$row['ugagroup']]['segmentation'] = prepare_fake_corsica_segmentation();
+				$spData[$row['region']][$row['secteur']][$row['ugagroup']]['segmentation'] = null;
 
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']]["quotas"] = $records_quota["ugagroupe"][$row["ugagroup"]];
 
@@ -129,7 +129,7 @@
 			if (array_key_exists($row["uga"],$records_seg["SP"]["ugas"]))
 				$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["ugas"][$row["uga"]]);
 			else
-				$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']]['segmentation'] = prepare_fake_corsica_segmentation();
+				$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']]['segmentation'] = null;
 				
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']]["quotas"] = $records_quota["uga"][$row["uga"]];
 		}
