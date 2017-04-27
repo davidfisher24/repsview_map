@@ -125,8 +125,11 @@
 			// LON
 			$spData[$row['region']][$row['secteur']]['lon'] = floatval($row['lon']);
 			if ($server && $row["region"] !== "SPCorse")  {
-				// SEGMENTATION
-				$spData[$row['region']][$row['secteur']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["secteurs"][$row["secteur"]]);
+				// SEGMENTAION - POSSIBILITY OF NULL
+				if (array_key_exists($row["secteur"],$records_seg["SP"]["secteurs"]))
+					$spData[$row['region']][$row['secteur']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["secteurs"][$row["secteur"]]);
+				else 
+					$spData[$row['region']][$row['secteur']]['segmentation'] = null;
 				// CONTACTS
 				$spData[$row['region']][$row['secteur']]['contacts'] = $records_contacts["SP"]["secteurs"][$row["secteur"]];
 				// QUOTAS

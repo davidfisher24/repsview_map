@@ -23,10 +23,6 @@ var MapView = Backbone.View.extend({
 	renderMap: function() {
 		var that = this;
 
-		
-		var testCities = ["Lyon","Marseille","Nantes","Nancy","Toulouse"];
-		
-
 		var svg = d3.json("./geoJson/FRA_adm2.json", function(json) {
 
 			var regions = topojson.feature(json, json.objects.FRA_adm2);
@@ -798,8 +794,6 @@ var MapView = Backbone.View.extend({
 
 		var currentScale = (svg.attr('transform')) ? svg.attr('transform').split(",")[3].replace(")","") : 1;		
 		var scale = 1 / Math.max(dx / this.model.get("width"), dy / this.model.get("height"));
-		console.log(currentScale);
-		console.log(scale);
 
 
 		var translate = [this.model.get("width") / 2 - scale * x, this.model.get("height") / 2 - scale * y];

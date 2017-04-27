@@ -75,10 +75,15 @@ MapModel = Backbone.Model.extend({
 	},
 
 	initialize:function(options){
+		// Ratio is defined above
 		var mapRatio = parseInt(this.get("mapRatio").split(":")[1]) / 10;
-
+		// Width comes from the width of the dic we have via jquery
 		this.set("width",options.mapWidth);
+		// Height is width * by the ratio defined
 		this.set("height",options.mapWidth * mapRatio);
+		// The default scale is set as triple the defined with
+		this.set("defaultScale",options.mapWidth * 3);
+
 		this.set("gpdata",options.gpdata);
 		this.set("spdata",options.spdata);
 		this.set("server",options.server);
