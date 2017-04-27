@@ -516,18 +516,19 @@ var MapView = Backbone.View.extend({
 
 		// TO BE MODDED. WHAT DO WE DO WITH NO DATA
 		if (d.segmentation === null) {
-			return;
 		}
 
-		this.model.get("pieLegendSegmentation").forEach(function(seg){
-			if (seg.measure !== "autres") {
-				data.push({
-					label: seg.label,
-					value: d.segmentation[seg.measure],
-					legendLabel: seg.legendLabel,
-				})
-			}
-		});
+		if (d.segmentation) {
+	 		this.model.get("pieLegendSegmentation").forEach(function(seg){
+				if (seg.measure !== "autres") {
+					data.push({
+						label: seg.label,
+						value: d.segmentation[seg.measure],
+						legendLabel: seg.legendLabel,
+					})
+				}
+			});
+	 	}
 		/* Adding orders and sorting data */
 		var total = 0;
 		var autres = {label:"Autres",value:0,legendLabel:"Autres"};
@@ -555,7 +556,6 @@ var MapView = Backbone.View.extend({
 		});
 
 		var radius = size/2;
-		//var arc = d3.svg.arc().innerRadius(radius * 0.45).outerRadius(radius * 0.9); 
 		var arc = d3.svg.arc().innerRadius(radius * 0.5).outerRadius(radius * 1); 
 		var pie = d3.layout.pie().value(function(d) { return d.value; }).sort(null);
 
@@ -575,7 +575,10 @@ var MapView = Backbone.View.extend({
 		var centreLabel = d3.select(".tooltip-canvas")
 			.append("text")
 			.attr("x", radius)
-			.attr("y", radius * 0.975)
+			.attr("y", function(){
+				if (d.segmentation) return radius * 0.975;
+				else return radius * 0.8;
+			})
 			.text(region)
 			.attr("class","tip-pie-hover-label bolded")
 			.style("fill", "none")
@@ -588,7 +591,10 @@ var MapView = Backbone.View.extend({
 		var centreValue = d3.select(".tooltip-canvas")
 			.append("text")
 			.attr("x", radius)
-			.attr("y", radius * 1.2)
+			.attr("y", function(){
+				if(d.segmentation) return radius * 1.2;
+				else return radius;
+			})
 			.text(visits + "%")
 			.attr("class","tip-pie-hover-value")
 			.style("fill", "none")
@@ -596,30 +602,53 @@ var MapView = Backbone.View.extend({
 			.style("text-anchor","middle")
 			.style("font-size",12);
 
-		var arcs = tooltipElement.selectAll("g.slice")
-			.data(function(d){
-				return pie(data);
-			})
-			.enter()
-			.append("g")
-			.attr("class", function(d){
-				return "slice";
-			})
-			.append("path")
-			.attr("fill", function(d, i) {
-				var color = legend.filter(function(l){ 
-					return l.label == d.data.label;
-				});
-				d.data.color = color[0].color;
-				return color[0].color;
-			})
-			.attr("d", arc);
+		if (d.segmentation) {
+			var arcs = tooltipElement.selectAll("g.slice")
+				.data(function(d){
+					return pie(data);
+				})
+				.enter()
+				.append("g")
+				.attr("class", function(d){
+					return "slice";
+				})
+				.append("path")
+				.attr("fill", function(d, i) {
+					var color = legend.filter(function(l){ 
+						return l.label == d.data.label;
+					});
+					d.data.color = color[0].color;
+					return color[0].color;
+				})
+				.attr("d", arc);
 
-		var eventStorageData = data;
-		eventStorageData.push({region: region, visits: visits});
-		this.model.set("tooltipData",eventStorageData);
-		$('#segmentationLegend').html('');
-		this.appendSegmentationLegend(data);
+			var eventStorageData = data;
+			eventStorageData.push({region: region, visits: visits});
+			this.model.set("tooltipData",eventStorageData);
+			$('#segmentationLegend').html('');
+			this.appendSegmentationLegend(data);
+		} else {
+			var arcText1 = d3.select(".tooltip-canvas")
+				.append("text")
+				.attr("x",radius)
+				.attr("y",radius * 1.3)
+				.html("Les données de segmentation")
+				.attr("class","tip-pie-hover-value")
+				.style("stroke", "#DDDDDD")
+				.style("text-anchor","middle")
+				.style("font-size",8);
+
+			var arcText2 = d3.select(".tooltip-canvas")
+				.append("text")
+				.attr("x",radius)
+				.attr("y",radius * 1.3)
+				.attr("dy",12)
+				.html("ne sont pas disponibles")
+				.attr("class","tip-pie-hover-value")
+				.style("stroke", "#DDDDDD")
+				.style("text-anchor","middle")
+				.style("font-size",8);
+		}
 	},
 
 	appendSegmentationLegend:function(data){
