@@ -104,12 +104,6 @@ var MapView = Backbone.View.extend({
 				var labelO = that.model.get("citiesVisible") === true && popLimit === true ? 1 : 0;
 				return labelO;
 			})
-			.on("click",function(d){
-				if (that.model.get("level") === 2 && that.model.get("citiesWithGroupedUgas").indexOf(d.name) !== -1){
-					console.log(that.model.get("cityUgaGroups")[d.name]);
-				}
-			})
-
 
 		svg.selectAll(".city-text")
 			.data(cities).enter()
@@ -738,8 +732,6 @@ var MapView = Backbone.View.extend({
 			this.model.set("currentMapBounds",null);
 			return;
 		}
-
-
 		// Calculate the projection points of the corners from the longitudes and latitudes to make
 		// an appropriate geographical bounding box
 		var leftBottom = projection([
@@ -831,6 +823,7 @@ var MapView = Backbone.View.extend({
 				return d3.select(this).attr("transform") + "scale("+moddedScale+")";
 			});
 
+
 		svg.selectAll('.city-text')
 			.transition()
 			.duration(that.model.get("zoomPeriod"))
@@ -839,10 +832,12 @@ var MapView = Backbone.View.extend({
 				return original * moddedScale;
 			})
 			.attr("dx",function(d){
-				return (0.7 * moddedScale) + "em";
+				var original = parseFloat(d3.select(this).attr("dx").replace("em",""));
+				return (original * moddedScale) + "em";
 			})
 			.attr("dy",function(d){
-				return (0.7 * moddedScale) + "em";
+				var original = parseFloat(d3.select(this).attr("dy").replace("em",""));
+				return (original * moddedScale) + "em";
 			})
 
 		svg.selectAll('.city-label')
@@ -855,15 +850,7 @@ var MapView = Backbone.View.extend({
 			.attr("width",function(d){
 				var original = d3.select(this).attr("width");
 				return original * moddedScale;
-			});
-
-	},
-
-
-	flagTransitionEnd:function(transition, callback) {
-		if (transition.size() === 0) {
-		 callback();
-		}
+			})
 	},
 
 
