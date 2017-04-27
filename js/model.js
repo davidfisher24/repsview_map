@@ -132,6 +132,7 @@ MapModel = Backbone.Model.extend({
 		for (var key in data) {
 			if (_this.get("reservedKeys").indexOf(key) === -1) {
 				var visits = _this.get("server") && key !== "SPCorse" ? ((data[key].contacts.visited / data[key].contacts.total) * 100).toFixed(2) : parseFloat((Math.random() * 100 +1).toFixed(2));
+				if (isNaN(visits)) visits = 0;
 				regionsArray.push({
 					lat: data[key].lat,
 					lon: data[key].lon,
@@ -159,6 +160,7 @@ MapModel = Backbone.Model.extend({
 		for (var key in data[region]) {
 			if (_this.get("reservedKeys").indexOf(key) === -1) {
 				var visits = _this.get("server") ? ((data[region][key].contacts.visited / data[region][key].contacts.total) * 100).toFixed(2) : parseFloat((Math.random() * 100 +1).toFixed(2));
+				if (isNaN(visits)) visits = 0;
 				sectorsArray.push({
 					lat: data[region][key].lat,
 					lon: data[region][key].lon,
@@ -184,18 +186,21 @@ MapModel = Backbone.Model.extend({
 		var sector = this.get("currentSector");
 		var ugaGroupsArray = [];
 		for (var key in data[region][sector]) {
-			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
-			if (_this.get("reservedKeys").indexOf(key) === -1) ugaGroupsArray.push({
-				lat: data[region][sector][key].lat,
-				lon: data[region][sector][key].lon,
-				name: key,
-				level: 2,
-				visits: visits,
-				nonVisits : 100 - visits, 
+			if (_this.get("reservedKeys").indexOf(key) === -1) {
+				var visits = _this.get("server") ? ((data[region][sector][key].contacts.visited / data[region][sector][key].contacts.total) * 100).toFixed(2) : parseFloat((Math.random() * 100 +1).toFixed(2));
+				if (isNaN(visits)) visits = 0;
+				ugaGroupsArray.push({
+					lat: data[region][sector][key].lat,
+					lon: data[region][sector][key].lon,
+					name: key,
+					level: 2,
+					visits: visits,
+					nonVisits : 100 - visits, 
 
-				segmentation: _this.prepareSegmentationDataArray(data[region][sector],key),
-				quotas: _this.prepareQuotaDataArray(data[region][sector],key),
-			});
+					segmentation: _this.prepareSegmentationDataArray(data[region][sector],key),
+					quotas: _this.prepareQuotaDataArray(data[region][sector],key),
+				});
+			} 
 		}
 		return ugaGroupsArray;
 	},
@@ -213,21 +218,26 @@ MapModel = Backbone.Model.extend({
 		var level = this.get("network") === "gp" ? 2 : 3;
 
 		for (var key in selectedData) {
-			var visits = parseFloat((Math.random() * 100 +1).toFixed(2));
-			if (_this.get("reservedKeys").indexOf(key) === -1) ugasArray.push({
-				lat: selectedData[key].lat,
-				lon: selectedData[key].lon,
-				name: key,
-				level: level,
-				visits: visits,
-				nonVisits : 100 - visits,
+			if (_this.get("reservedKeys").indexOf(key) === -1) {
+				var visits = _this.get("server") ? ((selectedData[key].contacts.visited / selectedData[key].contacts.total) * 100).toFixed(2) : parseFloat((Math.random() * 100 +1).toFixed(2));
+				if (isNaN(visits)) visits = 0;
+				ugasArray.push({
+					lat: selectedData[key].lat,
+					lon: selectedData[key].lon,
+					name: key,
+					level: level,
+					visits: visits,
+					nonVisits : 100 - visits,
 
-				segmentation: _this.prepareSegmentationDataArray(selectedData,key),
-				quotas: _this.prepareQuotaDataArray(selectedData,key),
-			});
+					segmentation: _this.prepareSegmentationDataArray(selectedData,key),
+					quotas: _this.prepareQuotaDataArray(selectedData,key),
+				});
+
+			} 
 		}
 		return ugasArray;
 	},
+
 
 	prepareSegmentationDataArray:function(selectedData,key){
 		if (selectedData[key].segmentation === null) return null;

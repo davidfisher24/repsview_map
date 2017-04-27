@@ -43,30 +43,45 @@
 		if ($row['secteur'] === null && $row['uga'] === null) {
 
 			if (!array_key_exists($row['region'],$gpData)) $gpData[$row['region']] = array();
+			// LAT
 			$gpData[$row['region']]['lat'] = floatval($row['lat']);
+			// LON
 			$gpData[$row['region']]['lon'] = floatval($row['lon']);
 			if ($server) {
+				// SEGMENTATION
 				$gpData[$row['region']]['segmentation'] = prepare_segmentation_data($records_seg["GP"]["regions"][$row["region"]]);
+				// CONTACTS
 				$gpData[$row['region']]['contacts'] = $records_contacts["GP"]["regions"][$row["region"]];
+				// QUOTAS
 				$gpData[$row['region']]['quotas'] = $records_quota["region"][$row["region"]];
 			}
 
 		} else if ($row['uga'] === null) {
 
 			if(!array_key_exists($row['secteur'],$gpData[$row['region']])) $gpData[$row['region']][$row['secteur']] = array();
+			// LAT
 			$gpData[$row['region']][$row['secteur']]['lat'] = floatval($row['lat']);
+			// LON
 			$gpData[$row['region']][$row['secteur']]['lon'] = floatval($row['lon']);
 			if ($server) {
+				// SEGMENTATION
 				$gpData[$row['region']][$row['secteur']]['segmentation'] = prepare_segmentation_data($records_seg["GP"]["secteurs"][$row["secteur"]]);
+				// CONTACTS
 				$gpData[$row['region']][$row['secteur']]['contacts'] = $records_contacts["GP"]["secteurs"][$row["secteur"]];
+				// QUOTAS
 				$gpData[$row['region']][$row['secteur']]['quotas'] = $records_quota["secteur"][$row["secteur"]];
 			}
 		} else {
+			// LAT AND LON
 			$gpData[$row['region']][$row['secteur']][$row['uga']] = array(
 				"lat" => floatval($row['lat']),
 				"lon" => floatval($row['lon'])
 			);
+			// SEGMENTATION
 			$gpData[$row['region']][$row['secteur']][$row['uga']]['segmentation'] = prepare_segmentation_data($records_seg["GP"]["ugas"][$row["uga"]]);
+			// CONTACTS
+			$gpData[$row['region']][$row['secteur']][$row['uga']]['contacts'] = $records_contacts["GP"]["ugas"][$row["uga"]];
+			// QUOTAS
 			$gpData[$row['region']][$row['secteur']][$row['uga']]["quotas"] = $records_quota["uga"][$row["uga"]];
 		}
 	}
@@ -80,57 +95,78 @@
 		if ($row['secteur'] === null && $row['ugagroup'] === null && $row['uga'] === null) {
 
 			if (!array_key_exists($row['region'],$spData)) $spData[$row['region']] = array();
+			// LAT
 			$spData[$row['region']]['lat'] = floatval($row['lat']);
+			// LON
 			$spData[$row['region']]['lon'] = floatval($row['lon']);
 			if ($server && $row["region"] !== "SPCorse") {
+				// SEGMENTAION
 				$spData[$row['region']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["regions"][$row["region"]]);
+				// CONTACTS
 				$spData[$row['region']]['contacts'] = $records_contacts["SP"]["regions"][$row["region"]];
+				// QUOTAS
 				$spData[$row['region']]['quotas'] = $records_quota["region"][$row["region"]];
 			}
-			else if ($server) {
-				$spData[$row['region']]['segmentation'] = prepare_fake_corsica_segmentation();
-				$spData[$row['region']]['quotas'] = $records_quota["secteur"][$row["region"]];
+			else if ($server && $row["region"] === "SPCorse") {
+				// SP CORSE EXCEPTIONS. 
+				$spData[$row['region']]['contacts'] = $records_contacts["SP"]["regions"][$row["region"]]; // Contacts fine
+				$spData[$row['region']]['segmentation'] = prepare_fake_corsica_segmentation(); // No segmentation
+				$spData[$row['region']]['quotas'] = $records_quota["secteur"][$row["region"]]; // Quotas in secteur here
 			}
 
 		} else if ($row['ugagroup'] === null && $row['uga'] === null) {
 
 			if(!array_key_exists($row['secteur'],$spData[$row['region']])) $spData[$row['region']][$row['secteur']] = array();
+			// LAT
 			$spData[$row['region']][$row['secteur']]['lat'] = floatval($row['lat']);
+			// LON
 			$spData[$row['region']][$row['secteur']]['lon'] = floatval($row['lon']);
 			if ($server && $row["region"] !== "SPCorse")  {
+				// SEGMENTATION
 				$spData[$row['region']][$row['secteur']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["secteurs"][$row["secteur"]]);
+				// CONTACTS
 				$spData[$row['region']][$row['secteur']]['contacts'] = $records_contacts["SP"]["secteurs"][$row["secteur"]];
+				// QUOTAS
 				$spData[$row['region']][$row['secteur']]['quotas'] = $records_quota["secteur"][$row["secteur"]];
 			}
-			else if ($server) {
-				$spData[$row['region']][$row['secteur']]['segmentation'] = prepare_fake_corsica_segmentation();
-				$spData[$row['region']][$row['secteur']]['quotas'] = $records_quota["uga"][$row["secteur"]];
+			else if ($server && $row["region"] === "SPCorse") {
+				// SP CORSE EXCEPTIONS
+				// Nothing for contacts
+				$spData[$row['region']][$row['secteur']]['segmentation'] = prepare_fake_corsica_segmentation(); // No seg
+				$spData[$row['region']][$row['secteur']]['quotas'] = $records_quota["uga"][$row["secteur"]]; // In ugas
 			}
 
 		} else if ($row['uga'] === null) {
 
 			if(!array_key_exists($row['ugagroup'],$spData[$row['region']][$row['secteur']])) $spData[$row['region']][$row['secteur']][$row['ugagroup']] = array();
+			// LAT
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']]['lat'] = floatval($row['lat']);
+			// LON
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']]['lon'] = floatval($row['lon']);
-			/// EXCEPTION
+			// SEGMENTAION - POSSIBILITY OF NULL
 			if (array_key_exists($row["ugagroup"],$records_seg["SP"]["ugagroups"]))
 				$spData[$row['region']][$row['secteur']][$row['ugagroup']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["ugagroups"][$row["ugagroup"]]);
 			else
 				$spData[$row['region']][$row['secteur']][$row['ugagroup']]['segmentation'] = null;
-
+			// CONTACTS
+				$spData[$row['region']][$row['secteur']][$row['ugagroup']]['contacts'] = $records_contacts["SP"]["ugagroups"][$row["ugagroup"]];
+			// QUOTAS
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']]["quotas"] = $records_quota["ugagroupe"][$row["ugagroup"]];
 
 		} else {
+			// LAT AND LON
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']] = array(
 				"lat" => floatval($row['lat']),
 				"lon" => floatval($row['lon'])
 			);
-			/// EXCEPTION
+			// SEGMENTAION - POSSIBILITY OF NULL
 			if (array_key_exists($row["uga"],$records_seg["SP"]["ugas"]))
 				$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']]['segmentation'] = prepare_segmentation_data($records_seg["SP"]["ugas"][$row["uga"]]);
 			else
 				$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']]['segmentation'] = null;
-				
+			// CONTACTS
+				$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']]['contacts'] = $records_contacts["SP"]["ugas"][$row["uga"]];
+			// QUOTAS
 			$spData[$row['region']][$row['secteur']][$row['ugagroup']][$row['uga']]["quotas"] = $records_quota["uga"][$row["uga"]];
 		}
 	}
@@ -144,78 +180,140 @@
 	die;
 
 
-
 	function sql_contacts_data($dbname, $conn){
 		$gp_contacts = array(
 			"regions" => array(),
-			"secteurs" => array()
+			"secteurs" => array(),
+			"ugas" => array()
 		);
 		$sp_contacts = array(
 			"regions" => array(),
-			"secteurs" => array()
+			"secteurs" => array(),
+			"ugagroups" => array(),
+			"ugas" => array()
 		);
 
 
-		$query1 = "SELECT cible, region, secteur, count(distinct onekey) as count FROM $dbname.ciblage WHERE freq_terrain > 0 group by secteur";
+		$query1 = "SELECT cible, region, secteur, ugagroupe, uga, count(distinct onekey) as count FROM $dbname.ciblage WHERE freq_terrain > 0 group by uga";
 		$result1 = $conn->query($query1);
+		// Put the visited amounts into each array from the query 1 result
 		while($row = $result1->fetch_assoc()) {
-			if ($row['cible'] && $row['region'] && $row['secteur']) {
+			if ($row['cible'] === "MG") {
+				if ($row['cible'] && $row['region'] && $row['secteur'] && $row['uga']) {
+					if (!array_key_exists($row["secteur"], $gp_contacts["secteurs"])) $gp_contacts["secteurs"][$row["secteur"]] = array(
+						"visited" => $row["count"],
+						"total" => 0,
+					);
 
-				if ($row['cible'] === "MG") {
 					if (!array_key_exists($row["region"], $gp_contacts["regions"])) $gp_contacts["regions"][$row["region"]] = array(
 						"visited" => $row["count"],
 						"total" => 0,
 					);
-					else $gp_contacts["regions"][$row["region"]]["visited"] += intval($row["count"]);
 
-					$gp_contacts["secteurs"][$row['secteur']] = array (
+					$gp_contacts["regions"][$row["region"]]["visited"] += intval($row["count"]);
+					$gp_contacts["secteurs"][$row["secteur"]]["visited"] += intval($row["count"]);
+					$gp_contacts["ugas"][$row['uga']] = array (
 						"visited" => intval($row['count']),
+						"total" => 0,
 					);
-				} else if ($row['cible'] === "SP") {
+				}
+			} else if ($row['cible'] === "SP") {
+				if ($row['cible'] && $row['region'] && $row['secteur'] && $row['ugagroupe'] && $row['uga']) {
+					if (!array_key_exists($row["ugagroupe"], $sp_contacts["ugagroups"])) $sp_contacts["ugagroups"][$row["ugagroupe"]] = array(
+						"visited" => $row["count"],
+						"total" => 0,
+					);
+
+					if (!array_key_exists($row["secteur"], $sp_contacts["secteurs"])) $sp_contacts["secteurs"][$row["secteur"]] = array(
+						"visited" => $row["count"],
+						"total" => 0,
+					);
+
 					if (!array_key_exists($row["region"], $sp_contacts["regions"])) $sp_contacts["regions"][$row["region"]] = array(
 						"visited" => $row["count"],
 						"total" => 0,
 					);
-					else $sp_contacts["regions"][$row["region"]]["visited"] += intval($row["count"]);
 
-					$sp_contacts["secteurs"][$row['secteur']] = array (
+					$sp_contacts["regions"][$row["region"]]["visited"] += intval($row["count"]);
+					$sp_contacts["secteurs"][$row["secteur"]]["visited"] += intval($row["count"]);
+					$sp_contacts["ugagroups"][$row["ugagroupe"]]["visited"] += intval($row["count"]);
+					$sp_contacts["ugas"][$row['uga']] = array (
 						"visited" => intval($row['count']),
+						"total" => 0,
 					);
+					
 				}
 			}
 		}
 
-		$query2 = "SELECT reseau, region, secteur, count(*) as count FROM $dbname.onekey as main INNER JOIN $dbname.sectorisation as sectors ON main.uga=sectors.uga WHERE main.active = 'Active' and main.s1 = 'SP.WFR.MG' AND main.uga IN (select distinct uga from sectorisation) group by sectors.secteur";
+		$query2 = "SELECT reseau, region, secteur, ugagroupe, main.uga, count(*) as count FROM $dbname.onekey as main INNER JOIN $dbname.sectorisation as sectors ON main.uga=sectors.uga WHERE main.active = 'Active' and main.s1 = 'SP.WFR.MG' AND main.uga IN (select distinct sectors.uga from sectorisation) group by sectors.reseau,sectors.uga";
 		$result2 = $conn->query($query2);
 
 		while($row = $result2->fetch_assoc()) {
-			if ($row['reseau'] && $row['region'] && $row['secteur']) {
-				if ($row['reseau'] === "GP") {
-					if (array_key_exists($row["region"], $gp_contacts["regions"])) 
-						$gp_contacts["regions"][$row["region"]]["total"] += $row["count"];
-
-					if (array_key_exists($row["secteur"], $gp_contacts["secteurs"])) 
-						$gp_contacts["secteurs"][$row["secteur"]]["total"] = intval($row["count"]);
-					else $gp_contacts["secteurs"][$row["secteur"]] = array(
+			if ($row['reseau'] === "GP") {
+				if ($row['reseau'] && $row['region'] && $row['secteur'] && $row['uga']) {
+					
+					if (array_key_exists($row['region'],$gp_contacts["regions"]))
+						$gp_contacts["regions"][$row['region']]["total"] += intval($row["count"]);
+					else 
+						$gp_contacts["regions"][$row['region']] = array(
 							"visited" => 0,
-							"total" => intval($row["count"])
+							"total" => 0
 						);
 
-				} else if ($row['reseau'] === "SP") {
-					if (array_key_exists($row["region"], $sp_contacts["regions"])) 
-						$sp_contacts["regions"][$row["region"]]["total"] += $row["count"];
-
-					if (array_key_exists($row["secteur"], $sp_contacts["secteurs"])) 
-						$sp_contacts["secteurs"][$row["secteur"]]["total"] = intval($row["count"]);
-					else $sp_contacts["secteurs"][$row["secteur"]] = array(
+					if (array_key_exists($row['secteur'],$gp_contacts["secteurs"]))
+						$gp_contacts["secteurs"][$row['secteur']]["total"] += intval($row["count"]);
+					else 
+						$gp_contacts["secteurs"][$row['secteur']] = array(
 							"visited" => 0,
-							"total" => intval($row["count"])
+							"total" => 0
+						);
+
+					if (array_key_exists($row['uga'],$gp_contacts["ugas"]))
+						$gp_contacts["ugas"][$row['uga']]["total"] += intval($row["count"]);
+					else 
+						$gp_contacts["ugas"][$row['uga']] = array(
+							"visited" => 0,
+							"total" => 0
 						);
 				}
-			/* NOTE  SOME SECTORS HAVE NO CONTACTS AND NO ARRAY ADDED AT THAT POINT. SO HERE WE ADD AN EMPTY ARRAY WITH 0 CONTACTS */
+			} else if ($row['reseau'] === "SP") {
+				if ($row['reseau'] && $row['region'] && $row['secteur'] && $row['ugagroupe'] && $row['uga']) {
+
+					if (array_key_exists($row['region'],$sp_contacts["regions"]))
+						$sp_contacts["regions"][$row['region']]["total"] += intval($row["count"]);
+					else 
+						$sp_contacts["regions"][$row['region']] = array(
+							"visited" => 0,
+							"total" => 0
+						);
+					
+					if (array_key_exists($row['secteur'],$sp_contacts["secteurs"]))
+						$sp_contacts["secteurs"][$row['secteur']]["total"] += intval($row["count"]);
+					else 
+						$sp_contacts["secteurs"][$row['secteur']] = array(
+							"visited" => 0,
+							"total" => 0
+						);
+
+					if (array_key_exists($row['ugagroupe'],$sp_contacts["ugagroups"]))
+						$sp_contacts["ugagroups"][$row['ugagroupe']]["total"] += intval($row["count"]);
+					else 
+						$sp_contacts["ugagroups"][$row['ugagroupe']] = array(
+							"visited" => 0,
+							"total" => 0
+						);
+
+					if (array_key_exists($row['uga'],$sp_contacts["ugas"]))
+						$sp_contacts["ugas"][$row['uga']]["total"] += intval($row["count"]);
+					else 
+						$sp_contacts["ugas"][$row['uga']] = array(
+							"visited" => 0,
+							"total" => 0
+						);
+				}
 			}
 		}
-
 		return array(
 			"GP" => $gp_contacts,
 			"SP" => $sp_contacts,
