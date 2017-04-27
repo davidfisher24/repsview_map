@@ -687,6 +687,7 @@ var MapView = Backbone.View.extend({
 		if ($('.d3-tip').length !== 0) d3.selectAll(".d3-tip").remove();
 		$('#informationPanel').html(this.model.get("infoPanelDefault"));
 		$('#informationPanelTitle').html('');
+		$('#segmentationLegend').html('');
 	},
 
 	resetElementsOnHoverOut:function(svg){
@@ -844,6 +845,7 @@ var MapView = Backbone.View.extend({
 	changeNetwork:function(e){
 		var svg = d3.select($("#zoomgroup")[0]);
 		this.removeElementsOnChange(svg);
+		$('#segmentationLegend').html('');
 		var changeTo = $(e.target).val() === "gp" ? "sp" : "gp";
 		$(e.target).html(changeTo.toUpperCase());
 		$(e.target).val(changeTo);

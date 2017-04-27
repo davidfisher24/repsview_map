@@ -109,9 +109,10 @@
 			}
 			else if ($server && $row["region"] === "SPCorse") {
 				// SP CORSE EXCEPTIONS. 
-				$spData[$row['region']]['contacts'] = $records_contacts["SP"]["regions"][$row["region"]]; // Contacts fine
-				$spData[$row['region']]['segmentation'] = prepare_fake_corsica_segmentation(); // No segmentation
-				$spData[$row['region']]['quotas'] = $records_quota["secteur"][$row["region"]]; // Quotas in secteur here
+				// Contacts stored in region. Quotas stored in secteur. No segmentation data
+				$spData[$row['region']]['contacts'] = $records_contacts["SP"]["regions"][$row["region"]]; 
+				$spData[$row['region']]['segmentation'] = null; // No segmentation
+				$spData[$row['region']]['quotas'] = $records_quota["secteur"][$row["region"]]; 
 			}
 
 		} else if ($row['ugagroup'] === null && $row['uga'] === null) {
@@ -131,9 +132,10 @@
 			}
 			else if ($server && $row["region"] === "SPCorse") {
 				// SP CORSE EXCEPTIONS
-				// Nothing for contacts
-				$spData[$row['region']][$row['secteur']]['segmentation'] = prepare_fake_corsica_segmentation(); // No seg
-				$spData[$row['region']][$row['secteur']]['quotas'] = $records_quota["uga"][$row["secteur"]]; // In ugas
+				// Quotas and contacts stored in ugas. No segmentation data
+				$spData[$row['region']][$row['secteur']]['segmentation'] = null; 
+				$spData[$row['region']][$row['secteur']]['quotas'] = $records_quota["uga"][$row["secteur"]]; 
+				$spData[$row['region']][$row['secteur']]['contacts'] = $records_contacts["SP"]["ugas"][$row["secteur"]];
 			}
 
 		} else if ($row['uga'] === null) {
@@ -447,25 +449,5 @@
 		);
 	}
 
-	function prepare_fake_corsica_segmentation(){
-		return array(
-            "ajout_vm" => 50,
-            "geriatrie" => 50,
-            "chirugerie" => 50,
-            "cardio" => 50,
-            "uro" => 50,
-            "rhumato" => 50,
-            "douleur" => 50,
-            "urg_anest" => 50,
-            "conquerir" => 50,
-            "fideliserG" => 50,
-            "fideliserM" => 50,
-            "VIP" => 50,
-            "pharm_hosp" => 50,
-            "arv" => 50,
-            "muco" => 50,
-            "gastro" => 50
-		);
-	}
 
 ?>
