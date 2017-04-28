@@ -231,16 +231,33 @@ var MapView = Backbone.View.extend({
 							$('#segmentationLegend').hide();
 						};
 					} else if (that.model.get("device") === "mobile") {
-						$('#tooltipGenerator').show();
-						that.hideTreeControl();
-						$('#informationPanel').html('');
-						$('#tooltipGenerator').html('');
-						var arcElementMaxSize = Math.min(
-							$(window).height() - $('#tooltipGenerator').offset().top,
-							$('#tooltipGenerator').width()
-						);
-						that.appendBarChartInInfoPanel($('#informationPanel').width(),d);
-						that.appendPieChartInToolTip(arcElementMaxSize,d);
+						/* Note
+						I am looking to see if the title of the region in the info panel matches the data region
+						this is a very cutre way of controlling mobile events without a mobile pulgin
+						This has to be chjanged
+						*/
+						var infoTitle = $('#informationPanelTitle').html().split(" ");
+						var title = (infoTitle[infoTitle.length - 1]);
+						if (d.name == title) {
+							$('#informationPanelTitle').html('');
+							$('#informationPanel').html('');
+							$('#tooltipGenerator').html('');
+							if (that.model.get("level") < that.model.get("deepestLevel") && !d.corsicaFlag && !that.model.get("modificationModeOn")) {
+								that.model.increaseLevel(d);
+								that.drawRegions()
+							};
+						} else {
+							$('#tooltipGenerator').show();
+							that.hideTreeControl();
+							$('#informationPanel').html('');
+							$('#mobileArcPanel').html('');
+							var arcElementMaxSize = Math.min(
+								$(window).height() - $('#mobileArcPanel').offset().top,
+								$('#mobileArcPanel').width()
+							);
+							that.appendBarChartInInfoPanel($('#informationPanel').width(),d);
+							that.appendPieChartInMobilePanel(arcElementMaxSize,d);
+						};
 					}
 				})
 				.on('mouseleave', function(d){
@@ -636,6 +653,151 @@ var MapView = Backbone.View.extend({
 			this.model.set("tooltipData",eventStorageData);
 			$('#segmentationLegend').html('');
 			this.appendSegmentationLegend(data);
+		} else {
+			var arcText1 = d3.select(".tooltip-canvas")
+				.append("text")
+				.attr("x",radius)
+				.attr("y",radius * 1.3)
+				.html("Les données de segmentation")
+				.attr("class","tip-pie-hover-value")
+				.style("stroke", "#DDDDDD")
+				.style("text-anchor","middle")
+				.style("font-size",8);
+
+			var arcText2 = d3.select(".tooltip-canvas")
+				.append("text")
+				.attr("x",radius)
+				.attr("y",radius * 1.3)
+				.attr("dy",12)
+				.html("ne sont pas disponibles")
+				.attr("class","tip-pie-hover-value")
+				.style("stroke", "#DDDDDD")
+				.style("text-anchor","middle")
+				.style("font-size",8);
+		}
+	},
+
+	appendPieChartInMobilePanel:function(size,d){
+		var _this = this;
+		var region = d.name;
+		var visits = d.visits;
+		var data = [];
+
+		if (d.segmentation) {
+	 		this.model.get("pieLegendSegmentation").forEach(function(seg){
+				if (seg.measure !== "autres") {
+					data.push({
+						label: seg.label,
+						value: d.segmentation[seg.measure],
+						legendLabel: seg.legendLabel,
+					})
+				}
+			});
+	 	}
+
+		/* Adding orders and sorting data */
+		var total = 0;
+		var autres = {label:"Autres",value:0,legendLabel:"Autres"};
+		data.forEach(function(d){
+			total += d.value;
+		});
+		data.forEach(function(d,i){
+			if ((d.value/total) * 100 < 5) {
+				autres.value += d.value;
+				d.value = 0;
+			}
+		});
+		data.sort(function(a,b) {return (a.value > b.value) ? -1 : ((b.value > a.value) ? 1 : 0);} ); 
+		data.push(autres);
+
+
+		var legend = this.model.get("pieLegendSegmentation"); 
+		var labels = []; 
+		var values = [];
+		var legendLabels = [];
+		$.each(data, function(index,obj) {
+			labels.push(obj.label);
+			values.push(obj.value);
+			legendLabels.push(obj.legendLabel);
+		});
+
+		var radius = size/2;
+		var arc = d3.svg.arc().innerRadius(radius * 0.5).outerRadius(radius * 1); 
+		var pie = d3.layout.pie().value(function(d) { return d.value; }).sort(null);
+
+
+		var tooltipElement = d3.select("#mobileArcPanel")
+			.append("svg") 
+			.data(data) 
+			.attr("width", size) 
+			.attr("height", size) 
+			.attr("class","tooltip-canvas")
+			.append("g") 
+			.attr("transform", "translate(" + (size/2) + "," + (size/2) + ")")
+			.attr('stroke','#000')
+			.attr('stroke-width',2);
+
+
+		var centreLabel = d3.select(".tooltip-canvas")
+			.append("text")
+			.attr("x", radius)
+			.attr("y", function(){
+				if (d.segmentation) return radius * 0.975;
+				else return radius * 0.8;
+			})
+			.text(region)
+			.attr("class","tip-pie-hover-label bolded")
+			.style("fill", "none")
+			.style("stroke", "#333333")
+			.style("text-anchor","middle")
+			.style("font-size",function(d){
+				return 30;
+			})
+			.text(region);
+
+		var centreValue = d3.select(".tooltip-canvas")
+			.append("text")
+			.attr("x", radius)
+			.attr("y", function(){
+				if(d.segmentation) return radius * 1.2;
+				else return radius;
+			})
+			.text(visits + "%")
+			.attr("class","tip-pie-hover-value")
+			.style("fill", "none")
+			.style("stroke", "#333333")
+			.style("text-anchor","middle")
+			.style("font-size",24);
+
+		if (d.segmentation) {
+			var arcs = tooltipElement.selectAll("g.slice")
+				.data(function(d){
+					return pie(data);
+				})
+				.enter()
+				.append("g")
+				.attr("class", function(d){
+					return "slice";
+				})
+				.append("path")
+				.attr("fill", function(d, i) {
+					var color = legend.filter(function(l){ 
+						return l.label == d.data.label;
+					});
+					d.data.color = color[0].color;
+					return color[0].color;
+				})
+				.attr("d", arc)
+				.on("click",function(d,i){
+					d3.select('.tip-pie-hover-label').text(_this.model.get("tooltipData")[i].label);
+	                d3.select('.tip-pie-hover-value').text(_this.model.get("tooltipData")[i].value);
+				});
+
+			var eventStorageData = data;
+			eventStorageData.push({region: region, visits: visits});
+			this.model.set("tooltipData",eventStorageData);
+			//$('#segmentationLegend').html(''); Not needed in mobile
+			//this.appendSegmentationLegend(data); Not needed in mobile
 		} else {
 			var arcText1 = d3.select(".tooltip-canvas")
 				.append("text")
