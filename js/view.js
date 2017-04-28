@@ -403,9 +403,12 @@ var MapView = Backbone.View.extend({
 
 		  // LINE POINTS
 		 	var linePoints = [];
-			for (var i = Math.ceil(dataMin / 20) * 20; i <= dataMax + 20; i = i + 20) {
+		 	var minLine = dataMin > 100 ? 90 : dataMin;
+		 	var interval = Math.ceil((((((dataMax - minLine)/10)/10) * 10)/10)) * 10;
+			for (var i = Math.ceil(minLine / interval) * interval; i <= dataMax + interval; i = i + interval) {
 				linePoints.push(i);
 			} 
+			console.log(linePoints);
 			linePoints.forEach(function(line){
 				svg.append("line")
 					.attr("x1", 0)
