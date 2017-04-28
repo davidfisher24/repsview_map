@@ -1,29 +1,32 @@
 MapModel = Backbone.Model.extend({
 
 	defaults: {
-		// version
-		"server" : false,
-		// Data for GP and SP networks
-		"gpdata" : "",
-		"spdata" : "",
-		"network" : "gp",
-		// Defined attribute
-		"width" : 800, // Width of the svg element
-		"height" : 600, // Height of the svg element
-		"mapRatio" : "10:8", // Defines the x to y ratio of the map
-		"zoomPeriod" : 750, // time between zoom in/out periods (needed for timeout functions)
 
-		"reservedKeys" : ["lat","lon","segmentation","contacts","quotas"], // Reserved keys in the current data array
-		"defaultCenter" : [4.8, 47.35], // Default centre (France)
-		"defaultScale" : 2400, // Default scale (France)
+		/* DATA AND VERSION */
+		"server" : false, // Version - server data is true or false
+		"gpdata" : "", // GP Data
+		"spdata" : "", // SP Data
+		"network" : "gp", // Current Selected Network
 		"deepestLevel" : 2,  // Maximum level that can be drilled to. Is set to 2 for gp and 3 for sp.
-		"mapFill" : '#bbdefb',
-		"mapStroke" : '#f9f9f9',
-		"pieColors" :  ['#007E33','#CC0000'], // Colours to use in the segments of the pies
-		// bar colour experiments
-		//"barColors" : ["#7cb5ec","#434348","#90ed7d","#f7a35c","#8085e9","#f15c80"], // Stolen from highcharts
-		"barColors" : ['#aa66cc','#4285F4','#00C851','#ffbb33','#ff4444','#90a4ae'],  // Lilettes design
+		"reservedKeys" : ["lat","lon","segmentation","contacts","quotas"], // Reserved keys in the current data array
 
+		/* MAP SCALES AND PROJECTION DATA */
+		"width" : 800, // Width of the svg element. Defaults at 800, measure dynamically
+		"height" : 600, // Height of the svg element. Scaled from the mapRatio and width parameter.
+		"mapRatio" : "10:8", // Defines the x to y ratio of the map
+		"zoomPeriod" : 750, // time between zoom in/out periods used for timeout functions
+		"defaultCenter" : [4.8, 47.35], // Default centre (France)
+		"defaultScale" : 2400, // Default scale (France). Scaled via the width parameter on load
+		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
+		"currentBoundingBox" : null, // Current bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
+		"currentMapBounds" : null, // current lat/lon bounds of the map
+		
+		/* COLOUR AND LEGEND DEFINITIONS */
+		"mapFill" : '#bbdefb',  // Map fill colour
+		"mapStroke" : '#f9f9f9', // Map stroke colour
+		"pieColors" :  ['#007E33','#CC0000'], // Colours to use in the segments of the contacts data pies
+		"barColors" : ['#aa66cc','#4285F4','#00C851','#ffbb33','#ff4444','#90a4ae'],  // Bar chart colours
+		"barProducts" : ["creon","tarka","lamaline","dymista","ceris","tadenan"], // Bar chart products
 		// Segmentation data parameters for legend and graphic. Labels and colours
 		"pieLegendSegmentation" :  [
 			{measure: "VIP", color: '#7cb5ec', label: "VIP", legendLabel: "VIP"}, 
@@ -44,29 +47,25 @@ MapModel = Backbone.Model.extend({
 			{measure: "urg_anest", color: '#9e9d24', label: "Urg Anest", legendLabel: "Urg Anest"},
 			{measure: "autres", color: '#80699B', label: "Autres", legendLabel: "Autres"}
 		],
-
-		"defaultBoundingBox" : [[100,100],[-100,-100]], // Default bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
-		"currentBoundingBox" : null, // Current bounding box [[max longitude, max latitiude],[min longitude, in latitiude]]
-		"currentMapBounds" : null, // current ouzel bounds of the map
-		// Dynamic attributes
+		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>",
+		
+		/* DYNAMICALLY STORED ATTRIBUTES */
 		"level" : 0, // Level of drilling of data
 		"currentRegion" : null, // Current region selected for setting data
 		"currentSector" : null, // Current secot select for setting data
 		"currentUgaGroup" : null, // Current uga group selected for setting data
+		"currentCities" : null,  // Current cities on the map
+		"currentRegions" : null, // current regions on the map
 
-		"currentCities" : null,
-		"currentRegions" : null,
-
+		/* HTML CONTROLS */
 		"citiesVisible" : true, // Linked to the checkbox for this element. If the cities are visible or not
-		"citiesVisibleLimit" : 250000,
-
-		"infoPanelDefault" : "<p class='panel-title'>To see more information about a level, select the element from the tree or the map.</p>",
-
-		"tooltipData" : null, // Problematic. This needs to be handled differently, but is the only way to get data back to the tooltip
-		"tooltipOffsetPosition" : null,// Again problematic. Stors the position offset of the tooltip for mouseout events
-
-		"currentDragEventLatLon" : null, // Temporary storage of a drag event for updating the database
+		"citiesVisibleLimit" : 250000, // Linked to the range input for showing cities
 		"modificationModeOn" : false, // Are we in modification mode, where an admin can move elements
+
+		/* TEMPORARILY STORED DATA */
+		"tooltipData" : null, // Data stored for use in the hover arc tooltip
+		"tooltipOffsetPosition" : null,// Positon of the for hover out events
+		"currentDragEventLatLon" : null, // Temporary storage of a drag event for updating the database	
 	},
 
 	data:function(){
@@ -75,15 +74,15 @@ MapModel = Backbone.Model.extend({
 	},
 
 	initialize:function(options){
-		// Ratio is defined above
+		// Ratio is defined in the model
 		var mapRatio = parseInt(this.get("mapRatio").split(":")[1]) / 10;
-		// Width comes from the width of the dic we have via jquery
+		// Width comes from the width of the div we have via jquery
 		this.set("width",options.mapWidth);
 		// Height is width * by the ratio defined
 		this.set("height",options.mapWidth * mapRatio);
 		// The default scale is set as triple the defined with
 		this.set("defaultScale",options.mapWidth * 3);
-
+		// Data and version
 		this.set("gpdata",options.gpdata);
 		this.set("spdata",options.spdata);
 		this.set("server",options.server);
@@ -116,6 +115,9 @@ MapModel = Backbone.Model.extend({
 	// FUNCTIONS FOR GETTING DATA
 	// getData() returns sector data for the level we are currently on
 	// getCities() returns city data depending on the level of zoom and current bounding box
+	// getRegion() getSectors() getUgagroupes() getUgas() return data for the specific level 
+	// prepareSegmentaionDataArray() and prepareQuotasDataArray() prepare the server data for the regions
+	// getSectors funcion has some flags for SPCorse region
 	//-----------------------------------------------------------------------------------------------------
 
 	getData: function(){
@@ -245,38 +247,23 @@ MapModel = Backbone.Model.extend({
 
 
 	prepareSegmentationDataArray:function(selectedData,key){
+		var _this = this;
 		if (selectedData[key].segmentation === null) return null;
-
-		var segmentation = {
-			ajout_vm : this.get("server") ? selectedData[key].segmentation.ajout_vm : Math.floor((Math.random() * 1000) + 1),
-            geriatrie : this.get("server") ? selectedData[key].segmentation.geriatrie : Math.floor((Math.random() * 1000) + 1), 
-            chirugerie : this.get("server") ?  selectedData[key].segmentation.chirugerie : Math.floor((Math.random() * 1000) + 1),
-            cardio : this.get("server") ?  selectedData[key].segmentation.cardio : Math.floor((Math.random() * 1000) + 1),
-            uro : this.get("server") ? selectedData[key].segmentation.uro : Math.floor((Math.random() * 1000) + 1),
-            rhumato : this.get("server") ? selectedData[key].segmentation.rhumato : Math.floor((Math.random() * 1000) + 1),
-            douleur : this.get("server") ?  selectedData[key].segmentation.douleur : Math.floor((Math.random() * 1000) + 1),
-            urg_anest : this.get("server") ?  selectedData[key].segmentation.urg_anest : Math.floor((Math.random() * 1000) + 1), 
-            conquerir : this.get("server") ?  selectedData[key].segmentation.conquerir : Math.floor((Math.random() * 1000) + 1),
-            fideliserG : this.get("server") ? selectedData[key].segmentation.fideliserG : Math.floor((Math.random() * 1000) + 1),
-            fideliserM : this.get("server") ?  selectedData[key].segmentation.fideliserM : Math.floor((Math.random() * 1000) + 1),
-            VIP : this.get("server") ? selectedData[key].segmentation.VIP : Math.floor((Math.random() * 1000) + 1), 
-            pharm_hosp : this.get("server") ? selectedData[key].segmentation.pharm_hosp : Math.floor((Math.random() * 1000) + 1),
-            arv : this.get("server") ? selectedData[key].segmentation.arv : Math.floor((Math.random() * 1000) + 1),
-            muco : this.get("server") ? selectedData[key].segmentation.muco : Math.floor((Math.random() * 1000) + 1),
-            gastro : this.get("server") ? selectedData[key].segmentation.gastro : Math.floor((Math.random() * 1000) + 1),
-		};
+		var segments = this.get("pieLegendSegmentation");
+		var segmentation = {};
+		segments.forEach(function(seg){
+			segmentation[seg.measure] = _this.get("server") ? selectedData[key].segmentation[seg.measure] : Math.floor((Math.random() * 1000) + 1);
+		});
 		return segmentation;
 	},
 
 	prepareQuotaDataArray:function(selectedData,key){
-		var quotas = {
-			creon: this.get("server") ? Math.round(selectedData[key].quotas.creon) : Math.floor((Math.random() * 100) + 51),
-			tarka: this.get("server") ? Math.round(selectedData[key].quotas.tarka) : Math.floor((Math.random() * 100) + 51),
-			tadenan: this.get("server") ? Math.round(selectedData[key].quotas.tadenan) : Math.floor((Math.random() * 100) + 51),
-			lamaline: this.get("server") ? Math.round(selectedData[key].quotas.lamaline) : Math.floor((Math.random() * 100) + 51),
-			dymista: this.get("server") ? Math.round(selectedData[key].quotas.dymista) : Math.floor((Math.random() * 100) + 51),
-			ceris: this.get("server") ? Math.round(selectedData[key].quotas.ceris) : Math.floor((Math.random() * 100) + 51),
-		}
+		var _this = this;
+		var products = this.get("barProducts");
+		var quotas = {};
+		products.forEach(function(prod){
+			quotas[prod] = _this.get("server") ? Math.round(selectedData[key].quotas[prod]) : Math.floor((Math.random() * 100) + 51);
+		});
 		return quotas;
 	},
 
@@ -301,17 +288,7 @@ MapModel = Backbone.Model.extend({
 			return pop > levelMinPopulation && lat && lon;
 		});
 
-		// Temporary - used for deltecting collisions
-		/*selection.forEach(function(e,i){
-			for (var a=0; a<i; a++) {
-				if (Math.abs((e.x - selection[a].x) * currentScale) < 10 &&  Math.abs((e.y - selection[a].y) * currentScale) < 10)
-					console.log("overlap between " + selection[a].name + " and " + e.name);
-			}
-		});*/
-
-		
 		return selection;
-
 	},
 
 
@@ -407,20 +384,19 @@ MapModel = Backbone.Model.extend({
 	},
 
 	/*******************************************************************************************
-	/ FUNCTION TO LOOK FOR ELEMENTS OVERLAPPING THE EDGE OF THE MAP (CURRENTLY USED FOR TOOLTIPS)
-	* projection - map projection
-	* elementObject - original element to be used. Send the bounding box to use the height and width values
-	* element - currently the tooptip that will be placed on the map
-	* size of the tooltip to be place (current height and widt are the same)
+	/ FUNCTION TO CALCULATE LOGICAL TOOLTIP POSITION BASED ON PROJECTION AND POSITION OF ELEMENT
+	params
+	projection - projection of our map
+	elementObject - The tooltip we will be placing
+	element - The original element the tooltip is aligned to
+	elementSize - the size of the tooltip element
 	********************************************************************************************/
 
 	calculateTooltipPosition:function(projection,elementObject,element,elementSize){
-		// Projection of current element
 		var proj = projection([element.lon,element.lat]);  
 		var elementX = proj[0];
 		var elementY = proj[1];
 
-		// Caluclations of the space we have to work with (right and top are not quite working)
 		var mapBox = d3.select('#franceMap').node().getBBox();
 		var zoomBox = d3.select('#zoomgroup').node().getBBox();
 		var scale = mapBox.width/zoomBox.width;
@@ -434,14 +410,12 @@ MapModel = Backbone.Model.extend({
 		var offsetX = 0;
 		if ((elementSize/scale)/2 > elementX - left) {
 			offsetX = elementSize/2 + 15;
-			//offsetY = (offsetY === -10) ? 100 : offsetY/2;
 			if (elementY - (elementSize/scale/2) < top)  offsetY = elementObject.height * scale + -(elementSize) + 10;
 			if (elementY + (elementSize/scale/2) > bottom) offsetY = -10;
 			else offsetY = 100;
 		}
 		if (elementX > right) {
 			offsetX = -(elementSize/2) - 15;
-			//offsetY = (offsetY === -10) ? 100 : offsetY/2;
 			if (elementY - (elementSize/scale/2) < top)  offsetY = elementObject.height * scale + -(elementSize) + 10;
 			if (elementY + (elementSize/scale/2) > bottom)  offsetY = -10;
 			else offsetY = 100;
@@ -460,67 +434,5 @@ MapModel = Backbone.Model.extend({
 		}
 		this.set("tooltipOffsetPosition",direction)
 	},
-
-	/*****************************************************************************************
-	/FUNCTION THAT CAN INVESTIAGE COLLISIONS IN PROJECTION BOXES
-	* testArray - an array of elements to test against (must include x and y projection values)
-	* comparator - x or y
-	* projectionPoint - point x or y of original point to test
-	* give - number of pixels to test to make a projection box
-	* itemLabelname - name of the item to be tested (for console logging instances)
-	*****************************************************************************************/
-
-	lookForCollisions:function(testArray,comparator,projectionPoint,give,itemLabelName){
-		$.each(testArray, function(index, obj) {
-		  if ((projectionPoint >= (obj[comparator] - give)) && projectionPoint <= ((obj[comparator] + give))) {
-		  	console.log(itemLabelName + " has a clash at position " + projectionPoint + " .Going to crash into " + obj.name + " with bounds of  " + (obj[comparator] -give) + " to " + (obj[comparator] + give));
-		  }
-		});
-	},
-
-
-	/*************************************************************************************************************
-	/FUNCTION TO TEST BOUNDING BOXES OF CITIES AND CLASHES
-	* Tests the original shown area elements for clashes within the bounding boxes
-	* Uses second helper function to recursively move through the array, dropping number of test elements each time
-	* params - {test element - class name for d3 to find the element it needs to test}, {projection - map projection}
-	**************************************************************************************************************/
-
-	testAreaBoundingBoxesForCollisions:function(testElement,projection){
-		var boxes = [];
-		var clashes = [];
-		d3.selectAll(testElement).each(function(d,i){
-			var proj = projection([d.lon, d.lat]);
-			var box = d3.select(this).node().getBBox();
-			boxes.push({
-				x: [proj[0] + box.x, proj[0] - box.x],
-				y: [proj[1] + box.y, proj[1] - box.y],
-				name: d.name,
-			})
-		})
-
-		for (var a=0; a < boxes.length - 1; a++) {
-			var check = this.checkBounds(boxes[a], boxes.slice(a + 1));
-			if (check) $.each(check,function(i,e){
-				if (typeof(e) == 'string' && clashes.indexOf(e) === -1) clashes.push(e);
-			})
-		}
-		
-
-		return clashes;
-	},
-
-	checkBounds:function(testElement,testArray){
-		var crash = null;
-		$.each(testArray,function(index,obj){
-			if (testElement.x[0] <= obj.x[1] && testElement.x[1] >= obj.x[0] && testElement.y[0] <= obj.y[1] && testElement.y[1] >= obj.y[0]) {
-				crash = [testElement.name,obj.name];
-				return false;
-			}
-		});
-		return crash;
-	},
-
-
 
 });

@@ -64,6 +64,7 @@ var MapView = Backbone.View.extend({
 	//----------------------------------------------------------------------------------------------------
 	// FUNCTION TO ADD CITIES TO THE MAP
 	// Sends a bounding box to get a list of cities in that box and places squares and indented labels
+	// params: currentScale
 	//-----------------------------------------------------------------------------------------------------
 
 	addCities:function(currentScale){
@@ -76,7 +77,7 @@ var MapView = Backbone.View.extend({
 			.scale(this.model.get("defaultScale"));
 		var path = d3.geo.path().projection(projection);
 
-
+		// Squares used to label the city points
 		svg.selectAll(".city-label")
 			.data(cities).enter()
 			.append("rect")
@@ -101,6 +102,7 @@ var MapView = Backbone.View.extend({
 				return labelO;
 			})
 
+		// Text aligned to the right of the city label
 		svg.selectAll(".city-text")
 			.data(cities).enter()
 			.append("text")
@@ -127,12 +129,13 @@ var MapView = Backbone.View.extend({
 
 	//----------------------------------------------------------------------------------------------------
 	// DRAW A REGION/SECTOR/UGA SET
-	// Removes all previous elements and gets the data for the current level we are aut
-	// Appends circles and labels for the current level, and adds click events to the circles for drilling
-	// The chooses a type of graph to append to the labels
+	// Removes all previous elements and gets the data for the current level we are at
+	// Appends pies and labels for the current level, and adds click events to the pies for drilling down
+	// Adds the tooltip event linked to the pie and the admin drag event
+	// params: initialLoad (true||false)
 	//-----------------------------------------------------------------------------------------------------
 
-		drawRegions:function(initialLoad) {
+	drawRegions:function(initialLoad) {
 		var that = this;
 		var svg = d3.select($("#zoomgroup")[0]);
 		var projection = d3.geo.mercator()
@@ -141,7 +144,6 @@ var MapView = Backbone.View.extend({
 		var path = d3.geo.path().projection(projection);
 
 		var dataArray = that.model.getData();
-		
 		
 		if (!initialLoad) {
 			this.removeElementsOnChange(svg);
@@ -157,7 +159,8 @@ var MapView = Backbone.View.extend({
 			that.addCities(currentScale);
 			var cities = that.model.get("currentCities");
  			
-
+			/////////////////////////////////////////////
+			// Drag events and functions
 			var drag = d3.behavior.drag()
 				.on("drag", dragMove)
 				.on("dragend", recordNewPosition);
@@ -176,8 +179,10 @@ var MapView = Backbone.View.extend({
 				if(!that.model.get("modificationModeOn")) return;
 				that.model.setNewLatLonForPoint(d);
 			}
+			/////////////////////////////////////////////
 
-
+			/////////////////////////////////////////////
+			// Tooltip events and functions
 		 	var tip = d3.tip()
 			  .attr('class', 'd3-tip')
 			  .offset(function(d){
@@ -191,7 +196,8 @@ var MapView = Backbone.View.extend({
 			  	var toolTipSvg = d3.select('#tooltipGenerator').html();
 			  	$('#tooltipGenerator').html('');
 			    return toolTipSvg;
-			 })
+			})
+			/////////////////////////////////////////////
 
 			var arc = d3.svg.arc().innerRadius(0).outerRadius(10/currentScale);
 	      	var pie = d3.layout.pie().value(function(d){ return d });
@@ -204,7 +210,6 @@ var MapView = Backbone.View.extend({
 					return "translate(" + (projection([d.lon, d.lat])[0]) + "," + (projection([d.lon, d.lat])[1]) + ")";
 				})
 				
-
 			var pies = svg.selectAll('g.area-element')
 				.append('g')
 				.attr('class', 'area-pie')
@@ -244,9 +249,9 @@ var MapView = Backbone.View.extend({
 					if(that.model.get("modificationModeOn")) return;
 					that.hideTreeControl();
 					$('#informationPanel').html('');
-					that.appendBarChartInToolTip($('#informationPanel').width(),d);
+					that.appendBarChartInInfoPanel($('#informationPanel').width(),d);
 					tip.show(d);
-					// Tooltip specific events
+					// Tooltip specific events stored in the model
 					d3.selectAll("g.slice").on('mouseover', function(d,i) {
 		                d3.select('.tip-pie-hover-label').text(that.model.get("tooltipData")[i].label).style("font-size",14);
 		                $('.tip-pie-hover-label').removeClass('bolded');
@@ -265,8 +270,6 @@ var MapView = Backbone.View.extend({
 		            	tip.hide();
 		            })
 				})
-
-			
 
 			var colors = that.model.get("pieColors");
 
@@ -300,23 +303,22 @@ var MapView = Backbone.View.extend({
 
 			that.model.set("currentRegions",dataArray);
 
-			that.createview();
-			// Testing clashes. Can log out the clashing elements
-			var clashes = that.model.testAreaBoundingBoxesForCollisions('.area-element',projection);
-
+			that.createTreeview();
 		},delay);
-
 	},
 
-
-
 	//----------------------------------------------------------------------------------------------------
-	// FUNCTIONS TO APPEND CHARTS TO TOOLTIPS ABOVE GRAPHICS
+	// FUNCTIONS TO APPEND CHARTS AND OTHER SVGS TO pARTS OF THE MAP
 	//-----------------------------------------------------------------------------------------------------
 
-	appendBarChartInToolTip:function(size,dataForRegion){
+	/*
+	/* Append a bar chart in the information panel
+	/* Params: size - size of the area we are working with, data for region.
+	*/
+
+	appendBarChartInInfoPanel:function(size,dataForRegion){
 		var data = [];
-		var products = ["creon","tarka","lamaline","dymista","ceris","tadenan"];
+		var products = this.model.get("barProducts");
 		if (this.model.get("server")) {
 			for (var i=0; i < products.length; i++) {
 				data.push({name:products[i], value:dataForRegion.quotas[products[i]], label: products[i].toUpperCase().substr(0,5)});
@@ -332,11 +334,18 @@ var MapView = Backbone.View.extend({
 		}
 		
 
-		// Define colours and margin and minimum and maximum values
+		// Variable definitions. Colours, range, and line points to be used
 		var colors = this.model.get("barColors");
 		var margin = 50;
 		var dataMin = d3.min(data, function(d) {return d.value; });
 		var dataMax = d3.max(data, function(d) {return d.value; });
+
+		var linePoints = [];
+	 	var minLine = dataMin > 100 ? 90 : dataMin;
+	 	var interval = Math.ceil((((((dataMax - minLine)/10)/10) * 10)/20)) * 20;
+		for (var i = Math.ceil(minLine / interval) * interval; i <= dataMax + interval; i = i + interval) {
+			linePoints.push(i);
+		} 
 
 		// Scales and axis formats
 		var x = d3.scale.ordinal().rangeRoundBands([0, size-(margin * 0.4)], .05);
@@ -349,7 +358,7 @@ var MapView = Backbone.View.extend({
 		var yAxis = d3.svg.axis()
 		    .scale(y)
 		    .orient("left")
-		    .ticks(5)
+		    .tickValues(linePoints);
 
 		// Main SVG Element
 		var svg = d3.select("#informationPanel").append("svg")
@@ -358,13 +367,12 @@ var MapView = Backbone.View.extend({
 		  	.append("g")
 		    .attr("transform","translate("+margin/2+",-"+margin/2+")");
 
-		// Definition of minimums and maximums. Absolute min and max are 90 and 100
+		// Domains
 		  x.domain(data.map(function(d) { return d.label; }));
 		  y.domain([
 			(dataMin >= 100) ? 90 : dataMin * 0.9, 
 			(dataMax <= 100) ? 110 : dataMax * 1.1,
 		  ]);
-
 
 		  // x axis and labels
 		  svg.append("g")
@@ -386,7 +394,6 @@ var MapView = Backbone.View.extend({
 		      	return string.charAt(0).toUpperCase() + string.slice(1);
 		      });
 
-
 		 // y axis and labels
 		  svg.append("g")
 		      .attr("class", "y axis")
@@ -401,14 +408,7 @@ var MapView = Backbone.View.extend({
 		      .style("font-size",12)
 
 
-		  // LINE POINTS
-		 	var linePoints = [];
-		 	var minLine = dataMin > 100 ? 90 : dataMin;
-		 	var interval = Math.ceil((((((dataMax - minLine)/10)/10) * 10)/10)) * 10;
-			for (var i = Math.ceil(minLine / interval) * interval; i <= dataMax + interval; i = i + interval) {
-				linePoints.push(i);
-			} 
-			console.log(linePoints);
+		  // line points
 			linePoints.forEach(function(line){
 				svg.append("line")
 					.attr("x1", 0)
@@ -424,7 +424,7 @@ var MapView = Backbone.View.extend({
 		            })
 			})
 
-	     // BARS
+	     // Bar elements
 		  var bars = svg.selectAll("bar")
 		      .data(data)
 		      .enter().append("rect")
@@ -443,7 +443,7 @@ var MapView = Backbone.View.extend({
 			  .attr("height", function(d) { return size - y(d.value); })
 		      .attr("y", function(d) { return y(d.value); })
 
-		  // LABELS
+		  // Bar number labels
 		  var labels = svg.selectAll("label")
 		  	  .data(data)
 		      .enter().append("text")
@@ -481,18 +481,19 @@ var MapView = Backbone.View.extend({
 			  .attr("opacity",1)
 			  .attr("class","bar-chart-text")
 
-			// CSS MODS - hide the tick marks, and change the 100 marker for a bold red marker
-			$('.tick line').hide(); // Hide the tick lines we don't need
+			// CSS Modifications to final bar - hide the tick marks,c hange the 100 marker for a bold red marker
+			// and hide the top line point if it is too high
+			$('.tick line').hide(); 
 			$('.y text').filter(function(i,e){
 				return e.innerHTML === "100"
 			}).css({
 				"fill": "#d9534f", "color": "#d9534f", "font-weight" : "700"
-			}) // Change the 100 marker for red
+			}) 
 
 			if ($('.y .tick').last().offset().top - $('#informationPanel').offset().top < 4) {
 				$('.y .tick').last().hide();
 				$('.bar-line-point').last().hide();
-			} // hide the top line if it is too close to the top
+			} 
 
 			// Add a title to the extra div above the bar chart
 			var regionName = dataForRegion.name.length === 2 ? "Region " + dataForRegion.name : dataForRegion.name;
@@ -507,10 +508,6 @@ var MapView = Backbone.View.extend({
 		var visits = d.visits;
 		var data = [];
 
-		// TO BE MODDED. WHAT DO WE DO WITH NO DATA
-		if (d.segmentation === null) {
-		}
-
 		if (d.segmentation) {
 	 		this.model.get("pieLegendSegmentation").forEach(function(seg){
 				if (seg.measure !== "autres") {
@@ -522,6 +519,7 @@ var MapView = Backbone.View.extend({
 				}
 			});
 	 	}
+
 		/* Adding orders and sorting data */
 		var total = 0;
 		var autres = {label:"Autres",value:0,legendLabel:"Autres"};
@@ -538,7 +536,7 @@ var MapView = Backbone.View.extend({
 		data.push(autres);
 
 
-		var legend = this.model.get("pieLegendSegmentation");  // Colors array
+		var legend = this.model.get("pieLegendSegmentation"); 
 		var labels = []; 
 		var values = [];
 		var legendLabels = [];
@@ -646,7 +644,7 @@ var MapView = Backbone.View.extend({
 
 	appendSegmentationLegend:function(data){
 		$('#segmentationLegend').show();
-		data = data.slice(0,data.length-1); // The is the object element storage so we need to slice the final element (the region) off
+		data = data.slice(0,data.length-1);
 		data = data.filter(function(d){
 			return d.value > 0;
 		});
@@ -956,7 +954,7 @@ var MapView = Backbone.View.extend({
 	},
 
 
-	createview:function () {
+	createTreeview:function () {
 		that =this;
 		var dataArray = that.model.getData();
 		var arr = [];
