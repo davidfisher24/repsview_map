@@ -231,11 +231,21 @@ var MapView = Backbone.View.extend({
 							$('#segmentationLegend').hide();
 						};
 					} else if (that.model.get("device") === "mobile") {
-						$(this).mouseenter();
+						$('#tooltipGenerator').show();
+						that.hideTreeControl();
+						$('#informationPanel').html('');
+						$('#tooltipGenerator').html('');
+						var arcElementMaxSize = Math.min(
+							$(window).height() - $('#tooltipGenerator').offset().top,
+							$('#tooltipGenerator').width()
+						);
+						that.appendBarChartInInfoPanel($('#informationPanel').width(),d);
+						that.appendPieChartInToolTip(arcElementMaxSize,d);
 					}
-					
 				})
 				.on('mouseleave', function(d){
+					if(that.model.get("device") === "mobile") return;
+					if(that.model.get("modificationModeOn")) return;
 					var elementSpace = d3.select(this).node().getBoundingClientRect();
 					var centreAxisVertical = elementSpace.top + ((elementSpace.bottom - elementSpace.top)/2);
 					var centreAxisHorizontal = elementSpace.left + ((elementSpace.right - elementSpace.left)/2);
@@ -253,6 +263,7 @@ var MapView = Backbone.View.extend({
 					
 				}) 
 				.on('mouseenter', function(d){
+					if(that.model.get("device") === "mobile") return;
 					if(that.model.get("modificationModeOn")) return;
 					that.hideTreeControl();
 					$('#informationPanel').html('');
