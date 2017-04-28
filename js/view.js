@@ -4,6 +4,8 @@ var MapView = Backbone.View.extend({
 
 	initialize: function(options) {
 		this.renderMap();
+		if (this.model.get("device") === "desktop") $('#map-panel-container-mobile').remove();
+		if (this.model.get("device") === "mobile") $('#map-panel-container-desktop').remove();
 		$('#informationPanel').html(this.model.get("infoPanelDefault"));
 	},
 
@@ -220,13 +222,18 @@ var MapView = Backbone.View.extend({
 				.call(drag)
 				.call(tip)
 				.on("click",function(d,i){
-					if (that.model.get("level") < that.model.get("deepestLevel") && !d.corsicaFlag && !that.model.get("modificationModeOn")) {
-						if (d3.event.defaultPrevented) return;
-						tip.hide();
-						that.model.increaseLevel(d);
-						that.drawRegions()
-						$('#segmentationLegend').hide();
-					};
+					if (that.model.get("device") === "desktop") {
+						if (that.model.get("level") < that.model.get("deepestLevel") && !d.corsicaFlag && !that.model.get("modificationModeOn")) {
+							if (d3.event.defaultPrevented) return;
+							tip.hide();
+							that.model.increaseLevel(d);
+							that.drawRegions()
+							$('#segmentationLegend').hide();
+						};
+					} else if (that.model.get("device") === "mobile") {
+						$(this).mouseenter();
+					}
+					
 				})
 				.on('mouseleave', function(d){
 					var elementSpace = d3.select(this).node().getBoundingClientRect();

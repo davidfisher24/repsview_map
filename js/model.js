@@ -4,6 +4,7 @@ MapModel = Backbone.Model.extend({
 
 		/* DATA AND VERSION */
 		"server" : false, // Version - server data is true or false
+		"device" : "desktop", // Device = desktop or mobile
 		"gpdata" : "", // GP Data
 		"spdata" : "", // SP Data
 		"network" : "gp", // Current Selected Network
@@ -86,6 +87,7 @@ MapModel = Backbone.Model.extend({
 		this.set("gpdata",options.gpdata);
 		this.set("spdata",options.spdata);
 		this.set("server",options.server);
+		this.set("device",options.device);
 	},
 
 	increaseLevel: function(data){
