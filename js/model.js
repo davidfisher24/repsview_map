@@ -1,3 +1,5 @@
+/* jshint ignore:start */
+//SERVER var Config = require('../../config');
 MapModel = Backbone.Model.extend({
 
 	defaults: {
@@ -315,7 +317,7 @@ MapModel = Backbone.Model.extend({
 			lat: newPosition[1],
 			version: that.get("server") ? "mylan" : "local",
 		}
-
+		//SERVER var url = Config.rootUrl + "/index.php?option=com_router&target=change_lat_lon";
 		var url = "./php/update_lat_lon.php";
 		$.ajax(url,{
 			method: "POST",
@@ -438,3 +440,6 @@ MapModel = Backbone.Model.extend({
 	},
 
 });
+
+//SERVER module.exports = MapModel;
+/* jshint ignore:end */

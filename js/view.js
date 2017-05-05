@@ -1,8 +1,14 @@
+/* jshint ignore:start */
+//SERVER var Config = require('../../config');
+//SERVER var treeView = require("../../resources/treeview");
+
 var MapView = Backbone.View.extend({
 
+	//SERVER template: require("./mapLayout"),
 	el: '#map_module',
 
 	initialize: function(options) {
+		//SERVER this.$el.html(this.template);
 		this.renderMap();
 		if (this.model.get("device") === "desktop") $('#map-panel-container-mobile').remove();
 		if (this.model.get("device") === "mobile") $('#map-panel-container-desktop').remove();
@@ -25,6 +31,8 @@ var MapView = Backbone.View.extend({
 	renderMap: function() {
 		var that = this;
 
+
+		//SERVER var svg = d3.json(Config.rootUrl+"/index.php?option=com_router&target=get_geo_json", function(json) {
 		var svg = d3.json("./geoJson/FRA_adm2.json", function(json) {
 
 			var regions = topojson.feature(json, json.objects.FRA_adm2);
@@ -1212,3 +1220,6 @@ var MapView = Backbone.View.extend({
 
 
 });
+
+//SERVER module.exports = MapView;
+/* jshint ignore:end */
