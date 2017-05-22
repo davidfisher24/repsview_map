@@ -9,6 +9,10 @@ var MapView = Backbone.View.extend({
 
 	initialize: function(options) {
 		//SERVER this.$el.html(this.template);
+		var containerWidth = $('#map').width();
+		var mapRatio = parseInt(this.model.get("mapRatio").split(":")[1]) / 10;
+		this.model.set("width",containerWidth);
+		this.model.set("height",containerWidth * mapRatio);
 		this.renderMap();
 		if (this.model.get("device") === "desktop") $('#map-panel-container-mobile').remove();
 		if (this.model.get("device") === "mobile") $('#map-panel-container-desktop').remove();
